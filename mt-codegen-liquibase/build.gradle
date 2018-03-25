@@ -1,0 +1,33 @@
+plugins { id "com.jfrog.bintray" version "1.8.0" }
+
+dependencies {
+  compile project(":mt-annotations")
+  compile project(":mt-core")
+  compile fastClasspathScanner
+  compile joox
+  compile liquibase
+  compile slf4jApi
+}
+
+// TODO remove this when https://github.com/bintray/gradle-bintray-plugin/issues/104 is resolved.
+bintray {
+  user = System.getenv('BINTRAY_USER')
+  key = System.getenv('BINTRAY_KEY')
+  publications = ['mavenJava']
+  pkg {
+    repo = 'io.vacco.metolithe'
+    name = project.name
+    userOrg = 'vaccovecrana'
+    licenses = ['Apache-2.0']
+    websiteUrl = 'https://github.com/vaccovecrana/metolithe'
+    issueTrackerUrl = 'https://github.com/vaccovecrana/metolithe/issues'
+    vcsUrl = 'https://github.com/vaccovecrana/metolithe.git'
+    labels = ['jdbc', 'key-value', 'dao', 'persistence']
+    publicDownloadNumbers = true
+    version {
+      name = project.version
+      desc = 'A minimal, opinionated, flat key/value JDBC object storage framework..'
+      gpg { sign = true }
+    }
+  }
+}

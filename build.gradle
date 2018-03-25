@@ -1,0 +1,49 @@
+buildscript {
+  repositories { jcenter() }
+  dependencies { classpath "com.github.ben-manes:gradle-versions-plugin:0.17.0" }
+}
+
+subprojects {
+
+  group 'io.vacco.metolithe'
+  version 0.10
+
+  repositories { jcenter() }
+  buildscript { repositories { jcenter() } }
+
+  apply plugin: 'com.github.ben-manes.versions'
+  apply plugin: 'java'
+  apply plugin: 'maven-publish'
+
+  ext {
+    slf4jApi = "org.slf4j:slf4j-api:1.7.25"
+    slf4jSimple = "org.slf4j:slf4j-simple:1.7.25"
+    validationApi = "javax.validation:validation-api:2.0.1.Final"
+
+    fuentJdbc = "org.codejargon:fluentjdbc:1.8.3"
+    fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:2.18.1"
+    joox = "org.jooq:joox-java-6:1.6.0"
+    liquibase = "org.liquibase:liquibase-core:3.5.5"
+
+    junit = "junit:junit:4.12"
+    j8Spec = "io.github.j8spec:j8spec:3.0.0"
+    h2 = "com.h2database:h2:1.4.197"
+    ktStdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.31"
+  }
+
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+
+  task sourceJar(type: Jar, dependsOn: classes) { from sourceSets.main.allSource }
+
+  publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+        artifact sourceJar { classifier "sources" }
+      }
+    }
+  }
+}
+
+task wrapper(type: Wrapper) { gradleVersion = '4.5' }
