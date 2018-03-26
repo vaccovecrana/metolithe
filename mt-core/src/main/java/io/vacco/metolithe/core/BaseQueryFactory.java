@@ -50,7 +50,7 @@ public abstract class BaseQueryFactory<T> {
     if (payload != null &&
         !defaultExtractors.containsKey(payload.getClass()) &&
         !extractors.containsKey(payload.getClass())) {
-      return codec.encode(payload);
+      return codec.encode(payload, payload.getClass());
     }
     return payload;
   }

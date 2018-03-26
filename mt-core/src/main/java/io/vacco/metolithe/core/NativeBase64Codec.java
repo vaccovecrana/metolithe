@@ -17,7 +17,7 @@ public class NativeBase64Codec implements MtCodec {
   }
 
   @Override
-  public <T> String encode(@NotNull T input) {
+  public <T> String encode(@NotNull T input, Class<?> targetClass) {
     try {
       requireNonNull(input);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
