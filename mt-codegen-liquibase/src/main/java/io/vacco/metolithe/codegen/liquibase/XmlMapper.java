@@ -28,7 +28,7 @@ public class XmlMapper {
       Match ct = $("createTable").attr("tableName", entityName);
       attributes.stream().map(fld0 -> XmlMapper.mapAttribute(entity, fld0)).forEach(ct::append);
       cs.append(ct);
-      attributes.stream().map(XmlMapper::mapIndex).filter(Objects::nonNull).forEach(cs::append);
+      attributes.stream().map(fld0 -> XmlMapper.mapIndex(entity, fld0)).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
       return lb;
     } catch (Exception e) {
@@ -52,9 +52,9 @@ public class XmlMapper {
     return columnXml;
   }
 
-  private static Match mapIndex(Field target) {
+  private static Match mapIndex(Class<?> root, Field target) {
     requireNonNull(target);
-    Optional<MtIndex> isIndex = isIndex(target.getDeclaredAnnotations());
+    Optional<MtIndex> isIndex = isIndex(root, target);
     String entityName = toSnakeCase(target.getDeclaringClass().getSimpleName());
     if (isIndex.isPresent()) {
       Match idx = $("createIndex")
@@ -81,8 +81,9 @@ public class XmlMapper {
         .findFirst();
   }
 
-  private static Optional<MtIndex> isIndex(Annotation ... annotations) {
-    return Arrays.stream(annotations)
+  private static Optional<MtIndex> isIndex(Class<?> root, Field target) {
+    if (!target.getDeclaringClass().equals(root)) { return Optional.empty(); }
+    return Arrays.stream(target.getDeclaredAnnotations())
         .filter(an0 -> an0.annotationType() == MtIndex.class)
         .map(an0 -> (MtIndex) an0).findFirst();
   }
