@@ -2,7 +2,6 @@ package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.spi.MtCodec;
 import java.io.*;
-import javax.validation.constraints.NotNull;
 import java.util.Base64;
 
 import static java.util.Objects.*;
@@ -12,12 +11,12 @@ public class NativeBase64Codec implements MtCodec {
   private final String SIGMA_COL = "Σ:";
 
   @Override
-  public boolean isEncoded(@NotNull String input) {
+  public boolean isEncoded(String input) {
     return input.startsWith(SIGMA_COL);
   }
 
   @Override
-  public <T> String encode(@NotNull T input, Class<?> targetClass) {
+  public <T> String encode(T input, Class<?> targetClass) {
     try {
       requireNonNull(input);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();

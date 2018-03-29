@@ -4,7 +4,6 @@ import io.vacco.metolithe.annotations.*;
 import org.joox.Match;
 import org.slf4j.*;
 
-import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -45,7 +44,7 @@ public class XmlMapper {
         .attr("name", target.getName().toLowerCase())
         .attr("type", TypeMapper.resolveSqlType(target.getType(), target.getDeclaredAnnotations()));
     Optional<MtId> pk = hasPrimaryKey(target.getDeclaredAnnotations());
-    Optional<NotNull> nn = isNotNull(target.getDeclaredAnnotations());
+    Optional<MtAttribute> nn = isNotNull(target.getDeclaredAnnotations());
     Match cn = (pk.isPresent() || nn.isPresent()) ? $("constraints") : null;
     if (pk.isPresent()) { cn.attr("primaryKey", "true"); }
     if (nn.isPresent()) { cn.attr("nullable", "false"); }
@@ -73,10 +72,12 @@ public class XmlMapper {
         .map(an0 -> (MtId) an0).findFirst();
   }
 
-  private static Optional<NotNull> isNotNull(Annotation ... annotations) {
+  private static Optional<MtAttribute> isNotNull(Annotation ... annotations) {
     return Arrays.stream(annotations)
-        .filter(an0 -> an0.annotationType() == NotNull.class)
-        .map(an0 -> (NotNull) an0).findFirst();
+        .filter(an0 -> an0.annotationType() == MtAttribute.class)
+        .map(an0 -> (MtAttribute) an0)
+        .filter(nn0 -> !nn0.nil())
+        .findFirst();
   }
 
   private static Optional<MtIndex> isIndex(Annotation ... annotations) {

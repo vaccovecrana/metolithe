@@ -1,6 +1,7 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.spi.MtCodec;
+import io.vacco.metolithe.spi.UnsafeSupplier;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 
 import java.util.*;

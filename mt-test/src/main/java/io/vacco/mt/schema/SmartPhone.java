@@ -1,7 +1,6 @@
 package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.*;
-import javax.validation.constraints.*;
 import java.util.Set;
 
 @MtEntity
@@ -11,24 +10,21 @@ public class SmartPhone extends Phone {
   public enum Feature { FORCE_TOUCH, FACE_DETECTION, BEZELLESS_DISPLAY, WIRELESS_CHARGNING }
   public enum BatteryType { LITHIUM_ION, GRAPHENE }
 
-  @MtId
-  @Size(max = 128)
+  @MtId(len = 128)
   private String deviceUid;
 
   @MtIndex
-  @MtAttribute(maxByteLength = 16)
-  @NotNull private Os os;
+  @MtAttribute(nil = false, len = 16)
+  private Os os;
 
   @MtIndex
-  @MtAttribute(maxByteLength = 32)
+  @MtAttribute(len = 32)
   private BatteryType batteryType;
 
-  @MtAttribute
-  @DecimalMin("0.0")
-  @DecimalMax("1.0")
+  @MtAttribute()
   private double gpsPrecision;
 
-  @MtAttribute(maxByteLength = 512)
+  @MtAttribute(len = 512)
   private Set<Feature> features;
 
   public String getDeviceUid() {

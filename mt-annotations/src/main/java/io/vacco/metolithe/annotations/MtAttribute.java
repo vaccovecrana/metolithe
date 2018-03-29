@@ -13,5 +13,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface MtAttribute {
-  long maxByteLength() default -1;
+  boolean nil() default true;
+  long len() default -1;
 }

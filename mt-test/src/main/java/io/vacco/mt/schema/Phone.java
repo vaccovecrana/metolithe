@@ -1,20 +1,16 @@
 package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.MtAttribute;
-import javax.validation.constraints.*;
 
 public abstract class Phone {
 
-  @MtAttribute
-  @DecimalMin("8") @DecimalMax("32")
+  @MtAttribute()
   private long serialNumber;
 
-  @MtAttribute
-  @Size(min = 7, max = 12)
+  @MtAttribute(len = 12)
   private String number;
 
-  @MtAttribute
-  @NotNull
+  @MtAttribute(nil = false)
   private boolean active;
 
   public long getSerialNumber() { return serialNumber; }

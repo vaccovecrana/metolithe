@@ -1,4 +1,4 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.spi;
 
 public interface UnsafeSupplier<T> {
   T get() throws Exception;
