@@ -34,7 +34,10 @@ public class EntityDescriptor<T> {
     entityFields = fields.stream().filter(this::isEntityField).collect(Collectors.toCollection(LinkedHashSet::new));
     entityFields.forEach(fl0 -> nameToField.put(fl0.getName(), fl0));
 
-    Optional<Field> opk = fields.stream().filter(this::isPrimaryKeyField).findFirst();
+    Optional<Field> opk = fields.stream()
+        .filter(this::isPrimaryKeyField)
+        .filter(fl -> fl.getDeclaringClass().equals(target))
+        .findFirst();
     if (!opk.isPresent()) {
       String msg = String.format("%s does not define a primary key (MtId) field.", target);
       throw new IllegalStateException(msg);
