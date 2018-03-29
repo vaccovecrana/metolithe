@@ -1,10 +1,13 @@
 package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.MtAttribute;
+import io.vacco.metolithe.annotations.MtEntity;
+import io.vacco.metolithe.annotations.MtId;
 
+@MtEntity
 public abstract class Phone {
 
-  @MtAttribute()
+  @MtId @MtAttribute
   private long serialNumber;
 
   @MtAttribute(len = 12)

@@ -26,7 +26,7 @@ public class XmlMapper {
       Match lb = $(xmlTemplate);
       Match cs = $("changeSet").attr("author", "generated").attr("id", entityName);
       Match ct = $("createTable").attr("tableName", entityName);
-      attributes.stream().map(XmlMapper::mapAttribute).forEach(ct::append);
+      attributes.stream().map(fld0 -> XmlMapper.mapAttribute(entity, fld0)).forEach(ct::append);
       cs.append(ct);
       attributes.stream().map(XmlMapper::mapIndex).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
@@ -38,12 +38,12 @@ public class XmlMapper {
     }
   }
 
-  private static Match mapAttribute(Field target) {
+  private static Match mapAttribute(Class<?> root, Field target) {
     requireNonNull(target);
     Match columnXml = $("column")
         .attr("name", target.getName().toLowerCase())
         .attr("type", TypeMapper.resolveSqlType(target.getType(), target.getDeclaredAnnotations()));
-    Optional<MtId> pk = hasPrimaryKey(target.getDeclaredAnnotations());
+    Optional<MtId> pk = hasPrimaryKey(root, target);
     Optional<MtAttribute> nn = isNotNull(target.getDeclaredAnnotations());
     Match cn = (pk.isPresent() || nn.isPresent()) ? $("constraints") : null;
     if (pk.isPresent()) { cn.attr("primaryKey", "true"); }
@@ -66,8 +66,9 @@ public class XmlMapper {
     return null;
   }
 
-  private static Optional<MtId> hasPrimaryKey(Annotation ... annotations) {
-    return Arrays.stream(annotations)
+  private static Optional<MtId> hasPrimaryKey(Class<?> root, Field f) {
+    if (!f.getDeclaringClass().equals(root)) { return Optional.empty(); }
+    return Arrays.stream(f.getDeclaredAnnotations())
         .filter(an0 -> an0.annotationType() == MtId.class)
         .map(an0 -> (MtId) an0).findFirst();
   }

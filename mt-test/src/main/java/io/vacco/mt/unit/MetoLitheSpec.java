@@ -4,6 +4,7 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
 import io.vacco.metolithe.core.NativeBase64Codec;
 import io.vacco.mt.dao.SmartPhoneDao;
+import io.vacco.mt.schema.Dummy;
 import io.vacco.mt.schema.Phone;
 import io.vacco.mt.schema.SmartPhone;
 import j8spec.annotation.DefinedOrder;
@@ -54,7 +55,7 @@ public class MetoLitheSpec {
     );
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(Phone.class));
+        () -> new EntityDescriptor<>(Dummy.class));
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(SmartPhone.class).getField("lolo"));
