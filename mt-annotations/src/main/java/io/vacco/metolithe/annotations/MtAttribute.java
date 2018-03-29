@@ -14,5 +14,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface MtAttribute {
   boolean nil() default true;
-  long len() default -1;
+  int len() default -1;
 }
