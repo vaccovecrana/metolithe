@@ -31,7 +31,7 @@ public class EntityDescriptor<T> {
       fields.addAll(Arrays.asList(cl0.getDeclaredFields()));
       cl0 = cl0.getSuperclass();
     }
-    entityFields = fields.stream().filter(this::isEntityField).collect(Collectors.toSet());
+    entityFields = fields.stream().filter(this::isEntityField).collect(Collectors.toCollection(LinkedHashSet::new));
     entityFields.forEach(fl0 -> nameToField.put(fl0.getName(), fl0));
 
     Optional<Field> opk = fields.stream().filter(this::isPrimaryKeyField).findFirst();
@@ -43,8 +43,9 @@ public class EntityDescriptor<T> {
     entityFields.forEach(fl0 -> fl0.setAccessible(true));
     primaryKeyField.setAccessible(true);
     nameToField.put(primaryKeyField.getName(), primaryKeyField);
-    allFields = new HashSet<>(entityFields);
+    allFields = new LinkedHashSet<>();
     allFields.add(primaryKeyField);
+    allFields.addAll(entityFields);
   }
 
   public Collection<String> propertyNames(boolean includePrimaryKey) {
