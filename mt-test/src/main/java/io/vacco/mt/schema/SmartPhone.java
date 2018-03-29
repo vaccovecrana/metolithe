@@ -10,7 +10,7 @@ public class SmartPhone extends Phone {
   public enum Feature { FORCE_TOUCH, FACE_DETECTION, BEZELLESS_DISPLAY, WIRELESS_CHARGNING }
   public enum BatteryType { LITHIUM_ION, GRAPHENE }
 
-  @MtId(len = 128)
+  @MtId @MtAttribute(len = 128)
   private String deviceUid;
 
   @MtIndex

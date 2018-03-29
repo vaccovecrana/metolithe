@@ -12,6 +12,4 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface MtId {
-  long len() default -1;
-}
+public @interface MtId {}
