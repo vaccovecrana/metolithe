@@ -2,7 +2,6 @@ package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.spi.MtCodec;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
-
 import java.util.Map;
 import static java.lang.String.format;
 import static java.util.Objects.*;

@@ -26,6 +26,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.DriverManager;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static j8spec.J8Spec.*;
@@ -39,7 +40,7 @@ public class MetoLitheSpec {
 
   static FluentJdbc jdbc;
   static SmartPhoneDao smartPhoneDao;
-  static Map<Class<?>, Set<Field>> entities = new HashMap<>();
+  static Map<Class<?>, Collection<Field>> entities = new HashMap<>();
   static List<Match> entityXmlNodes = new ArrayList<>();
   static List<File> xmlFiles = new ArrayList<>();
 
@@ -59,6 +60,13 @@ public class MetoLitheSpec {
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(SmartPhone.class).getField("lolo"));
+    it("Cannot extract an invalid field.",
+        c -> c.expected(IllegalStateException.class),
+        () -> new EntityDescriptor<>(SmartPhone.class).extract(null, "lolo"));
+    it("Can extract an object's values without its primary key attribute.", () ->
+        new EntityDescriptor<>(SmartPhone.class)
+            .extractAll(new SmartPhone(), Function.identity(), false)
+    );
     it("Cannot map a class with invalid data.", c -> c.expected(IllegalStateException.class),
         () -> XmlMapper.mapEntity(SmartPhone.class, null)
     );
@@ -78,7 +86,7 @@ public class MetoLitheSpec {
     it("Maps and writes entity XML files.", () -> {
       File targetDir = new File("/tmp/testlogs");
       targetDir.mkdirs();
-      for (Map.Entry<Class<?>, Set<Field>> e0 : entities.entrySet()) {
+      for (Map.Entry<Class<?>, Collection<Field>> e0 : entities.entrySet()) {
         Match xml = XmlMapper.mapEntity(e0.getKey(), e0.getValue());
         File xmlFile = XmlChangeSetWriter.write(e0.getKey(), xml, targetDir);
         assertNotNull(xmlFile);
@@ -125,7 +133,7 @@ public class MetoLitheSpec {
       sp.setOs(SmartPhone.Os.ANDROID);
       sp.setActive(true);
       sp.setNumber(phoneNo);
-      sp.setSerialNumber(123456);
+      sp.setSerialNumber("123456");
       sp = smartPhoneDao.save(sp);
       assertNotNull(sp);
     });
@@ -154,7 +162,7 @@ public class MetoLitheSpec {
     });
     it("Can merge a new object", () -> {
       SmartPhone sp = new SmartPhone();
-      sp.setSerialNumber(567890);
+      sp.setSerialNumber("567890");
       sp.setNumber(phoneNo2);
       sp.setDeviceUid(phoneId2);
       sp.setOs(SmartPhone.Os.IOS);
@@ -170,7 +178,7 @@ public class MetoLitheSpec {
       long dc = smartPhoneDao.deleteWhereEq("number", phoneNo2);
       assertEquals(1, dc);
       SmartPhone sp = new SmartPhone();
-      sp.setSerialNumber(567890);
+      sp.setSerialNumber("567890");
       sp.setNumber(phoneNo2);
       sp.setDeviceUid(phoneId2);
       sp.setOs(SmartPhone.Os.IOS);

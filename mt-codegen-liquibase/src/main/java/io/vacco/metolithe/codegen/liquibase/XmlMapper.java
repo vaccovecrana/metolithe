@@ -3,8 +3,6 @@ package io.vacco.metolithe.codegen.liquibase;
 import io.vacco.metolithe.annotations.*;
 import org.joox.Match;
 import org.slf4j.*;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
@@ -12,12 +10,13 @@ import java.util.*;
 import static java.lang.String.*;
 import static java.util.Objects.*;
 import static org.joox.JOOX.$;
+import static io.vacco.metolithe.core.FieldFilter.*;
 
 public class XmlMapper {
 
   private static final Logger log = LoggerFactory.getLogger(XmlMapper.class);
 
-  public static Match mapEntity(Class<?> entity, Set<Field> attributes) {
+  public static Match mapEntity(Class<?> entity, Collection<Field> attributes) {
     try {
       requireNonNull(entity);
       requireNonNull(attributes);
@@ -43,10 +42,10 @@ public class XmlMapper {
     Match columnXml = $("column")
         .attr("name", target.getName().toLowerCase())
         .attr("type", TypeMapper.resolveSqlType(target.getType(), target.getDeclaredAnnotations()));
-    Optional<MtId> pk = hasPrimaryKey(root, target);
-    Optional<MtAttribute> nn = isNotNull(target.getDeclaredAnnotations());
-    Match cn = (pk.isPresent() || nn.isPresent()) ? $("constraints") : null;
-    if (pk.isPresent()) { cn.attr("primaryKey", "true"); }
+    boolean pk = isOwnId(root, target);
+    Optional<MtAttribute> nn = hasNotNull(target);
+    Match cn = (pk || nn.isPresent()) ? $("constraints") : null;
+    if (pk) { cn.attr("primaryKey", "true"); }
     if (nn.isPresent()) { cn.attr("nullable", "false"); }
     if (cn != null) { columnXml.append(cn); }
     return columnXml;
@@ -54,9 +53,8 @@ public class XmlMapper {
 
   private static Match mapIndex(Class<?> root, Field target) {
     requireNonNull(target);
-    Optional<MtIndex> isIndex = isIndex(root, target);
-    String entityName = toSnakeCase(target.getDeclaringClass().getSimpleName());
-    if (isIndex.isPresent()) {
+    if (isOwnIndex(root, target)) {
+      String entityName = toSnakeCase(root.getSimpleName());
       Match idx = $("createIndex")
           .attr("indexName", format("%s_%s_idx", entityName, target.getName().toLowerCase()))
           .attr("tableName", entityName);
@@ -64,28 +62,6 @@ public class XmlMapper {
       return idx;
     }
     return null;
-  }
-
-  private static Optional<MtId> hasPrimaryKey(Class<?> root, Field f) {
-    if (!f.getDeclaringClass().equals(root)) { return Optional.empty(); }
-    return Arrays.stream(f.getDeclaredAnnotations())
-        .filter(an0 -> an0.annotationType() == MtId.class)
-        .map(an0 -> (MtId) an0).findFirst();
-  }
-
-  private static Optional<MtAttribute> isNotNull(Annotation ... annotations) {
-    return Arrays.stream(annotations)
-        .filter(an0 -> an0.annotationType() == MtAttribute.class)
-        .map(an0 -> (MtAttribute) an0)
-        .filter(nn0 -> !nn0.nil())
-        .findFirst();
-  }
-
-  private static Optional<MtIndex> isIndex(Class<?> root, Field target) {
-    if (!target.getDeclaringClass().equals(root)) { return Optional.empty(); }
-    return Arrays.stream(target.getDeclaredAnnotations())
-        .filter(an0 -> an0.annotationType() == MtIndex.class)
-        .map(an0 -> (MtIndex) an0).findFirst();
   }
 
   private static String toSnakeCase(String in) {

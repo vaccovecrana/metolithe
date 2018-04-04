@@ -1,59 +1,58 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.annotations.*;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.*;
 import static java.util.stream.Collectors.joining;
+import static io.vacco.metolithe.core.FieldFilter.*;
 
 public class EntityDescriptor<T> {
 
   private static final String COMMA_SPC = ", ";
-
   private final Class<?> target;
-  private final Set<Field> entityFields;
-  private final Set<Field> allFields;
-  private final Map<String, Field> nameToField = new HashMap<>();
-  private final Field primaryKeyField;
+  private final Map<String, Field> fieldMap = new LinkedHashMap<>();
+  private final String pkFieldName;
 
   public EntityDescriptor(Class<T> target) {
     this.target = requireNonNull(target);
     Class<?> cl0 = target;
-    List<Field> fields = new ArrayList<>();
+    Map<String, List<Field>> all = new LinkedHashMap<>();
     while (cl0 != null) {
-      fields.addAll(Arrays.asList(cl0.getDeclaredFields()));
+      Arrays.asList(cl0.getDeclaredFields()).forEach(fl0 -> {
+        List<Field> mappings = all.get(fl0.getName());
+        if (mappings == null) {
+          mappings = new ArrayList<>();
+          all.put(fl0.getName(), mappings);
+        }
+        if (hasPrimaryKey(fl0).isPresent() || hasIndex(fl0).isPresent() || hasAttribute(fl0).isPresent()) {
+          mappings.add(fl0);
+        }
+      });
       cl0 = cl0.getSuperclass();
     }
-    entityFields = fields.stream().filter(this::isEntityField).collect(Collectors.toCollection(LinkedHashSet::new));
-    entityFields.forEach(fl0 -> nameToField.put(fl0.getName(), fl0));
-
-    Optional<Field> opk = fields.stream()
-        .filter(this::isPrimaryKeyField)
-        .filter(fl -> fl.getDeclaringClass().equals(target))
-        .findFirst();
+    all.forEach((key, value) -> {
+      if (!value.isEmpty()) {
+        Optional<Field> fTarget = value.stream()
+            .filter(fl0 -> isOwnId(target, fl0) || isOwnIndex(target, fl0) || hasAttribute(fl0).isPresent())
+            .findFirst();
+        fieldMap.put(key, fTarget.get());
+      }
+    });
+    Optional<Field> opk = fieldMap.values().stream().filter(fl0 -> isOwnId(target, fl0)).findFirst();
     if (!opk.isPresent()) {
       String msg = String.format("%s does not define a primary key (MtId) field.", target);
       throw new IllegalStateException(msg);
     }
-    primaryKeyField = opk.get();
-    entityFields.forEach(fl0 -> fl0.setAccessible(true));
-    primaryKeyField.setAccessible(true);
-    nameToField.put(primaryKeyField.getName(), primaryKeyField);
-    allFields = new LinkedHashSet<>();
-    allFields.add(primaryKeyField);
-    allFields.addAll(entityFields);
+    pkFieldName = opk.get().getName();
+    fieldMap.values().forEach(fl0 -> fl0.setAccessible(true));
   }
 
   public Collection<String> propertyNames(boolean includePrimaryKey) {
-    if (includePrimaryKey) { return allFields.stream().map(Field::getName).collect(Collectors.toSet()); }
-    return entityFields.stream().map(Field::getName).collect(Collectors.toSet());
+    Set<String> fNames = new LinkedHashSet<>(fieldMap.keySet());
+    if (!includePrimaryKey) { fNames.remove(pkFieldName); }
+    return fNames;
   }
 
   public String propertyNamesCsv(boolean includePrimaryKey) {
@@ -72,52 +71,31 @@ public class EntityDescriptor<T> {
         .collect(joining(COMMA_SPC));
   }
 
-  public <K> K extract(T target, String property) {
-    return (K) doExtract(target, nameToField.get(property));
-  }
+  public <K> K extract(T target, String property) { return (K) doExtract(target, fieldMap.get(property)); }
 
   public Map<String, Object> extractAll(T target, Function<Object, Object> postProcessor,
                                         boolean includePrimaryKey) {
-    Map<String, Object> props = new HashMap<>();
-    entityFields.forEach(fl0 -> props.put(fl0.getName(),
-        postProcessor.apply(extract(target, fl0.getName()))));
-    if (includePrimaryKey) {
-      props.put(primaryKeyField.getName(),
-          postProcessor.apply(extract(target, primaryKeyField.getName())));
-    }
-    return props;
+    Map<String, Object> vals = new LinkedHashMap<>();
+    fieldMap.forEach((fName, fl) -> vals.put(fName, postProcessor.apply(extract(target, fl.getName()))));
+    if (!includePrimaryKey) { vals.remove(pkFieldName); }
+    return vals;
   }
 
   private Object doExtract(T target, Field f) {
     try { return f.get(target); }
-    catch (IllegalAccessException e) {
+    catch (Exception e) {
       throw new IllegalStateException("Object field extraction failed", e);
     }
   }
 
-  public Set<Field> getAllFields() { return allFields; }
-  public Field getPrimaryKeyField() { return primaryKeyField; }
+  public Collection<Field> getAllFields() { return fieldMap.values(); }
+  public Field getPrimaryKeyField() { return fieldMap.get(pkFieldName); }
   public Field getField(String name) {
     requireNonNull(name);
-    Field f = nameToField.get(name);
-    if (f == null) {
-      throw new IllegalArgumentException(String.format("Attribute field [%s] not found", name));
-    }
+    Field f = fieldMap.get(name);
+    if (f == null) { throw new IllegalArgumentException(String.format("Attribute field [%s] not found", name)); }
     return f;
   }
 
   public Class<?> getTarget() { return target; }
-
-  private boolean isEntityField(Field f) {
-    requireNonNull(f);
-    return Arrays.stream(f.getDeclaredAnnotations())
-        .anyMatch(an0 -> an0.annotationType() == MtIndex.class
-            || an0.annotationType() == MtAttribute.class);
-  }
-
-  private boolean isPrimaryKeyField(Field f) {
-    requireNonNull(f);
-    return Arrays.stream(f.getDeclaredAnnotations())
-        .anyMatch(an0 -> an0.annotationType() == MtId.class);
-  }
 }
