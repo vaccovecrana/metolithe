@@ -8,7 +8,9 @@ import static java.util.Objects.*;
 
 public abstract class BaseUpdateDao<T> extends BaseDao<T> {
 
-  public BaseUpdateDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema) { super(jdbc, codec, sourceSchema); }
+  public BaseUpdateDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema, EntityDescriptor.CaseFormat format) {
+    super(jdbc, codec, sourceSchema, format);
+  }
 
   private String getUpdateQuery() {
     String queryAssignments = getDescriptor().placeHolderAssignmentCsv(false);

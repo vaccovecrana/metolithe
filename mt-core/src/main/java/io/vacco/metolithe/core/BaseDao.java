@@ -15,7 +15,9 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
 
   public enum DaoError { MISSING_DATA, MISSING_ID }
 
-  public BaseDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema) { super(jdbc, codec, sourceSchema); }
+  public BaseDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema, EntityDescriptor.CaseFormat format) {
+    super(jdbc, codec, sourceSchema, format);
+  }
 
   private String getInsertQuery() {
     return getQueryCache().computeIfAbsent("insert", k ->
@@ -50,7 +52,6 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
   public Collection<T> loadWhereEq(String field, String value) {
     requireNonNull(field, classError(DaoError.MISSING_ID));
     requireNonNull(value, classError(DaoError.MISSING_DATA));
-    getDescriptor().getField(field);
     return sql().query().select(getSelectWhereEqQuery(field))
         .namedParam(field, value).listResult(mapToDefault());
   }

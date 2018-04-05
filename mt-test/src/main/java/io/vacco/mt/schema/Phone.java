@@ -6,7 +6,7 @@ import io.vacco.metolithe.annotations.MtId;
 import io.vacco.metolithe.annotations.MtIndex;
 
 @MtEntity
-public abstract class Phone {
+public class Phone {
 
   @MtId @MtAttribute(len = 16)
   private String serialNumber;

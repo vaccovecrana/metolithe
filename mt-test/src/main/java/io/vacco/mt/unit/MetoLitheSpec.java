@@ -3,6 +3,7 @@ package io.vacco.mt.unit;
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
 import io.vacco.metolithe.core.NativeBase64Codec;
+import io.vacco.mt.dao.PhoneDao;
 import io.vacco.mt.dao.SmartPhoneDao;
 import io.vacco.mt.schema.Dummy;
 import io.vacco.mt.schema.Phone;
@@ -40,6 +41,7 @@ public class MetoLitheSpec {
 
   static FluentJdbc jdbc;
   static SmartPhoneDao smartPhoneDao;
+  static PhoneDao phoneDao;
   static Map<Class<?>, Collection<Field>> entities = new HashMap<>();
   static List<Match> entityXmlNodes = new ArrayList<>();
   static List<File> xmlFiles = new ArrayList<>();
@@ -56,22 +58,22 @@ public class MetoLitheSpec {
     );
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(Dummy.class));
+        () -> new EntityDescriptor<>(Dummy.class, EntityDescriptor.CaseFormat.KEEP_CASE));
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class).getField("lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).getField("lolo"));
     it("Cannot extract an invalid field.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class).extract(null, "lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).extract(null, "lolo"));
     it("Can extract an object's values without its primary key attribute.", () ->
-        new EntityDescriptor<>(SmartPhone.class)
+        new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE)
             .extractAll(new SmartPhone(), Function.identity(), false)
     );
     it("Cannot map a class with invalid data.", c -> c.expected(IllegalStateException.class),
         () -> XmlMapper.mapEntity(SmartPhone.class, null)
     );
     it("Scans the target classpath packages for annotated classes.", () ->
-        new EntityExtractor().apply("io.vacco.mt.schema").forEach(ed0 ->
+        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,"io.vacco.mt.schema").forEach(ed0 ->
             entities.put(ed0.getTarget(), ed0.getAllFields()))
     );
     it("Generates xml mappings for extracted entities.", () ->
@@ -146,7 +148,7 @@ public class MetoLitheSpec {
     it("Can find an object by an attribute.", () -> {
       Collection<SmartPhone> spc = smartPhoneDao.loadWhereEq("number", phoneNo);
       assertNotNull(spc);
-      assertTrue(spc.size() == 1);
+      assertEquals(spc.size(), 1);
       assertEquals(phoneNo, spc.iterator().next().getNumber());
     });
     it("Can update an existing object.", () -> {
@@ -231,6 +233,22 @@ public class MetoLitheSpec {
     it("Can retrieve a mapper for a registered class.",  () -> {
       Mapper<SmartPhone> mapper = smartPhoneDao.mapperFor(SmartPhone.class);
       assertNotNull(mapper);
+    });
+
+    it("Initializes an upper case dao.", () -> {
+      JdbcDataSource ds = new JdbcDataSource();
+      ds.setURL(dbUrl);
+      jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
+      phoneDao = new PhoneDao(jdbc, new NativeBase64Codec(), "public");
+      assertNotNull(phoneDao);
+    });
+    it("Can save objects in upper case.", () -> {
+      Phone p = new Phone();
+      p.setActive(true);
+      p.setNumber("6175555555");
+      p.setSerialNumber("ANDROIDLOLOLOL");
+      p = phoneDao.save(p);
+      assertNotNull(p);
     });
   }
 }

@@ -10,13 +10,17 @@ import static io.vacco.metolithe.core.FieldFilter.*;
 
 public class EntityDescriptor<T> {
 
+  public enum CaseFormat { UPPER_CASE, LOWER_CASE, KEEP_CASE }
+
   private static final String COMMA_SPC = ", ";
   private final Class<?> target;
   private final Map<String, Field> fieldMap = new LinkedHashMap<>();
   private final String pkFieldName;
+  private final CaseFormat format;
 
-  public EntityDescriptor(Class<T> target) {
+  public EntityDescriptor(Class<T> target, CaseFormat format) {
     this.target = requireNonNull(target);
+    this.format = requireNonNull(format);
     Class<?> cl0 = target;
     Map<String, List<Field>> all = new LinkedHashMap<>();
     while (cl0 != null) {
@@ -37,7 +41,7 @@ public class EntityDescriptor<T> {
         Optional<Field> fTarget = value.stream()
             .filter(fl0 -> isOwnId(target, fl0) || isOwnIndex(target, fl0) || hasAttribute(fl0).isPresent())
             .findFirst();
-        fieldMap.put(key, fTarget.get());
+        fieldMap.put(setCase(key), fTarget.get());
       }
     });
     Optional<Field> opk = fieldMap.values().stream().filter(fl0 -> isOwnId(target, fl0)).findFirst();
@@ -56,12 +60,15 @@ public class EntityDescriptor<T> {
   }
 
   public String propertyNamesCsv(boolean includePrimaryKey) {
-    return propertyNames(includePrimaryKey).stream().collect(joining(COMMA_SPC));
+    return propertyNames(includePrimaryKey).stream()
+        .map(this::setCase)
+        .collect(joining(COMMA_SPC));
   }
 
   public String placeholderCsv(boolean includePrimaryKey) {
     return propertyNames(includePrimaryKey).stream()
         .map(k -> String.format(":%s", k))
+        .map(this::setCase)
         .collect(joining(COMMA_SPC));
   }
 
@@ -71,12 +78,14 @@ public class EntityDescriptor<T> {
         .collect(joining(COMMA_SPC));
   }
 
-  public <K> K extract(T target, String property) { return (K) doExtract(target, fieldMap.get(property)); }
+  public <K> K extract(T target, String property) {
+    return (K) doExtract(target, fieldMap.get(property));
+  }
 
   public Map<String, Object> extractAll(T target, Function<Object, Object> postProcessor,
                                         boolean includePrimaryKey) {
     Map<String, Object> vals = new LinkedHashMap<>();
-    fieldMap.forEach((fName, fl) -> vals.put(fName, postProcessor.apply(extract(target, fl.getName()))));
+    fieldMap.forEach((fName, fl) -> vals.put(fName, postProcessor.apply(extract(target, fName))));
     if (!includePrimaryKey) { vals.remove(pkFieldName); }
     return vals;
   }
@@ -89,7 +98,7 @@ public class EntityDescriptor<T> {
   }
 
   public Collection<Field> getAllFields() { return fieldMap.values(); }
-  public Field getPrimaryKeyField() { return fieldMap.get(pkFieldName); }
+  public String getPrimaryKeyField() { return setCase(pkFieldName); }
   public Field getField(String name) {
     requireNonNull(name);
     Field f = fieldMap.get(name);
@@ -98,4 +107,14 @@ public class EntityDescriptor<T> {
   }
 
   public Class<?> getTarget() { return target; }
+  public CaseFormat getFormat() { return format; }
+
+  private String setCase(String in) {
+    switch (format) {
+      case KEEP_CASE: return in;
+      case LOWER_CASE: return in.toLowerCase();
+      case UPPER_CASE: return in.toUpperCase();
+      default: throw new IllegalStateException("Unable to determine property case formatting.");
+    }
+  }
 }

@@ -26,14 +26,14 @@ public abstract class BaseQueryFactory<T> {
   protected abstract Class<T> getTargetClass();
   protected abstract Collection<Class<? extends Enum>> getEnumClasses();
 
-  public BaseQueryFactory(FluentJdbc jdbc, MtCodec codec, String sourceSchema) {
+  public BaseQueryFactory(FluentJdbc jdbc, MtCodec codec, String sourceSchema, EntityDescriptor.CaseFormat format) {
     this.jdbc = requireNonNull(jdbc);
     this.codec = requireNonNull(codec);
     this.sourceSchema = requireNonNull(sourceSchema);
     getEnumClasses().forEach(eClass -> extractors.put(eClass, new EnumExtractor(eClass)));
     extractors.put(Set.class, (rs, i) -> deSerialize(rs.getString(i)));
     objectMappers = ObjectMappers.builder().extractors(extractors).build();
-    descriptor = new EntityDescriptor<>(getTargetClass());
+    descriptor = new EntityDescriptor<>(getTargetClass(), format);
   }
 
   protected FluentJdbc sql() { return jdbc; }
@@ -69,5 +69,5 @@ public abstract class BaseQueryFactory<T> {
   protected String getSchemaName() { return getSchemaName(getTargetClass()); }
   protected Map<String, String> getQueryCache() { return queryCache; }
   protected EntityDescriptor<T> getDescriptor() { return descriptor; }
-  protected String getPrimaryKeyId() { return descriptor.getPrimaryKeyField().getName(); }
+  protected String getPrimaryKeyId() { return descriptor.getPrimaryKeyField(); }
 }
