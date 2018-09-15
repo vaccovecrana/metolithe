@@ -6,10 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * To be placed on a property field intended to be an index.
+ * To be placed on a property field intended to be an index,
+ * or an attribute aggregator annotation for a property field.
  *
  * @since 0.10
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.TYPE})
 public @interface MtIndex {}

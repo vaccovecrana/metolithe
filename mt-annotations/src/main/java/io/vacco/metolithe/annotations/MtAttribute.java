@@ -6,12 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * To be placed on a property which must be persisted.
+ * To be placed on a property which must be persisted,
+ * or an aggregator annotation for a property field.
  *
  * @since 0.10
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.TYPE})
 public @interface MtAttribute {
   boolean nil() default true;
   int len() default -1;
