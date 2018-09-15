@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * @since 0.10
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.TYPE})
+@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 public @interface MtAttribute {
   boolean nil() default true;
   int len() default -1;

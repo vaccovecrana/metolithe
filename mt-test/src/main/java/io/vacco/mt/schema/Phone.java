@@ -2,13 +2,13 @@ package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.MtAttribute;
 import io.vacco.metolithe.annotations.MtEntity;
-import io.vacco.metolithe.annotations.MtId;
 import io.vacco.metolithe.annotations.MtIndex;
+import io.vacco.mt.dao.CustomId;
 
 @MtEntity
 public class Phone {
 
-  @MtId @MtAttribute(len = 16)
+  @CustomId
   private String serialNumber;
 
   @MtIndex @MtAttribute(len = 12)
