@@ -1,6 +1,7 @@
 package io.vacco.metolithe.codegen.liquibase;
 
 import io.vacco.metolithe.annotations.*;
+import io.vacco.metolithe.core.AnnotationExtractor;
 import org.joox.Match;
 import org.slf4j.*;
 import java.lang.reflect.Field;
@@ -41,7 +42,7 @@ public class XmlMapper {
     requireNonNull(target);
     Match columnXml = $("column")
         .attr("name", target.getName().toLowerCase())
-        .attr("type", TypeMapper.resolveSqlType(target.getType(), target.getDeclaredAnnotations()));
+        .attr("type", TypeMapper.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
     boolean pk = isOwnId(root, target);
     Optional<MtAttribute> nn = hasNotNull(target);
     Match cn = (pk || nn.isPresent()) ? $("constraints") : null;
