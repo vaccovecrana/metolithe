@@ -2,7 +2,6 @@ package io.vacco.mt.unit;
 
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
-import io.vacco.metolithe.core.NativeBase64Codec;
 import io.vacco.mt.dao.PhoneDao;
 import io.vacco.mt.dao.SmartPhoneDao;
 import io.vacco.mt.schema.Dummy;
@@ -37,25 +36,22 @@ import static org.junit.Assert.*;
 @RunWith(J8SpecRunner.class)
 public class MetoLitheSpec {
 
-  static Logger log = LoggerFactory.getLogger(MetoLitheSpec.class);
+  private static Logger log = LoggerFactory.getLogger(MetoLitheSpec.class);
 
-  static FluentJdbc jdbc;
-  static SmartPhoneDao smartPhoneDao;
-  static PhoneDao phoneDao;
-  static Map<Class<?>, Collection<Field>> entities = new HashMap<>();
-  static List<Match> entityXmlNodes = new ArrayList<>();
-  static List<File> xmlFiles = new ArrayList<>();
+  private static FluentJdbc jdbc;
+  private static SmartPhoneDao smartPhoneDao;
+  private static PhoneDao phoneDao;
+  private static Map<Class<?>, Collection<Field>> entities = new HashMap<>();
+  private static List<Match> entityXmlNodes = new ArrayList<>();
+  private static List<File> xmlFiles = new ArrayList<>();
 
-  static String dbUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-  static String phoneId = "123456";
-  static String phoneId2 = "ABCDEF";
-  static String phoneNo = "555-555-5555";
-  static String phoneNo2 = "617-555-5555";
+  private static String dbUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+  private static String phoneId = "123456";
+  private static String phoneId2 = "ABCDEF";
+  private static String phoneNo = "555-555-5555";
+  private static String phoneNo2 = "617-555-5555";
 
   static {
-    it("Cannot decode invalid base64 input.", c -> c.expected(IllegalStateException.class),
-        () -> new NativeBase64Codec().decode("lolololol")
-    );
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
         () -> new EntityDescriptor<>(Dummy.class, EntityDescriptor.CaseFormat.KEEP_CASE));
@@ -82,9 +78,8 @@ public class MetoLitheSpec {
                 XmlMapper.mapEntity(e0.getKey(), e0.getValue())
             ).collect(Collectors.toList()))
     );
-    it("Prints each entity generated XML data.", () -> {
-      entityXmlNodes.stream().map(XmlChangeSetWriter::getData).forEach(log::info);
-    });
+    it("Prints each entity generated XML data.", () ->
+        entityXmlNodes.stream().map(XmlChangeSetWriter::getData).forEach(log::info));
     it("Maps and writes entity XML files.", () -> {
       File targetDir = new File("/tmp/testlogs");
       targetDir.mkdirs();
@@ -113,7 +108,7 @@ public class MetoLitheSpec {
       JdbcDataSource ds = new JdbcDataSource();
       ds.setURL(dbUrl);
       jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
-      smartPhoneDao = new SmartPhoneDao(jdbc, new NativeBase64Codec(), "public");
+      smartPhoneDao = new SmartPhoneDao(jdbc, "public");
       assertNotNull(smartPhoneDao);
     });
     it("Cannot load a non-existing object.", () -> {
@@ -127,10 +122,6 @@ public class MetoLitheSpec {
       SmartPhone sp = new SmartPhone();
       sp.setBatteryType(SmartPhone.BatteryType.LITHIUM_ION);
       sp.setDeviceUid(phoneId);
-      sp.setFeatures(new HashSet<>(Arrays.asList(
-          SmartPhone.Feature.BEZELLESS_DISPLAY,
-          SmartPhone.Feature.FACE_DETECTION,
-          SmartPhone.Feature.WIRELESS_CHARGNING)));
       sp.setGpsPrecision(0.8);
       sp.setOs(SmartPhone.Os.ANDROID);
       sp.setActive(true);
@@ -211,25 +202,6 @@ public class MetoLitheSpec {
         return true;
       });
     });
-    it("Can build a named parameter query string for sequenced inputs.", () -> {
-      Map<String, Object> params = new HashMap<>();
-      List<SmartPhone.Feature> rawVals = Arrays.asList(
-          SmartPhone.Feature.BEZELLESS_DISPLAY, SmartPhone.Feature.WIRELESS_CHARGNING,
-          SmartPhone.Feature.FACE_DETECTION, SmartPhone.Feature.FORCE_TOUCH
-      );
-      String paramsSt = smartPhoneDao.toNamedParam(params, rawVals, "ft");
-      assertNotNull(paramsSt);
-      assertEquals(":ft0, :ft1, :ft2, :ft3", paramsSt);
-      assertTrue(paramsSt.split(", ").length == rawVals.size());
-      assertTrue(params.containsKey("ft0"));
-      assertTrue(params.containsKey("ft1"));
-      assertTrue(params.containsKey("ft2"));
-      assertTrue(params.containsKey("ft3"));
-      assertEquals(SmartPhone.Feature.BEZELLESS_DISPLAY, params.get("ft0"));
-      assertEquals(SmartPhone.Feature.WIRELESS_CHARGNING, params.get("ft1"));
-      assertEquals(SmartPhone.Feature.FACE_DETECTION, params.get("ft2"));
-      assertEquals(SmartPhone.Feature.FORCE_TOUCH, params.get("ft3"));
-    });
     it("Can retrieve a mapper for a registered class.",  () -> {
       Mapper<SmartPhone> mapper = smartPhoneDao.mapperFor(SmartPhone.class);
       assertNotNull(mapper);
@@ -239,7 +211,7 @@ public class MetoLitheSpec {
       JdbcDataSource ds = new JdbcDataSource();
       ds.setURL(dbUrl);
       jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
-      phoneDao = new PhoneDao(jdbc, new NativeBase64Codec(), "public");
+      phoneDao = new PhoneDao(jdbc, "public");
       assertNotNull(phoneDao);
     });
     it("Can save objects in upper case.", () -> {

@@ -1,6 +1,5 @@
 package io.vacco.mt.unit
 
-import io.vacco.metolithe.core.NativeBase64Codec
 import io.vacco.mt.dao.BlogMetadataDao
 import io.vacco.mt.schema.BlogMetadata
 import j8spec.J8Spec.*
@@ -25,12 +24,11 @@ class MetoLitheKotlinSpec {
       val ds = JdbcDataSource()
       ds.setURL(dbUrl)
       jdbc = FluentJdbcBuilder().connectionProvider(ds).build()
-      blogDao = BlogMetadataDao(jdbc!!, NativeBase64Codec(), "public")
+      blogDao = BlogMetadataDao(jdbc!!, "public")
       assertNotNull(blogDao)
     }
     it("Can add a new data object") {
-      var bm = BlogMetadata("ABCDEF", "I am the great gopher.",
-          setOf("fun", "lol", "OMGRLY"), BlogMetadata.PublishStatus.SCHEDULED)
+      var bm = BlogMetadata("ABCDEF", "I am the great gopher.", BlogMetadata.PublishStatus.SCHEDULED)
       bm =  blogDao!!.merge(bm)
       assertNotNull(bm)
     }
@@ -42,5 +40,4 @@ class MetoLitheKotlinSpec {
       assertEquals(t0, bm.title)
     }
   }
-
 }

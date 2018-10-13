@@ -1,10 +1,10 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.spi.MtCodec;
 import io.vacco.metolithe.spi.UnsafeSupplier;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -15,8 +15,8 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
 
   public enum DaoError { MISSING_DATA, MISSING_ID }
 
-  public BaseDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema, EntityDescriptor.CaseFormat format) {
-    super(jdbc, codec, sourceSchema, format);
+  public BaseDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema, EntityDescriptor.CaseFormat format) {
+    super(clazz, jdbc, sourceSchema, format);
   }
 
   private String getInsertQuery() {
@@ -37,7 +37,7 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
   public T save(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
     String query = getInsertQuery();
-    Map<String, Object> namedParams = getDescriptor().extractAll(record, this::serialize, true);
+    Map<String, Object> namedParams = getDescriptor().extractAll(record, Function.identity(), true);
     sql().query().update(query).namedParams(namedParams).run();
     return record;
   }

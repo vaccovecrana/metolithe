@@ -1,15 +1,16 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.spi.MtCodec;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import java.util.Map;
+import java.util.function.Function;
+
 import static java.lang.String.format;
 import static java.util.Objects.*;
 
 public abstract class BaseUpdateDao<T> extends BaseDao<T> {
 
-  public BaseUpdateDao(FluentJdbc jdbc, MtCodec codec, String sourceSchema, EntityDescriptor.CaseFormat format) {
-    super(jdbc, codec, sourceSchema, format);
+  public BaseUpdateDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema, EntityDescriptor.CaseFormat format) {
+    super(clazz, jdbc, sourceSchema, format);
   }
 
   private String getUpdateQuery() {
@@ -34,7 +35,7 @@ public abstract class BaseUpdateDao<T> extends BaseDao<T> {
   public T update(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
     String query = getUpdateQuery();
-    Map<String, Object> params = getDescriptor().extractAll(record, this::serialize, true);
+    Map<String, Object> params = getDescriptor().extractAll(record, Function.identity(), true);
     sql().query().update(query).namedParams(params).run();
     return record;
   }

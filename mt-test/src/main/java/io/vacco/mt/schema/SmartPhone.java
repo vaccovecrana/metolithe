@@ -7,25 +7,19 @@ import java.util.Set;
 public class SmartPhone extends Phone {
 
   public enum Os { IOS, ANDROID }
-  public enum Feature { FORCE_TOUCH, FACE_DETECTION, BEZELLESS_DISPLAY, WIRELESS_CHARGNING }
   public enum BatteryType { LITHIUM_ION, GRAPHENE }
 
   @MtId @MtAttribute(len = 128)
   private String deviceUid;
 
-  @MtIndex
-  @MtAttribute(nil = false, len = 16)
+  @MtIndex @MtAttribute(nil = false, len = 16)
   private Os os;
 
-  @MtIndex
-  @MtAttribute(len = 32)
+  @MtIndex @MtAttribute(len = 32)
   private BatteryType batteryType;
 
   @MtAttribute()
   private double gpsPrecision;
-
-  @MtAttribute(len = 512)
-  private Set<Feature> features;
 
   public String getDeviceUid() {
     return deviceUid;
@@ -55,10 +49,4 @@ public class SmartPhone extends Phone {
     this.gpsPrecision = gpsPrecision;
   }
 
-  public Set<Feature> getFeatures() {
-    return features;
-  }
-  public void setFeatures(Set<Feature> features) {
-    this.features = features;
-  }
 }
