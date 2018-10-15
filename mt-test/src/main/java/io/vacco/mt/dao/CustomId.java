@@ -8,4 +8,4 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @MtId @MtAttribute(len = 16)
-public @interface CustomId { }
+public @interface CustomId {}

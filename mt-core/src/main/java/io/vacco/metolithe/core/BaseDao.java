@@ -32,12 +32,14 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
             getDescriptor().propertyNamesCsv(true),
             getSchemaName(), field, field));
   }
-  private String getSelectQuery() { return getSelectWhereEqQuery(getPrimaryKeyId()); }
+  private String getSelectQuery() {
+    return getSelectWhereEqQuery(getDescriptor().getPrimaryKeyField());
+  }
 
   public T save(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
     String query = getInsertQuery();
-    Map<String, Object> namedParams = getDescriptor().extractAll(record, Function.identity(), true);
+    Map<String, Object> namedParams = getDescriptor().extractAll(record, true);
     sql().query().update(query).namedParams(namedParams).run();
     return record;
   }
@@ -45,7 +47,7 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
   public Optional<T> load(String id) {
     requireNonNull(id, classError(DaoError.MISSING_ID));
     return sql().query().select(getSelectQuery())
-        .namedParam(getPrimaryKeyId(), id)
+        .namedParam(getDescriptor().getPrimaryKeyField(), id)
         .firstResult(mapToDefault());
   }
 

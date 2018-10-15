@@ -1,4 +1,4 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.extraction;
 
 import org.codejargon.fluentjdbc.api.mapper.ObjectMapperRsExtractor;
 import java.sql.ResultSet;

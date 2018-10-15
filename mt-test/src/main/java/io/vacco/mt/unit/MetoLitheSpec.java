@@ -26,7 +26,6 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.DriverManager;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static j8spec.J8Spec.*;
@@ -63,7 +62,7 @@ public class MetoLitheSpec {
         () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).extract(null, "lolo"));
     it("Can extract an object's values without its primary key attribute.", () ->
         new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE)
-            .extractAll(new SmartPhone(), Function.identity(), false)
+            .extractAll(new SmartPhone(), false)
     );
     it("Cannot map a class with invalid data.", c -> c.expected(IllegalStateException.class),
         () -> XmlMapper.mapEntity(SmartPhone.class, null)

@@ -1,4 +1,4 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.extraction;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

@@ -16,15 +16,16 @@ public abstract class BaseUpdateDao<T> extends BaseDao<T> {
   private String getUpdateQuery() {
     String queryAssignments = getDescriptor().placeHolderAssignmentCsv(false);
     return getQueryCache().computeIfAbsent("update",
-        k -> format("update %s set %s where %s = :%s", getSchemaName(),
-            queryAssignments, getPrimaryKeyId(), getPrimaryKeyId())
+        k -> format("update %s set %s where %s = :%s", getSchemaName(), queryAssignments,
+            getDescriptor().getPrimaryKeyField(), getDescriptor().getPrimaryKeyField())
     );
   }
 
   private String getDeleteQuery() {
     return getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s",
-            getSchemaName(), getPrimaryKeyId(), getPrimaryKeyId()));
+            getSchemaName(), getDescriptor().getPrimaryKeyField(),
+            getDescriptor().getPrimaryKeyField()));
   }
 
   private String getDeleteWhereEqQuery(String field) {
@@ -35,22 +36,22 @@ public abstract class BaseUpdateDao<T> extends BaseDao<T> {
   public T update(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
     String query = getUpdateQuery();
-    Map<String, Object> params = getDescriptor().extractAll(record, Function.identity(), true);
+    Map<String, Object> params = getDescriptor().extractAll(record, true);
     sql().query().update(query).namedParams(params).run();
     return record;
   }
 
   public T merge(T record) {
-    String id = getDescriptor().extract(record, getPrimaryKeyId());
+    String id = getDescriptor().extract(record, getDescriptor().getPrimaryKeyField());
     if (!load(id).isPresent()) { return save(record); }
     return update(record);
   }
 
   public long delete(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
-    String id = getDescriptor().extract(record, getPrimaryKeyId());
+    String id = getDescriptor().extract(record, getDescriptor().getPrimaryKeyField());
     return sql().query().update(getDeleteQuery())
-        .namedParam(getPrimaryKeyId(), id).run().affectedRows();
+        .namedParam(getDescriptor().getPrimaryKeyField(), id).run().affectedRows();
   }
 
   public long deleteWhereEq(String field, String value) {

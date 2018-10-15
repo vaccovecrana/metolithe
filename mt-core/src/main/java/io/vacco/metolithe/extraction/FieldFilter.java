@@ -1,4 +1,4 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.extraction;
 
 import io.vacco.metolithe.annotations.*;
 import java.lang.reflect.Field;
@@ -10,6 +10,12 @@ public final class FieldFilter {
     return AnnotationExtractor.apply(f)
         .filter(an0 -> an0.annotationType() == MtId.class)
         .map(an0 -> (MtId) an0).findFirst();
+  }
+
+  public static Optional<MtId> hasOwnPrimaryKey(Class<?> target, Field f) {
+    Optional<MtId> id = hasPrimaryKey(f);
+    if (f.getDeclaringClass() == target) return id;
+    return Optional.empty();
   }
 
   public static Optional<MtAttribute> hasAttribute(Field f) {
@@ -31,13 +37,17 @@ public final class FieldFilter {
         .map(an0 -> (MtIndex) an0).findFirst();
   }
 
-  public static boolean isOwnId(Class<?> target, Field f) {
-    Optional<MtId> id = hasPrimaryKey(f);
-    return id.isPresent() && f.getDeclaringClass() == target;
+  public static Optional<MtIndex> hasOwnIndex(Class<?> target, Field f) {
+    Optional<MtIndex> idx = hasIndex(f);
+    if (idx.isPresent() && f.getDeclaringClass() == target) return idx;
+    return Optional.empty();
+  }
+
+  public static boolean isOwnPrimaryKey(Class<?> target, Field f) {
+    return hasOwnPrimaryKey(target, f).isPresent();
   }
 
   public static boolean isOwnIndex(Class<?> target, Field f) {
-    Optional<MtIndex> idx = hasIndex(f);
-    return idx.isPresent() && f.getDeclaringClass() == target;
+    return hasOwnIndex(target, f).isPresent();
   }
 }

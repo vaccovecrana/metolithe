@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.extraction.EnumExtractor;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
@@ -66,6 +67,4 @@ public abstract class BaseQueryFactory<T> {
   }
 
   protected Map<String, String> getQueryCache() { return queryCache; }
-
-  protected String getPrimaryKeyId() { return descriptor.getPrimaryKeyField(); }
 }
