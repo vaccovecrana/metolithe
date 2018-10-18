@@ -1,7 +1,6 @@
 package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.*;
-import java.util.Set;
 
 @MtEntity
 public class SmartPhone extends Phone {
@@ -9,9 +8,13 @@ public class SmartPhone extends Phone {
   public enum Os { IOS, ANDROID }
   public enum BatteryType { LITHIUM_ION, GRAPHENE }
 
-  @MtId @MtAttribute(len = 128)
+  @MtId private long spId;
+
+  @MtId(position = 1)
+  @MtAttribute(len = 128, nil = false)
   private String deviceUid;
 
+  @MtId(position = 2)
   @MtIndex @MtAttribute(nil = false, len = 16)
   private Os os;
 
@@ -49,4 +52,5 @@ public class SmartPhone extends Phone {
     this.gpsPrecision = gpsPrecision;
   }
 
+  public long getSpId() { return spId; }
 }

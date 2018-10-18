@@ -6,7 +6,7 @@ import io.vacco.metolithe.annotations.MtId
 
 @MtEntity
 data class BlogMetadata(
-    @MtId() val id: String = "",
+    @MtId var id: Long = 0,
     @MtAttribute(nil = false, len = 150)
     val title: String = "",
     @MtAttribute(nil = false, len = 16)

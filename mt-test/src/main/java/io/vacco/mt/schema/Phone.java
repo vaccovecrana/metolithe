@@ -2,13 +2,15 @@ package io.vacco.mt.schema;
 
 import io.vacco.metolithe.annotations.MtAttribute;
 import io.vacco.metolithe.annotations.MtEntity;
+import io.vacco.metolithe.annotations.MtId;
 import io.vacco.metolithe.annotations.MtIndex;
-import io.vacco.mt.dao.CustomId;
 
-@MtEntity
+@MtEntity()
 public class Phone {
 
-  @CustomId
+  @MtId private long phoneId;
+
+  @MtAttribute(len = 16) @MtId(position = 1)
   private String serialNumber;
 
   @MtIndex @MtAttribute(len = 12)
@@ -25,4 +27,6 @@ public class Phone {
 
   public boolean isActive() { return active; }
   public void setActive(boolean active) { this.active = active; }
+
+  public long getPhoneId() { return phoneId; }
 }

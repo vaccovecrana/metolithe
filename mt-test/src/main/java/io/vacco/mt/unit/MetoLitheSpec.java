@@ -45,10 +45,17 @@ public class MetoLitheSpec {
   private static List<File> xmlFiles = new ArrayList<>();
 
   private static String dbUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-  private static String phoneId = "123456";
-  private static String phoneId2 = "ABCDEF";
+  private static String deviceUid1 = "ABCDEF-012345-BBBAAA";
+  private static String deviceUid2 = "ZZZYYY-XXXXXX-999888";
+  private static String serialNo1 = "ABC-DEF-GHI-JKLM";
+  private static String serialNo2 = "123-456-789-0123";
+  private static String serialNo3 = "AAA-BBB-CCC-DDD";
   private static String phoneNo = "555-555-5555";
   private static String phoneNo2 = "617-555-5555";
+  private static String phoneNo3 = "787-555-5555";
+
+  private static long generatedId1;
+  private static long generatedId2;
 
   static {
     it("Cannot describe an entity without a primary key attribute.",
@@ -102,7 +109,6 @@ public class MetoLitheSpec {
       assertNotNull(conn);
       conn.close();
     });
-
     it("Initializes a new Dao.", () -> {
       JdbcDataSource ds = new JdbcDataSource();
       ds.setURL(dbUrl);
@@ -111,28 +117,29 @@ public class MetoLitheSpec {
       assertNotNull(smartPhoneDao);
     });
     it("Cannot load a non-existing object.", () -> {
-      Optional<SmartPhone> lol = smartPhoneDao.load("lol");
+      Optional<SmartPhone> lol = smartPhoneDao.load(999L);
       assertFalse(lol.isPresent());
     });
     it("Fails to explicitly load an non-existing object.", c -> c.expected(IllegalArgumentException.class),
-        () -> smartPhoneDao.loadExisting("lol")
+        () -> smartPhoneDao.loadExisting(99999L)
     );
     it("Can save an object.", () -> {
       SmartPhone sp = new SmartPhone();
       sp.setBatteryType(SmartPhone.BatteryType.LITHIUM_ION);
-      sp.setDeviceUid(phoneId);
+      sp.setDeviceUid(deviceUid1);
       sp.setGpsPrecision(0.8);
       sp.setOs(SmartPhone.Os.ANDROID);
       sp.setActive(true);
       sp.setNumber(phoneNo);
-      sp.setSerialNumber("123456");
+      sp.setSerialNumber(serialNo1);
       sp = smartPhoneDao.save(sp);
       assertNotNull(sp);
+      generatedId1 = sp.getSpId();
     });
     it("Can load an existing object.", () -> {
-      SmartPhone sp = smartPhoneDao.loadExisting(phoneId);
+      SmartPhone sp = smartPhoneDao.loadExisting(generatedId1);
       assertNotNull(sp);
-      Optional<SmartPhone> osp = smartPhoneDao.load(phoneId);
+      Optional<SmartPhone> osp = smartPhoneDao.load(generatedId1);
       assertTrue(osp.isPresent());
     });
     it("Can find an object by an attribute.", () -> {
@@ -142,26 +149,27 @@ public class MetoLitheSpec {
       assertEquals(phoneNo, spc.iterator().next().getNumber());
     });
     it("Can update an existing object.", () -> {
-      SmartPhone sp = smartPhoneDao.loadExisting(phoneId);
+      SmartPhone sp = smartPhoneDao.loadExisting(generatedId1);
       sp.setBatteryType(null);
       smartPhoneDao.update(sp);
     });
     it("Can merge changes to an existing object.", () -> {
-      SmartPhone sp = smartPhoneDao.loadExisting(phoneId);
+      SmartPhone sp = smartPhoneDao.loadExisting(generatedId1);
       sp.setBatteryType(SmartPhone.BatteryType.GRAPHENE);
       sp = smartPhoneDao.merge(sp);
       assertEquals(SmartPhone.BatteryType.GRAPHENE, sp.getBatteryType());
     });
     it("Can merge a new object", () -> {
       SmartPhone sp = new SmartPhone();
-      sp.setSerialNumber("567890");
+      sp.setSerialNumber(serialNo2);
       sp.setNumber(phoneNo2);
-      sp.setDeviceUid(phoneId2);
+      sp.setDeviceUid(deviceUid2);
       sp.setOs(SmartPhone.Os.IOS);
       smartPhoneDao.merge(sp);
+      generatedId2 = sp.getSpId();
     });
     it("Can delete an existing object.", () -> {
-      SmartPhone sp = smartPhoneDao.loadExisting(phoneId2);
+      SmartPhone sp = smartPhoneDao.loadExisting(generatedId2);
       long dc = smartPhoneDao.delete(sp);
       assertEquals(1, dc);
       smartPhoneDao.merge(sp);
@@ -170,16 +178,15 @@ public class MetoLitheSpec {
       long dc = smartPhoneDao.deleteWhereEq("number", phoneNo2);
       assertEquals(1, dc);
       SmartPhone sp = new SmartPhone();
-      sp.setSerialNumber("567890");
+      sp.setSerialNumber(serialNo2);
       sp.setNumber(phoneNo2);
-      sp.setDeviceUid(phoneId2);
+      sp.setDeviceUid(deviceUid2);
       sp.setOs(SmartPhone.Os.IOS);
       smartPhoneDao.merge(sp);
     });
-
     it("Can update multiple objects within a transaction.", () -> {
-      SmartPhone sp0 = smartPhoneDao.loadExisting(phoneId);
-      SmartPhone sp1 = smartPhoneDao.loadExisting(phoneId2);
+      SmartPhone sp0 = smartPhoneDao.loadExisting(generatedId1);
+      SmartPhone sp1 = smartPhoneDao.loadExisting(generatedId2);
       boolean b = smartPhoneDao.inTransaction(() -> {
         sp0.setActive(false);
         sp1.setActive(false);
@@ -190,8 +197,8 @@ public class MetoLitheSpec {
       assertTrue(b);
     });
     it("Can rollback a transaction.", c -> c.expected(IllegalStateException.class), () -> {
-      SmartPhone sp0 = smartPhoneDao.loadExisting(phoneId);
-      SmartPhone sp1 = smartPhoneDao.loadExisting(phoneId2);
+      SmartPhone sp0 = smartPhoneDao.loadExisting(generatedId1);
+      SmartPhone sp1 = smartPhoneDao.loadExisting(generatedId2);
       smartPhoneDao.inTransaction(() -> {
         sp0.setDeviceUid(null);
         sp0.setActive(false);
@@ -216,8 +223,8 @@ public class MetoLitheSpec {
     it("Can save objects in upper case.", () -> {
       Phone p = new Phone();
       p.setActive(true);
-      p.setNumber("6175555555");
-      p.setSerialNumber("ANDROIDLOLOLOL");
+      p.setNumber(phoneNo3);
+      p.setSerialNumber(serialNo3);
       p = phoneDao.save(p);
       assertNotNull(p);
     });

@@ -28,12 +28,12 @@ class MetoLitheKotlinSpec {
       assertNotNull(blogDao)
     }
     it("Can add a new data object") {
-      var bm = BlogMetadata("ABCDEF", "I am the great gopher.", BlogMetadata.PublishStatus.SCHEDULED)
+      var bm = BlogMetadata(12345L, "I am the great gopher.", BlogMetadata.PublishStatus.SCHEDULED)
       bm =  blogDao!!.merge(bm)
       assertNotNull(bm)
     }
     it("Can read back an existing data object") {
-      var bm = blogDao!!.loadExisting("ABCDEF")
+      var bm = blogDao!!.loadExisting(12345L)
       val t0 = "This is how we do sh*t at the nursing home!"
       assertNotNull(bm)
       bm = blogDao!!.merge(bm.copy(title = t0))

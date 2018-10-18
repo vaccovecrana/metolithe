@@ -1,16 +1,17 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.spi.MtIdGenerator;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import java.util.Map;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Objects.*;
 
-public abstract class BaseUpdateDao<T> extends BaseDao<T> {
+public abstract class BaseUpdateDao<T, K> extends BaseDao<T, K> {
 
-  public BaseUpdateDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema, EntityDescriptor.CaseFormat format) {
-    super(clazz, jdbc, sourceSchema, format);
+  public BaseUpdateDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
+                       EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
+    super(clazz, jdbc, sourceSchema, format, idGenerator);
   }
 
   private String getUpdateQuery() {
@@ -35,6 +36,7 @@ public abstract class BaseUpdateDao<T> extends BaseDao<T> {
 
   public T update(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
+    setId(record);
     String query = getUpdateQuery();
     Map<String, Object> params = getDescriptor().extractAll(record, true);
     sql().query().update(query).namedParams(params).run();
@@ -42,14 +44,14 @@ public abstract class BaseUpdateDao<T> extends BaseDao<T> {
   }
 
   public T merge(T record) {
-    String id = getDescriptor().extract(record, getDescriptor().getPrimaryKeyField());
+    K id = idOf(record);
     if (!load(id).isPresent()) { return save(record); }
     return update(record);
   }
 
   public long delete(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
-    String id = getDescriptor().extract(record, getDescriptor().getPrimaryKeyField());
+    K id = idOf(record);
     return sql().query().update(getDeleteQuery())
         .namedParam(getDescriptor().getPrimaryKeyField(), id).run().affectedRows();
   }

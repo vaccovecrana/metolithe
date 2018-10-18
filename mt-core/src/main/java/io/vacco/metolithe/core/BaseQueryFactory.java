@@ -1,6 +1,7 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.extraction.EnumExtractor;
+import io.vacco.metolithe.spi.MtIdGenerator;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
@@ -12,21 +13,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.String.*;
 import static java.util.Objects.*;
 
-public abstract class BaseQueryFactory<T> {
+public abstract class BaseQueryFactory<T, K> {
 
   private Class<T> clazz;
   private FluentJdbc jdbc;
   private Map<String, String> queryCache = new ConcurrentHashMap<>();
   private String sourceSchema;
   private EntityDescriptor<T> descriptor;
-
   private ObjectMappers objectMappers;
-  private final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
 
-  public BaseQueryFactory(Class<T> clazz, FluentJdbc jdbc, String sourceSchema, EntityDescriptor.CaseFormat format) {
+  private final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
+  private final MtIdGenerator<K> generator;
+
+  public BaseQueryFactory(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
+                          EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
     this.clazz = requireNonNull(clazz);
     this.jdbc = requireNonNull(jdbc);
     this.sourceSchema = requireNonNull(sourceSchema);
+    this.generator = requireNonNull(idGenerator);
     for (Field fld : clazz.getDeclaredFields()) {
       if (fld.getType().isEnum()) {
         extractors.put(fld.getType(), new EnumExtractor(fld.getType()));
@@ -41,6 +45,29 @@ public abstract class BaseQueryFactory<T> {
     descriptor = new EntityDescriptor<>(clazz, format);
   }
 
+  public K idOf(T target) {
+    requireNonNull(target);
+    K currentPk = getDescriptor().extract(target, getDescriptor().getPrimaryKeyField());
+    boolean isFixed = getDescriptor().isFixedPrimaryKey();
+    boolean isDefault = generator.defaultValue().equals(currentPk);
+    if (isFixed && !isDefault) { return currentPk; }
+    Object [] pkValues = getDescriptor().extractPkComponents(target);
+    Object pkVal = generator.apply(pkValues);
+    return (K) pkVal;
+  }
+
+  public T setId(T target) {
+    try {
+      K id = idOf(target);
+      getDescriptor().getField(getDescriptor().getPrimaryKeyField()).set(target, id);
+      return target;
+    } catch (Exception e) {
+      throw new IllegalStateException(String.format(
+          "Unable to generate/assign primary key generated value on [%s], target [%s]",
+          clazz.getCanonicalName(), target), e);
+    }
+  }
+
   public FluentJdbc sql() { return jdbc; }
 
   public Mapper<T> mapTo(Class<T> targetBeanClass) {
@@ -49,7 +76,7 @@ public abstract class BaseQueryFactory<T> {
 
   public Mapper<T> mapToDefault() { return mapTo(clazz); }
 
-  public <K> Mapper<K> mapperFor(Class<K> targetClass) {
+  public <J> Mapper<J> mapperFor(Class<J> targetClass) {
     return objectMappers.forClass(targetClass);
   }
 

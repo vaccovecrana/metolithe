@@ -44,12 +44,15 @@ public class XmlMapper {
     Match columnXml = $("column")
         .attr("name", target.getName().toLowerCase())
         .attr("type", TypeMapper.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
-    boolean pk = isOwnPrimaryKey(root, target);
+    Optional<MtId> oid = hasOwnPrimaryKey(root, target);
     Optional<MtAttribute> nn = hasNotNull(target);
-    Match cn = (pk || nn.isPresent()) ? $("constraints") : null;
-    if (pk) { cn.attr("primaryKey", "true"); }
-    if (nn.isPresent()) { cn.attr("nullable", "false"); }
-    if (cn != null) { columnXml.append(cn); }
+    boolean isTargetPk = oid.isPresent() && oid.get().position() == 0;
+    Match cn = (isTargetPk || nn.isPresent()) ? $("constraints") : null;
+    if (cn != null) {
+      if (isTargetPk) { cn.attr("primaryKey", "true"); }
+      if (nn.isPresent()) { cn.attr("nullable", "false"); }
+      columnXml.append(cn);
+    }
     return columnXml;
   }
 

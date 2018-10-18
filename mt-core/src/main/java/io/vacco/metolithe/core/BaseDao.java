@@ -1,22 +1,23 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.spi.MtIdGenerator;
 import io.vacco.metolithe.spi.UnsafeSupplier;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.Objects.*;
 
-public abstract class BaseDao<T> extends BaseQueryFactory<T> {
+public abstract class BaseDao<T, K> extends BaseQueryFactory<T, K> {
 
   public enum DaoError { MISSING_DATA, MISSING_ID }
 
-  public BaseDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema, EntityDescriptor.CaseFormat format) {
-    super(clazz, jdbc, sourceSchema, format);
+  public BaseDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
+                 EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
+    super(clazz, jdbc, sourceSchema, format, idGenerator);
   }
 
   private String getInsertQuery() {
@@ -32,19 +33,21 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
             getDescriptor().propertyNamesCsv(true),
             getSchemaName(), field, field));
   }
+
   private String getSelectQuery() {
     return getSelectWhereEqQuery(getDescriptor().getPrimaryKeyField());
   }
 
   public T save(T record) {
     requireNonNull(record, classError(DaoError.MISSING_DATA));
+    setId(record);
     String query = getInsertQuery();
     Map<String, Object> namedParams = getDescriptor().extractAll(record, true);
     sql().query().update(query).namedParams(namedParams).run();
     return record;
   }
 
-  public Optional<T> load(String id) {
+  public Optional<T> load(K id) {
     requireNonNull(id, classError(DaoError.MISSING_ID));
     return sql().query().select(getSelectQuery())
         .namedParam(getDescriptor().getPrimaryKeyField(), id)
@@ -58,7 +61,7 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
         .namedParam(field, value).listResult(mapToDefault());
   }
 
-  public T loadExisting(String id) {
+  public T loadExisting(K id) {
     Optional<T> record = load(id);
     if (!record.isPresent()) {
       throw new IllegalArgumentException(classError(DaoError.MISSING_ID));
@@ -77,7 +80,7 @@ public abstract class BaseDao<T> extends BaseQueryFactory<T> {
         }).collect(joining(", "));
   }
 
-  public <K> K inTransaction(UnsafeSupplier<K> processor) {
+  public <J> J inTransaction(UnsafeSupplier<J> processor) {
     return sql().query().transaction().in(() -> {
       try { return processor.get(); }
       catch (Exception e) { throw new IllegalStateException(e); }

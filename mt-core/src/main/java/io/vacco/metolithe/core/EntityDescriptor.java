@@ -1,6 +1,6 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.annotations.MtId;
+import io.vacco.metolithe.annotations.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,6 +19,7 @@ public class EntityDescriptor<T> {
   private final List<Field> pkFields;
   private final String pkFieldName;
   private final CaseFormat format;
+  private final MtEntity entityAnnotation;
 
   public EntityDescriptor(Class<T> target, CaseFormat format) {
     this.target = requireNonNull(target);
@@ -27,6 +28,7 @@ public class EntityDescriptor<T> {
     this.fieldMap = assignFields(rawFields);
     this.pkFields = assignPkComponents(rawFields);
     this.pkFieldName = getSeedPkComponent();
+    this.entityAnnotation = requireNonNull(target.getDeclaredAnnotation(MtEntity.class));
     fieldMap.values().forEach(fl0 -> fl0.setAccessible(true));
   }
 
@@ -66,6 +68,7 @@ public class EntityDescriptor<T> {
     return pkFields.stream().map(fl -> doExtract(target, fl)).toArray(Object[]::new);
   }
 
+  public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
   public Class<?> getTarget() { return target; }
   public CaseFormat getFormat() { return format; }
   public Collection<Field> getAllFields() { return fieldMap.values(); }
@@ -122,6 +125,7 @@ public class EntityDescriptor<T> {
       });
     }));
     return pkFields.entrySet().stream()
+        .filter(e0 -> e0.getKey() > 0)
         .sorted(Comparator.comparingInt(Map.Entry::getKey))
         .map(Map.Entry::getValue).collect(Collectors.toList());
   }
