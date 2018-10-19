@@ -2,6 +2,7 @@ package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.extraction.EnumExtractor;
 import io.vacco.metolithe.spi.MtIdGenerator;
+import io.vacco.metolithe.util.TypeUtil;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
@@ -41,8 +42,14 @@ public abstract class BaseQueryFactory<T, K> {
         throw new IllegalArgumentException(String.format(msg, clazz.getCanonicalName(), fld));
       }
     }
-    objectMappers = ObjectMappers.builder().extractors(extractors).build();
-    descriptor = new EntityDescriptor<>(clazz, format);
+    this.objectMappers = ObjectMappers.builder().extractors(extractors).build();
+    this.descriptor = new EntityDescriptor<>(clazz, format);
+    Class<?> idClass = TypeUtil.toWrapperClass(idGenerator.defaultValue().getClass());
+    Class<?> entityPkClass = TypeUtil.toWrapperClass(descriptor.getField(descriptor.getPrimaryKeyField()).getType());
+    if (!idClass.isAssignableFrom(entityPkClass)) {
+      String msg = "Primary key field for target class [%s] with primary key field of type [%s] does not match Id generator class [%s]";
+      throw new IllegalArgumentException(String.format(msg, clazz, idClass, entityPkClass));
+    }
   }
 
   public K idOf(T target) {
@@ -50,7 +57,8 @@ public abstract class BaseQueryFactory<T, K> {
     K currentPk = getDescriptor().extract(target, getDescriptor().getPrimaryKeyField());
     boolean isFixed = getDescriptor().isFixedPrimaryKey();
     boolean isDefault = generator.defaultValue().equals(currentPk);
-    if (isFixed && !isDefault) { return currentPk; }
+    boolean isNull = currentPk == null;
+    if (isFixed && !isDefault && !isNull) { return currentPk; }
     Object [] pkValues = getDescriptor().extractPkComponents(target);
     Object pkVal = generator.apply(pkValues);
     return (K) pkVal;

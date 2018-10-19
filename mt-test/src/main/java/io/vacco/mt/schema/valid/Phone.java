@@ -1,4 +1,4 @@
-package io.vacco.mt.schema;
+package io.vacco.mt.schema.valid;
 
 import io.vacco.metolithe.annotations.MtAttribute;
 import io.vacco.metolithe.annotations.MtEntity;

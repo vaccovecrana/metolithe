@@ -119,7 +119,8 @@ public class EntityDescriptor<T> {
       ownPk.ifPresent(mtId -> {
         if (pkFields.containsKey(mtId.position())) {
           throw new IllegalStateException(String.format(
-              "%s contains duplicate primary key field positions: [%s].", target, pkFields));
+              "%s contains duplicate primary key field positions: [%s]. Specify a position value for each primary key field.",
+              target, pkFields));
         }
         pkFields.put(mtId.position(), fl0);
       });
@@ -150,10 +151,9 @@ public class EntityDescriptor<T> {
 
   private String setCase(String in) {
     switch (format) {
-      case KEEP_CASE: return in;
       case LOWER_CASE: return in.toLowerCase();
       case UPPER_CASE: return in.toUpperCase();
-      default: throw new IllegalStateException("Unable to determine property case formatting.");
     }
+    return in;
   }
 }

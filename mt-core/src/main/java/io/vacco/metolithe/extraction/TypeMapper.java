@@ -1,6 +1,8 @@
 package io.vacco.metolithe.extraction;
 
 import io.vacco.metolithe.annotations.MtAttribute;
+import io.vacco.metolithe.util.TypeUtil;
+
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Optional;
@@ -13,14 +15,15 @@ public class TypeMapper {
   public static String resolveSqlType(Class<?> jt0, Annotation ... annotations) {
     requireNonNull(jt0);
     requireNonNull(annotations);
-    if (jt0 == Boolean.class || jt0 == boolean.class) { return "boolean"; }
-    if (jt0 == String.class) {
+    Class<?> wt0 = TypeUtil.toWrapperClass(jt0);
+    if (wt0 == Boolean.class) { return "boolean"; }
+    if (wt0 == String.class) {
       Optional<MtAttribute> maxSize = hasLength(annotations);
       if (maxSize.isPresent()) { return format("varchar(%s)", maxSize.get().len()); }
       return "varchar";
     }
-    if (Long.class == jt0 || long.class == jt0 || Integer.class == jt0 || int.class == jt0) { return "bigint"; }
-    if (Double.class == jt0 || double.class == jt0) { return "double"; }
+    if (wt0 == Long.class || wt0 == Integer.class) { return "bigint"; }
+    if (wt0 == Double.class) { return "double"; }
     if (Enum.class.isAssignableFrom(jt0)) {
       Optional<MtAttribute> maxLength = hasLength(annotations);
       if (maxLength.isPresent()) { return format("varchar(%s)", maxLength.get().len()); }

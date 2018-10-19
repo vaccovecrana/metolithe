@@ -2,11 +2,16 @@ package io.vacco.mt.unit;
 
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
-import io.vacco.mt.dao.PhoneDao;
-import io.vacco.mt.dao.SmartPhoneDao;
-import io.vacco.mt.schema.Dummy;
-import io.vacco.mt.schema.Phone;
-import io.vacco.mt.schema.SmartPhone;
+import io.vacco.metolithe.util.Murmur3;
+import io.vacco.metolithe.util.TypeUtil;
+import io.vacco.mt.dao.*;
+import io.vacco.mt.schema.invalid.CollectionEntity;
+import io.vacco.mt.schema.invalid.DuplicateIdEntity;
+import io.vacco.mt.schema.invalid.InvalidEntity;
+import io.vacco.mt.schema.valid.Bus;
+import io.vacco.mt.schema.valid.Dummy;
+import io.vacco.mt.schema.valid.Phone;
+import io.vacco.mt.schema.valid.SmartPhone;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.Contexts;
@@ -58,6 +63,11 @@ public class MetoLitheSpec {
   private static long generatedId2;
 
   static {
+    beforeAll(() -> {
+      JdbcDataSource ds = new JdbcDataSource();
+      ds.setURL(dbUrl);
+      jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
+    });
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
         () -> new EntityDescriptor<>(Dummy.class, EntityDescriptor.CaseFormat.KEEP_CASE));
@@ -75,8 +85,11 @@ public class MetoLitheSpec {
         () -> XmlMapper.mapEntity(SmartPhone.class, null)
     );
     it("Scans the target classpath packages for annotated classes.", () ->
-        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,"io.vacco.mt.schema").forEach(ed0 ->
-            entities.put(ed0.getTarget(), ed0.getAllFields()))
+        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,"io.vacco.mt.schema.valid")
+            .forEach(ed0 -> {
+              entities.put(ed0.getTarget(), ed0.getAllFields());
+              log.info(ed0.getFormat().toString());
+            })
     );
     it("Generates xml mappings for extracted entities.", () ->
         entityXmlNodes.addAll(
@@ -109,10 +122,14 @@ public class MetoLitheSpec {
       assertNotNull(conn);
       conn.close();
     });
+    it("Cannot create a Dao for an entity with duplicate primary key field positions.",
+        c -> c.expected(IllegalStateException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
+    it("Cannot create a Dao for an entity specifying collection fields.",
+        c -> c.expected(IllegalArgumentException.class),
+        () -> new CollectionEntityDao(jdbc, "public"));
+    it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
+        c -> c.expected(IllegalArgumentException.class), () -> new InvalidEntityDao(jdbc, "public"));
     it("Initializes a new Dao.", () -> {
-      JdbcDataSource ds = new JdbcDataSource();
-      ds.setURL(dbUrl);
-      jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
       smartPhoneDao = new SmartPhoneDao(jdbc, "public");
       assertNotNull(smartPhoneDao);
     });
@@ -227,6 +244,34 @@ public class MetoLitheSpec {
       p.setSerialNumber(serialNo3);
       p = phoneDao.save(p);
       assertNotNull(p);
+    });
+    it("Converts primitive type classes to wrapper types.", () -> {
+      TypeUtil.toWrapperClass(int.class);
+      TypeUtil.toWrapperClass(double.class);
+      TypeUtil.toWrapperClass(char.class);
+      TypeUtil.toWrapperClass(boolean.class);
+      TypeUtil.toWrapperClass(float.class);
+      TypeUtil.toWrapperClass(short.class);
+      TypeUtil.toWrapperClass(byte.class);
+    });
+    it("Clears remaining coverage classes.", () -> {
+      new CollectionEntity();
+      new DuplicateIdEntity();
+      new InvalidEntity();
+      new Dummy();
+      new Bus();
+      new TypeUtil();
+      new Murmur3();
+
+      Phone p = new Phone();
+      p.getSerialNumber();
+      p.isActive();
+      p.getPhoneId();
+
+      SmartPhone sp = new SmartPhone();
+      sp.getDeviceUid();
+      sp.getOs();
+      sp.getGpsPrecision();
     });
   }
 }

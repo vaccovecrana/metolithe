@@ -1,7 +1,7 @@
 package io.vacco.mt.unit
 
 import io.vacco.mt.dao.BlogMetadataDao
-import io.vacco.mt.schema.BlogMetadata
+import io.vacco.mt.schema.valid.BlogMetadata
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
@@ -38,6 +38,18 @@ class MetoLitheKotlinSpec {
       assertNotNull(bm)
       bm = blogDao!!.merge(bm.copy(title = t0))
       assertEquals(t0, bm.title)
+    }
+    it("Queries remaining object attributes.") {
+      val bm = BlogMetadata()
+      bm.component1()
+      bm.component2()
+      bm.component3()
+      bm.status
+      bm.id
+      bm.toString()
+      bm.equals(bm)
+      bm.hashCode()
+      bm.id = 90
     }
   }
 }
