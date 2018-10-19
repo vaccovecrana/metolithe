@@ -229,7 +229,30 @@ public class MetoLitheSpec {
       Mapper<SmartPhone> mapper = smartPhoneDao.mapperFor(SmartPhone.class);
       assertNotNull(mapper);
     });
-
+    it("Changes the Id of a non-fixed Id entity when one of its attributes changes.", () -> {
+      BusDao bd = new BusDao(jdbc, "public");
+      Bus b = new Bus();
+      b.licensePlate = "5AA777";
+      long id0 = bd.idOf(b);
+      b.licensePlate = "2ZZ999";
+      long id1 = bd.idOf(b);
+      b.licensePlate = "5AA777";
+      long id2 = bd.idOf(b);
+      assertNotEquals(id0, id1);
+      assertEquals(id0, id2);
+    });
+    it("Preserves the Id of a fixed Id entity when one of its attributes changes and the object has been assigned an Id.", () -> {
+      SmartPhone sp = new SmartPhone();
+      sp.setBatteryType(SmartPhone.BatteryType.LITHIUM_ION);
+      sp.setDeviceUid("12345");
+      sp.setGpsPrecision(1.0);
+      sp.setOs(SmartPhone.Os.ANDROID);
+      smartPhoneDao.setId(sp);
+      long id0 = smartPhoneDao.idOf(sp);
+      sp.setDeviceUid("ABCDE");
+      long id1 = smartPhoneDao.idOf(sp);
+      assertEquals(id0, id1);
+    });
     it("Initializes an upper case dao.", () -> {
       JdbcDataSource ds = new JdbcDataSource();
       ds.setURL(dbUrl);
