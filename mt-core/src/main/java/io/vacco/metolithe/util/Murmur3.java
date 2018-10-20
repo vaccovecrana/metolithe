@@ -18,16 +18,6 @@ public class Murmur3 {
   /**
    * Murmur3 64-bit variant. This is essentially MSB 8 bytes of Murmur3 128-bit variant.
    *
-   * @param data - input byte array
-   * @return - hashcode
-   */
-  public static long hash64(byte[] data) {
-    return hash64(data, 0, data.length, DEFAULT_SEED);
-  }
-
-  /**
-   * Murmur3 64-bit variant. This is essentially MSB 8 bytes of Murmur3 128-bit variant.
-   *
    * @param data   - input byte array
    * @param length - length of array
    * @param seed   - seed. (default is 0)

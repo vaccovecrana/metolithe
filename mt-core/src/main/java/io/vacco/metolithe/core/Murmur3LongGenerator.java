@@ -8,8 +8,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-// TODO add seed initialization parameter.
 public class Murmur3LongGenerator implements MtIdGenerator<Long> {
+
+  private final int seed;
+
+  public Murmur3LongGenerator() { this.seed = Murmur3.DEFAULT_SEED; }
+  public Murmur3LongGenerator(int seed) { this.seed = seed; }
 
   @Override public Long apply(Object... parts) {
     Objects.requireNonNull(parts);
@@ -17,7 +21,9 @@ public class Murmur3LongGenerator implements MtIdGenerator<Long> {
         .filter(Objects::nonNull)
         .map(Object::toString)
         .map(String::getBytes).reduce(ArrayConcat::apply);
-    return oba.map(Murmur3::hash64).orElse(defaultValue());
+    return oba
+        .map(ba -> Murmur3.hash64(ba, 0, ba.length, this.seed))
+        .orElse(defaultValue());
   }
 
   @Override public Long defaultValue() { return 0L; }

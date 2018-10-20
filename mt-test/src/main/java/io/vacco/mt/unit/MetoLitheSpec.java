@@ -2,6 +2,7 @@ package io.vacco.mt.unit;
 
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
+import io.vacco.metolithe.core.Murmur3LongGenerator;
 import io.vacco.metolithe.util.Murmur3;
 import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
@@ -67,6 +68,10 @@ public class MetoLitheSpec {
       JdbcDataSource ds = new JdbcDataSource();
       ds.setURL(dbUrl);
       jdbc = new FluentJdbcBuilder().connectionProvider(ds).build();
+    });
+    it("Can apply Murmur3 hash on values using a custom seed.", () -> {
+      long val = new Murmur3LongGenerator(12345).apply("Hello", 0, 999L, "cool");
+      assertNotEquals(0, val);
     });
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
