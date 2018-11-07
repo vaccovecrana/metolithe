@@ -56,8 +56,13 @@ public abstract class BaseUpdateDao<T, K> extends BaseDao<T, K> {
         .namedParam(getDescriptor().getPrimaryKeyField(), id).run().affectedRows();
   }
 
-  public long deleteWhereEq(String field, String value) {
+  public long deleteWhereEq(String field, Object value) {
     return sql().query().update(getDeleteWhereEqQuery(field))
         .namedParam(field, value).run().affectedRows();
+  }
+
+  public long deleteWhereIdEq(K id) {
+    requireNonNull(id, classError(DaoError.MISSING_ID));
+    return deleteWhereEq(getDescriptor().getPrimaryKeyField(), id);
   }
 }

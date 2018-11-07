@@ -282,6 +282,17 @@ public class MetoLitheSpec {
       TypeUtil.toWrapperClass(short.class);
       TypeUtil.toWrapperClass(byte.class);
     });
+    it("Can delete an existing object based on its id.", () -> {
+      SmartPhone sp = new SmartPhone();
+      sp.setSerialNumber(serialNo2);
+      sp.setNumber(phoneNo2);
+      sp.setDeviceUid(deviceUid2);
+      sp.setOs(SmartPhone.Os.IOS);
+      smartPhoneDao.merge(sp);
+      long newId = sp.getSpId();
+      long result = smartPhoneDao.deleteWhereIdEq(newId);
+      assertEquals(1, result);
+    });
     it("Clears remaining coverage classes.", () -> {
       new CollectionEntity();
       new DuplicateIdEntity();
