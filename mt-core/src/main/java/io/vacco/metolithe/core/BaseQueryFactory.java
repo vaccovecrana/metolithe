@@ -77,20 +77,17 @@ public abstract class BaseQueryFactory<T, K> {
   }
 
   public FluentJdbc sql() { return jdbc; }
-
   public Mapper<T> mapTo(Class<T> targetBeanClass) {
     return objectMappers.forClass(targetBeanClass);
   }
-
   public Mapper<T> mapToDefault() { return mapTo(clazz); }
-
   public <J> Mapper<J> mapperFor(Class<J> targetClass) {
     return objectMappers.forClass(targetClass);
   }
 
   public String getSchemaName() { return getSchemaName(clazz); }
-
   public EntityDescriptor<T> getDescriptor() { return descriptor; }
+  public MtIdGenerator<K> getGenerator() { return generator; }
 
   protected String classError(Enum<?> type) {
     return format("%s.%s", type, clazz.getSimpleName().toLowerCase());
