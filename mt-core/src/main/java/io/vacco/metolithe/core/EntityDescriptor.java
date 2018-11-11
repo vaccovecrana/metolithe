@@ -1,9 +1,9 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
+import io.vacco.metolithe.util.TypeUtil;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.*;
 import static java.util.stream.Collectors.joining;
@@ -16,7 +16,7 @@ public class EntityDescriptor<T> {
 
   private final Class<?> target;
   private final Map<String, Field> fieldMap;
-  private final List<Field> pkFields;
+  private final Map<Integer, Map<Integer, Field>> pkFieldGroups;
   private final String pkFieldName;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
@@ -26,8 +26,8 @@ public class EntityDescriptor<T> {
     this.format = requireNonNull(format);
     Map<String, List<Field>> rawFields = scanClassFields(target);
     this.fieldMap = assignFields(rawFields);
-    this.pkFields = assignPkComponents(rawFields);
     this.pkFieldName = getSeedPkComponent();
+    this.pkFieldGroups = assignPkComponents(rawFields);
     this.entityAnnotation = requireNonNull(target.getDeclaredAnnotation(MtEntity.class));
     fieldMap.values().forEach(fl0 -> fl0.setAccessible(true));
   }
@@ -65,7 +65,15 @@ public class EntityDescriptor<T> {
   }
 
   public Object [] extractPkComponents(T target) {
-    return pkFields.stream().map(fl -> doExtract(target, fl)).toArray(Object[]::new);
+    Optional<Object []> components = pkFieldGroups.values().stream()
+        .map(fMap -> fMap.values().stream().map(fl -> doExtract(target, fl)).toArray(Object[]::new))
+        .filter(TypeUtil::allNonNull)
+        .findFirst();
+    if (!components.isPresent()) {
+      String msg = String.format("No non-null primary key component value set available for [%s]", target);
+      throw new IllegalStateException(msg);
+    }
+    return components.get();
   }
 
   public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
@@ -112,29 +120,35 @@ public class EntityDescriptor<T> {
     return result;
   }
 
-  private List<Field> assignPkComponents(Map<String, List<Field>> rawAttributes) {
-    Map<Integer, Field> pkFields = new HashMap<>();
+  private Map<Integer, Map<Integer, Field>> assignPkComponents(Map<String, List<Field>> rawAttributes) {
+    Map<Integer, Map<Integer, Field>> pkFields = new TreeMap<>();
     rawAttributes.forEach((key, value) -> value.forEach(fl0 -> {
-      Optional<MtId> ownPk = hasOwnPrimaryKey(target, fl0);
-      ownPk.ifPresent(mtId -> {
-        if (pkFields.containsKey(mtId.position())) {
-          throw new IllegalStateException(String.format(
-              "%s contains duplicate primary key field positions: [%s]. Specify a position value for each primary key field.",
-              target, pkFields));
+      Optional<MtIdGroup> pkComponent = hasIdGroup(fl0);
+      pkComponent.ifPresent(mtGrp -> {
+        Map<Integer, Field> groupMap = pkFields.computeIfAbsent(mtGrp.number(), group -> new TreeMap<>());
+        if (!groupMap.containsKey(mtGrp.position())) {
+          groupMap.put(mtGrp.position(), fl0);
+        } else {
+          String msg = String.format(
+              String.join("\n",
+                  "[%s] contains duplicate primary key field group positions:",
+                  "field: [%s], group: [%s], position: [%s]",
+                  "Specify a unique position value for each primary key field group."
+              ), target, fl0, mtGrp.number(), mtGrp.position());
+          throw new IllegalArgumentException(msg);
         }
-        pkFields.put(mtId.position(), fl0);
       });
     }));
-    return pkFields.entrySet().stream()
-        .filter(e0 -> e0.getKey() > 0)
-        .sorted(Comparator.comparingInt(Map.Entry::getKey))
-        .map(Map.Entry::getValue).collect(Collectors.toList());
+    if (pkFields.isEmpty()) {
+      throw new IllegalStateException(String.format("No field group definitions were found for class [%s].", target));
+    }
+    return pkFields;
   }
 
   private String getSeedPkComponent() {
     Optional<String> opk = fieldMap.entrySet().stream().filter(e0 -> {
       Optional<MtId> oid = hasOwnPrimaryKey(target, e0.getValue());
-      return oid.isPresent() && oid.get().position() == 0;
+      return oid.isPresent();
     }).map(Map.Entry::getKey).findFirst();
     if (!opk.isPresent()) {
       throw new IllegalStateException(String.format("%s does not define a primary key (MtId) field.", target));

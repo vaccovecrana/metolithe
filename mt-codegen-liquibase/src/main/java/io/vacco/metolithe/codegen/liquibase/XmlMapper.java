@@ -46,7 +46,7 @@ public class XmlMapper {
         .attr("type", TypeMapper.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
     Optional<MtId> oid = hasOwnPrimaryKey(root, target);
     Optional<MtAttribute> nn = hasNotNull(target);
-    boolean isTargetPk = oid.isPresent() && oid.get().position() == 0;
+    boolean isTargetPk = oid.isPresent();
     Match cn = (isTargetPk || nn.isPresent()) ? $("constraints") : null;
     if (cn != null) {
       if (isTargetPk) { cn.attr("primaryKey", "true"); }

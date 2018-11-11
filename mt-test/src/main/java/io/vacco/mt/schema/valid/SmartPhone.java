@@ -10,11 +10,11 @@ public class SmartPhone extends Phone {
 
   @MtId private long spId;
 
-  @MtId(position = 1)
+  @MtIdGroup(number = 0, position = 1)
   @MtAttribute(len = 128, nil = false)
   private String deviceUid;
 
-  @MtId(position = 2)
+  @MtIdGroup(number = 0, position = 2)
   @MtIndex @MtAttribute(nil = false, len = 16)
   private Os os;
 

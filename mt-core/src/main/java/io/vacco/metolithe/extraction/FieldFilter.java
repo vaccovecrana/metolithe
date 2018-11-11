@@ -37,6 +37,12 @@ public final class FieldFilter {
         .map(an0 -> (MtIndex) an0).findFirst();
   }
 
+  public static Optional<MtIdGroup> hasIdGroup(Field f) {
+    return AnnotationExtractor.apply(f)
+        .filter(an0 -> an0.annotationType() == MtIdGroup.class)
+        .map(an0 -> (MtIdGroup) an0).findFirst();
+  }
+
   public static Optional<MtIndex> hasOwnIndex(Class<?> target, Field f) {
     Optional<MtIndex> idx = hasIndex(f);
     if (idx.isPresent() && f.getDeclaringClass() == target) return idx;

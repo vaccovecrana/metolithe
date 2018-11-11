@@ -6,14 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * To be placed on a property field intended to be a
- * primary key, or an attribute aggregator annotation
- * for a property field.
+ * Placed on a property field intended to be the entity's primary key.
  *
  * @since 0.10
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface MtId {
-  int position() default 0;
-}
+public @interface MtId {}

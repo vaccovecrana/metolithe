@@ -1,16 +1,14 @@
 package io.vacco.mt.schema.valid;
 
-import io.vacco.metolithe.annotations.MtAttribute;
-import io.vacco.metolithe.annotations.MtEntity;
-import io.vacco.metolithe.annotations.MtId;
-import io.vacco.metolithe.annotations.MtIndex;
+import io.vacco.metolithe.annotations.*;
 
 @MtEntity()
 public class Phone {
 
   @MtId private long phoneId;
 
-  @MtAttribute(len = 16) @MtId(position = 1)
+  @MtAttribute(nil = false, len = 16)
+  @MtIdGroup(number = 0, position = 0)
   private String serialNumber;
 
   @MtIndex @MtAttribute(len = 12)

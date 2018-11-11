@@ -6,11 +6,9 @@ import io.vacco.metolithe.core.Murmur3LongGenerator;
 import io.vacco.metolithe.util.Murmur3;
 import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
-import io.vacco.mt.schema.invalid.CollectionEntity;
-import io.vacco.mt.schema.invalid.DuplicateIdEntity;
-import io.vacco.mt.schema.invalid.InvalidEntity;
+import io.vacco.mt.schema.invalid.*;
 import io.vacco.mt.schema.valid.Bus;
-import io.vacco.mt.schema.valid.Dummy;
+import io.vacco.mt.schema.valid.PersonContact;
 import io.vacco.mt.schema.valid.Phone;
 import io.vacco.mt.schema.valid.SmartPhone;
 import j8spec.annotation.DefinedOrder;
@@ -75,7 +73,13 @@ public class MetoLitheSpec {
     });
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(Dummy.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+        () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+    it("Cannot describe an entity without primary key groups.",
+        c -> c.expected(IllegalStateException.class),
+        () -> new EntityDescriptor<>(MissingPkGroupEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+    it("Cannot describe an entity with duplicate id group positions.",
+        c -> c.expected(IllegalArgumentException.class),
+        () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE));
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).getField("lolo"));
@@ -246,10 +250,11 @@ public class MetoLitheSpec {
       assertNotEquals(id0, id1);
       assertEquals(id0, id2);
     });
-    it("Preserves the Id of a fixed Id entity when one of its attributes changes and the object has been assigned an Id.", () -> {
+    it("Preserves the Id of a fixed Id entity when one of its attributes changes, and the object has been assigned an Id.", () -> {
       SmartPhone sp = new SmartPhone();
       sp.setBatteryType(SmartPhone.BatteryType.LITHIUM_ION);
       sp.setDeviceUid("12345");
+      sp.setSerialNumber(serialNo2);
       sp.setGpsPrecision(1.0);
       sp.setOs(SmartPhone.Os.ANDROID);
       smartPhoneDao.setId(sp);
@@ -289,15 +294,22 @@ public class MetoLitheSpec {
       sp.setDeviceUid(deviceUid2);
       sp.setOs(SmartPhone.Os.IOS);
       smartPhoneDao.merge(sp);
+      assertNotNull(smartPhoneDao.getGenerator());
       long newId = sp.getSpId();
       long result = smartPhoneDao.deleteWhereIdEq(newId);
       assertEquals(1, result);
+    });
+    it("Cannot persist an entity with incomplete id group fields.",
+        c -> c.expected(IllegalStateException.class), () -> {
+      PersonContactDao pdc = new PersonContactDao(jdbc, "public");
+      PersonContact pc = new PersonContact();
+      pc.firstName = "Mark";
+      pdc.setId(pc);
     });
     it("Clears remaining coverage classes.", () -> {
       new CollectionEntity();
       new DuplicateIdEntity();
       new InvalidEntity();
-      new Dummy();
       new Bus();
       new TypeUtil();
       new Murmur3();

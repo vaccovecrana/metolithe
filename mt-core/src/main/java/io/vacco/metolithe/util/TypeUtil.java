@@ -24,4 +24,12 @@ public class TypeUtil {
     else
       throw new IllegalArgumentException("Primitive type not supported: " + type.getName());
   }
+
+  public static boolean allNonNull(Object [] target) {
+    if (target == null) return false;
+    for (Object o : target) {
+      if (o == null) return false;
+    }
+    return true;
+  }
 }
