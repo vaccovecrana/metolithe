@@ -54,7 +54,7 @@ public abstract class BaseDao<T, K> extends BaseQueryFactory<T, K> {
         .firstResult(mapToDefault());
   }
 
-  public Collection<T> loadWhereEq(String field, String value) {
+  public Collection<T> loadWhereEq(String field, Object value) {
     requireNonNull(field, classError(DaoError.MISSING_ID));
     requireNonNull(value, classError(DaoError.MISSING_DATA));
     return sql().query().select(getSelectWhereEqQuery(field))
