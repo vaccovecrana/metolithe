@@ -4,7 +4,7 @@ import org.codejargon.fluentjdbc.api.mapper.ObjectMapperRsExtractor;
 import java.util.Collection;
 import java.util.function.Function;
 
-public interface CollectionCodec<O> extends Function<Collection<?>, O>, ObjectMapperRsExtractor<Collection<?>> {
+public interface MtCollectionCodec<O> extends Function<Collection<?>, O>, ObjectMapperRsExtractor<Collection<?>> {
   O write(Collection<?> payload);
   Collection<?> read(O payload);
   String getTargetSqlType();

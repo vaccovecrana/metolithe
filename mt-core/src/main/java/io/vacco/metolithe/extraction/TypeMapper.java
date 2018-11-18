@@ -1,7 +1,7 @@
 package io.vacco.metolithe.extraction;
 
 import io.vacco.metolithe.annotations.MtAttribute;
-import io.vacco.metolithe.spi.CollectionCodec;
+import io.vacco.metolithe.spi.MtCollectionCodec;
 import io.vacco.metolithe.util.TypeUtil;
 
 import java.lang.annotation.Annotation;
@@ -14,10 +14,10 @@ import static java.util.Objects.requireNonNull;
 
 public class TypeMapper {
 
-  private final CollectionCodec<?> collectionCodec;
+  private final MtCollectionCodec<?> collectionCodec;
 
   public TypeMapper() { this.collectionCodec = null; }
-  public TypeMapper(CollectionCodec<?> collectionCodec) {
+  public TypeMapper(MtCollectionCodec<?> collectionCodec) {
     this.collectionCodec = requireNonNull(collectionCodec);
   }
 

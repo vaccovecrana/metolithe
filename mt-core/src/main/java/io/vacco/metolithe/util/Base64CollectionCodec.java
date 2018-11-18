@@ -1,6 +1,6 @@
 package io.vacco.metolithe.util;
 
-import io.vacco.metolithe.spi.CollectionCodec;
+import io.vacco.metolithe.spi.MtCollectionCodec;
 import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,7 +8,7 @@ import java.util.Base64;
 import java.util.Collection;
 import static java.util.Objects.*;
 
-public class Base64CollectionCodec implements CollectionCodec<String> {
+public class Base64CollectionCodec implements MtCollectionCodec<String> {
 
   private static final String SIGMA_COL = "Σ:";
 

@@ -1,7 +1,7 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-import io.vacco.metolithe.spi.CollectionCodec;
+import io.vacco.metolithe.spi.MtCollectionCodec;
 import io.vacco.metolithe.util.TypeUtil;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -21,9 +21,9 @@ public class EntityDescriptor<T> {
   private final String pkFieldName;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
-  private CollectionCodec<?> collectionCodec;
+  private MtCollectionCodec<?> collectionCodec;
 
-  public EntityDescriptor(Class<T> target, CaseFormat format, CollectionCodec<?> collectionCodec) {
+  public EntityDescriptor(Class<T> target, CaseFormat format, MtCollectionCodec<?> collectionCodec) {
     this.target = requireNonNull(target);
     this.format = requireNonNull(format);
     this.collectionCodec = collectionCodec;
@@ -80,7 +80,7 @@ public class EntityDescriptor<T> {
   }
 
   public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
-  public CollectionCodec<?> getCollectionCodec() { return collectionCodec; }
+  public MtCollectionCodec<?> getCollectionCodec() { return collectionCodec; }
   public Class<T> getTarget() { return target; }
   public CaseFormat getFormat() { return format; }
   public Collection<Field> getAllFields() { return fieldMap.values(); }

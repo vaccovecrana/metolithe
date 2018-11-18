@@ -4,7 +4,7 @@ import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.github.lukehutch.fastclasspathscanner.matchprocessor.*;
 import io.vacco.metolithe.annotations.*;
 import io.vacco.metolithe.core.EntityDescriptor;
-import io.vacco.metolithe.spi.CollectionCodec;
+import io.vacco.metolithe.spi.MtCollectionCodec;
 
 import java.util.*;
 
@@ -15,7 +15,7 @@ public class EntityExtractor implements ClassAnnotationMatchProcessor {
   private final Set<Class<?>> entityClasses = new HashSet<>();
 
   public Collection<EntityDescriptor<?>> apply(EntityDescriptor.CaseFormat format,
-                                               CollectionCodec<?> collectionCodec,
+                                               MtCollectionCodec<?> collectionCodec,
                                                String ... packageSpecs) {
     requireNonNull(packageSpecs);
     if (packageSpecs.length == 0) throw new IllegalArgumentException();
