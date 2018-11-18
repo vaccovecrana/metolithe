@@ -25,6 +25,13 @@ public final class FieldFilter {
         .findFirst();
   }
 
+  public static Optional<MtCollection> hasCollection(Field f) {
+    return AnnotationExtractor.apply(f)
+        .filter(an0 -> an0.annotationType() == MtCollection.class)
+        .map(an0 -> (MtCollection) an0)
+        .findFirst();
+  }
+
   public static Optional<MtAttribute> hasNotNull(Field f) {
     Optional<MtAttribute> mta = hasAttribute(f);
     if (mta.isPresent() && !mta.get().nil()) { return mta; }

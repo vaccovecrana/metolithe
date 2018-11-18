@@ -15,9 +15,9 @@ public abstract class BaseDao<T, K> extends BaseQueryFactory<T, K> {
 
   public enum DaoError { MISSING_DATA, MISSING_ID }
 
-  public BaseDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
-                 EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
-    super(clazz, jdbc, sourceSchema, format, idGenerator);
+  public BaseDao(FluentJdbc jdbc, String sourceSchema,
+                 EntityDescriptor<T> descriptor, MtIdGenerator<K> idGenerator) {
+    super(jdbc, sourceSchema, descriptor, idGenerator);
   }
 
   private String getInsertQuery() {

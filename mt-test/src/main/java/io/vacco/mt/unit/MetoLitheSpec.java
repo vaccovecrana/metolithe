@@ -3,14 +3,13 @@ package io.vacco.mt.unit;
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
 import io.vacco.metolithe.core.Murmur3LongGenerator;
+import io.vacco.metolithe.extraction.TypeMapper;
+import io.vacco.metolithe.util.Base64CollectionCodec;
 import io.vacco.metolithe.util.Murmur3;
 import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
 import io.vacco.mt.schema.invalid.*;
-import io.vacco.mt.schema.valid.Bus;
-import io.vacco.mt.schema.valid.PersonContact;
-import io.vacco.mt.schema.valid.Phone;
-import io.vacco.mt.schema.valid.SmartPhone;
+import io.vacco.mt.schema.valid.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.Contexts;
@@ -73,28 +72,38 @@ public class MetoLitheSpec {
     });
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+        () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
     it("Cannot describe an entity without primary key groups.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(MissingPkGroupEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+        () -> new EntityDescriptor<>(MissingPkGroupEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
     it("Cannot describe an entity with duplicate id group positions.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE));
+        () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
+    it("Cannot describe a collection entity with attribute descriptions in collection fields.",
+        c -> c.expected(IllegalStateException.class),
+        () -> new EntityDescriptor<>(InvalidAttributeCollectionEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, new Base64CollectionCodec()));
+    it("Cannot describe a collection entity with index descriptions in collection fields.",
+        c -> c.expected(IllegalStateException.class),
+        () -> new EntityDescriptor<>(InvalidIndexCollectionAttribute.class, EntityDescriptor.CaseFormat.KEEP_CASE, new Base64CollectionCodec()));
+    it("Cannot describe a collection entity without a collection codec.",
+        c -> c.expected(IllegalStateException.class),
+        () -> new EntityDescriptor<>(CollectionEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).getField("lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).getField("lolo"));
     it("Cannot extract an invalid field.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).extract(null, "lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).extract(null, "lolo"));
     it("Can extract an object's values without its primary key attribute.", () ->
-        new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE)
+        new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null)
             .extractAll(new SmartPhone(), false)
     );
     it("Cannot map a class with invalid data.", c -> c.expected(IllegalStateException.class),
-        () -> XmlMapper.mapEntity(SmartPhone.class, null)
+        () -> XmlMapper.mapEntity(SmartPhone.class, null, new TypeMapper())
     );
     it("Scans the target classpath packages for annotated classes.", () ->
-        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,"io.vacco.mt.schema.valid")
+        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,
+            new Base64CollectionCodec(),"io.vacco.mt.schema.valid")
             .forEach(ed0 -> {
               entities.put(ed0.getTarget(), ed0.getAllFields());
               log.info(ed0.getFormat().toString());
@@ -103,7 +112,7 @@ public class MetoLitheSpec {
     it("Generates xml mappings for extracted entities.", () ->
         entityXmlNodes.addAll(
             entities.entrySet().stream().map(e0 ->
-                XmlMapper.mapEntity(e0.getKey(), e0.getValue())
+                XmlMapper.mapEntity(e0.getKey(), e0.getValue(), new TypeMapper(new Base64CollectionCodec()))
             ).collect(Collectors.toList()))
     );
     it("Prints each entity generated XML data.", () ->
@@ -112,7 +121,7 @@ public class MetoLitheSpec {
       File targetDir = new File("/tmp/testlogs");
       targetDir.mkdirs();
       for (Map.Entry<Class<?>, Collection<Field>> e0 : entities.entrySet()) {
-        Match xml = XmlMapper.mapEntity(e0.getKey(), e0.getValue());
+        Match xml = XmlMapper.mapEntity(e0.getKey(), e0.getValue(), new TypeMapper(new Base64CollectionCodec()));
         File xmlFile = XmlChangeSetWriter.write(e0.getKey(), xml, targetDir);
         assertNotNull(xmlFile);
         assertTrue(xmlFile.exists());
@@ -133,9 +142,6 @@ public class MetoLitheSpec {
     });
     it("Cannot create a Dao for an entity with duplicate primary key field positions.",
         c -> c.expected(IllegalStateException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
-    it("Cannot create a Dao for an entity specifying collection fields.",
-        c -> c.expected(IllegalArgumentException.class),
-        () -> new CollectionEntityDao(jdbc, "public"));
     it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
         c -> c.expected(IllegalArgumentException.class), () -> new InvalidEntityDao(jdbc, "public"));
     it("Initializes a new Dao.", () -> {
@@ -222,6 +228,19 @@ public class MetoLitheSpec {
       });
       assertTrue(b);
     });
+    it("Can save an object which specifies collection fields.", () -> {
+      CollectionEntityDao cd = new CollectionEntityDao(jdbc, "public");
+      CollectionEntity ce = new CollectionEntity();
+      ce.entName = "Zoidberg";
+      ce.options = new TreeSet<>();
+      ce.options.add("Why");
+      ce.options.add("not");
+      ce.options.add("Zoidberg?");
+      cd.setId(ce);
+      cd.save(ce);
+      CollectionEntity ce0 = cd.loadExisting(ce.entId);
+      assertNotNull(ce0);
+    });
     it("Can rollback a transaction.", c -> c.expected(IllegalStateException.class), () -> {
       SmartPhone sp0 = smartPhoneDao.loadExisting(generatedId1);
       SmartPhone sp1 = smartPhoneDao.loadExisting(generatedId2);
@@ -278,6 +297,15 @@ public class MetoLitheSpec {
       p = phoneDao.save(p);
       assertNotNull(p);
     });
+    it("Can create a list query of target parameters", () -> {
+      Map<String, Object> params = new HashMap<>();
+      Collection<String> items = new ArrayList<>();
+      items.add("one");
+      items.add("two");
+      items.add("three");
+      String queryPart = phoneDao.toNamedParam(params, items, "number");
+      assertEquals(":number0, :number1, :number2", queryPart);
+    });
     it("Converts primitive type classes to wrapper types.", () -> {
       TypeUtil.toWrapperClass(int.class);
       TypeUtil.toWrapperClass(double.class);
@@ -286,6 +314,8 @@ public class MetoLitheSpec {
       TypeUtil.toWrapperClass(float.class);
       TypeUtil.toWrapperClass(short.class);
       TypeUtil.toWrapperClass(byte.class);
+      assertFalse(TypeUtil.allNonNull(null));
+      assertFalse(TypeUtil.allNonNull(new Object []{}));
     });
     it("Can delete an existing object based on its id.", () -> {
       SmartPhone sp = new SmartPhone();

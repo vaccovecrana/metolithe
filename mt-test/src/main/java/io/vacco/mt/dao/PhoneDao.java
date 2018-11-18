@@ -8,7 +8,8 @@ import org.codejargon.fluentjdbc.api.FluentJdbc;
 
 public class PhoneDao extends BaseUpdateDao<Phone, Long> {
   public PhoneDao(FluentJdbc jdbc, String sourceSchema) {
-    super(Phone.class, jdbc, sourceSchema,
-        EntityDescriptor.CaseFormat.UPPER_CASE, new Murmur3LongGenerator());
+    super(jdbc, sourceSchema, new EntityDescriptor<>(
+        Phone.class, EntityDescriptor.CaseFormat.UPPER_CASE, null
+    ), new Murmur3LongGenerator());
   }
 }

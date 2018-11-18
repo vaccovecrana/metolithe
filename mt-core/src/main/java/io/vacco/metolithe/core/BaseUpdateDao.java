@@ -9,9 +9,9 @@ import static java.util.Objects.*;
 
 public abstract class BaseUpdateDao<T, K> extends BaseDao<T, K> {
 
-  public BaseUpdateDao(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
-                       EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
-    super(clazz, jdbc, sourceSchema, format, idGenerator);
+  public BaseUpdateDao(FluentJdbc jdbc, String sourceSchema,
+                       EntityDescriptor<T> descriptor, MtIdGenerator<K> idGenerator) {
+    super(jdbc, sourceSchema, descriptor, idGenerator);
   }
 
   private String getUpdateQuery() {

@@ -7,6 +7,8 @@ import io.vacco.mt.schema.valid.BlogMetadata
 import org.codejargon.fluentjdbc.api.FluentJdbc
 
 class BlogMetadataDao(jdbc: FluentJdbc, sourceSchema: String) :
-    BaseUpdateDao<BlogMetadata, Long>(
-            BlogMetadata::class.java, jdbc, sourceSchema,
-            EntityDescriptor.CaseFormat.KEEP_CASE, Murmur3LongGenerator())
+    BaseUpdateDao<BlogMetadata, Long>(jdbc, sourceSchema,
+        EntityDescriptor(
+            BlogMetadata::class.java,
+            EntityDescriptor.CaseFormat.KEEP_CASE, null
+        ), Murmur3LongGenerator())

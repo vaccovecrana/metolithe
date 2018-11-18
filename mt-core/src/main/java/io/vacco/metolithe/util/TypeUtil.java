@@ -26,7 +26,7 @@ public class TypeUtil {
   }
 
   public static boolean allNonNull(Object [] target) {
-    if (target == null) return false;
+    if (target == null || target.length == 0) return false;
     for (Object o : target) {
       if (o == null) return false;
     }

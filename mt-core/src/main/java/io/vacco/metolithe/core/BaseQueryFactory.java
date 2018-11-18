@@ -6,8 +6,6 @@ import io.vacco.metolithe.util.TypeUtil;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
-
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,39 +14,33 @@ import static java.util.Objects.*;
 
 public abstract class BaseQueryFactory<T, K> {
 
-  private Class<T> clazz;
   private FluentJdbc jdbc;
   private Map<String, String> queryCache = new ConcurrentHashMap<>();
   private String sourceSchema;
   private EntityDescriptor<T> descriptor;
   private ObjectMappers objectMappers;
 
-  private final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
+  protected final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
   private final MtIdGenerator<K> generator;
 
-  public BaseQueryFactory(Class<T> clazz, FluentJdbc jdbc, String sourceSchema,
-                          EntityDescriptor.CaseFormat format, MtIdGenerator<K> idGenerator) {
-    this.clazz = requireNonNull(clazz);
+  public BaseQueryFactory(FluentJdbc jdbc, String sourceSchema,
+                          EntityDescriptor<T> descriptor, MtIdGenerator<K> idGenerator) {
     this.jdbc = requireNonNull(jdbc);
     this.sourceSchema = requireNonNull(sourceSchema);
     this.generator = requireNonNull(idGenerator);
-    for (Field fld : clazz.getDeclaredFields()) {
-      if (fld.getType().isEnum()) {
-        extractors.put(fld.getType(), new EnumExtractor(fld.getType()));
-      } else if (Collection.class.isAssignableFrom(fld.getType())) {
-        String msg = String.join("\n",
-            "Cannot map collection fields for class [%s], field [%s].",
-            "Use a one-to-many/many-to-many entity instead.");
-        throw new IllegalArgumentException(String.format(msg, clazz.getCanonicalName(), fld));
-      }
-    }
+    this.descriptor = requireNonNull(descriptor);
+    Arrays.stream(descriptor.getTarget().getDeclaredFields())
+        .filter(fld -> fld.getType().isEnum())
+        .forEach(fld -> extractors.put(fld.getType(), new EnumExtractor(fld.getType())));
+    Arrays.stream(descriptor.getTarget().getDeclaredFields())
+        .filter(fld -> Collection.class.isAssignableFrom(fld.getType()))
+        .forEach(fld -> extractors.put(fld.getType(), descriptor.getCollectionCodec()));
     this.objectMappers = ObjectMappers.builder().extractors(extractors).build();
-    this.descriptor = new EntityDescriptor<>(clazz, format);
     Class<?> idClass = TypeUtil.toWrapperClass(idGenerator.defaultValue().getClass());
     Class<?> entityPkClass = TypeUtil.toWrapperClass(descriptor.getField(descriptor.getPrimaryKeyField()).getType());
     if (!idClass.isAssignableFrom(entityPkClass)) {
-      String msg = "Primary key field for target class [%s] with primary key field of type [%s] does not match Id generator class [%s]";
-      throw new IllegalArgumentException(String.format(msg, clazz, idClass, entityPkClass));
+      String msg = "Primary key field for target class [%s] with field type [%s] does not match Id generator class [%s]";
+      throw new IllegalArgumentException(String.format(msg, descriptor.getTarget(), idClass, entityPkClass));
     }
   }
 
@@ -72,7 +64,7 @@ public abstract class BaseQueryFactory<T, K> {
     } catch (Exception e) {
       throw new IllegalStateException(String.format(
           "Unable to generate/assign primary key generated value on [%s], target [%s]",
-          clazz.getCanonicalName(), target), e);
+          descriptor.getTarget().getCanonicalName(), target), e);
     }
   }
 
@@ -80,17 +72,17 @@ public abstract class BaseQueryFactory<T, K> {
   public Mapper<T> mapTo(Class<T> targetBeanClass) {
     return objectMappers.forClass(targetBeanClass);
   }
-  public Mapper<T> mapToDefault() { return mapTo(clazz); }
+  public Mapper<T> mapToDefault() { return mapTo(descriptor.getTarget()); }
   public <J> Mapper<J> mapperFor(Class<J> targetClass) {
     return objectMappers.forClass(targetClass);
   }
 
-  public String getSchemaName() { return getSchemaName(clazz); }
+  public String getSchemaName() { return getSchemaName(descriptor.getTarget()); }
   public EntityDescriptor<T> getDescriptor() { return descriptor; }
   public MtIdGenerator<K> getGenerator() { return generator; }
 
   protected String classError(Enum<?> type) {
-    return format("%s.%s", type, clazz.getSimpleName().toLowerCase());
+    return format("%s.%s", type, descriptor.getTarget().getSimpleName().toLowerCase());
   }
 
   protected String getSchemaName(Class<?> clazz) {

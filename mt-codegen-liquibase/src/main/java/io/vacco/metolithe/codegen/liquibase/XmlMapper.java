@@ -18,7 +18,7 @@ public class XmlMapper {
 
   private static final Logger log = LoggerFactory.getLogger(XmlMapper.class);
 
-  public static Match mapEntity(Class<?> entity, Collection<Field> attributes) {
+  public static Match mapEntity(Class<?> entity, Collection<Field> attributes, TypeMapper tm) {
     try {
       requireNonNull(entity);
       requireNonNull(attributes);
@@ -27,7 +27,7 @@ public class XmlMapper {
       Match lb = $(xmlTemplate);
       Match cs = $("changeSet").attr("author", "generated").attr("id", entityName);
       Match ct = $("createTable").attr("tableName", entityName);
-      attributes.stream().map(fld0 -> XmlMapper.mapAttribute(entity, fld0)).forEach(ct::append);
+      attributes.stream().map(fld0 -> XmlMapper.mapAttribute(entity, fld0, tm)).forEach(ct::append);
       cs.append(ct);
       attributes.stream().map(fld0 -> XmlMapper.mapIndex(entity, fld0)).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
@@ -39,11 +39,13 @@ public class XmlMapper {
     }
   }
 
-  private static Match mapAttribute(Class<?> root, Field target) {
+  private static Match mapAttribute(Class<?> root, Field target, TypeMapper tm) {
+    requireNonNull(root);
     requireNonNull(target);
+    requireNonNull(tm);
     Match columnXml = $("column")
         .attr("name", target.getName().toLowerCase())
-        .attr("type", TypeMapper.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
+        .attr("type", tm.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
     Optional<MtId> oid = hasOwnPrimaryKey(root, target);
     Optional<MtAttribute> nn = hasNotNull(target);
     boolean isTargetPk = oid.isPresent();

@@ -6,7 +6,8 @@ import org.codejargon.fluentjdbc.api.FluentJdbc;
 
 public class BusDao extends BaseDao<Bus, Long> {
   public BusDao(FluentJdbc jdbc, String sourceSchema) {
-    super(Bus.class, jdbc, sourceSchema,
-        EntityDescriptor.CaseFormat.KEEP_CASE, new Murmur3LongGenerator());
+    super(jdbc, sourceSchema, new EntityDescriptor<>(
+        Bus.class, EntityDescriptor.CaseFormat.KEEP_CASE, null
+    ), new Murmur3LongGenerator());
   }
 }

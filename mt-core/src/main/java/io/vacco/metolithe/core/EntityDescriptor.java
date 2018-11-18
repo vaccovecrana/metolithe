@@ -1,6 +1,7 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
+import io.vacco.metolithe.spi.CollectionCodec;
 import io.vacco.metolithe.util.TypeUtil;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -14,16 +15,18 @@ public class EntityDescriptor<T> {
   public enum CaseFormat { UPPER_CASE, LOWER_CASE, KEEP_CASE }
   public static final String COMMA_SPC = ", ";
 
-  private final Class<?> target;
+  private final Class<T> target;
   private final Map<String, Field> fieldMap;
   private final Map<Integer, Map<Integer, Field>> pkFieldGroups;
   private final String pkFieldName;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
+  private CollectionCodec<?> collectionCodec;
 
-  public EntityDescriptor(Class<T> target, CaseFormat format) {
+  public EntityDescriptor(Class<T> target, CaseFormat format, CollectionCodec<?> collectionCodec) {
     this.target = requireNonNull(target);
     this.format = requireNonNull(format);
+    this.collectionCodec = collectionCodec;
     Map<String, List<Field>> rawFields = scanClassFields(target);
     this.fieldMap = assignFields(rawFields);
     this.pkFieldName = getSeedPkComponent();
@@ -77,7 +80,8 @@ public class EntityDescriptor<T> {
   }
 
   public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
-  public Class<?> getTarget() { return target; }
+  public CollectionCodec<?> getCollectionCodec() { return collectionCodec; }
+  public Class<T> getTarget() { return target; }
   public CaseFormat getFormat() { return format; }
   public Collection<Field> getAllFields() { return fieldMap.values(); }
   public String getPrimaryKeyField() { return pkFieldName; }
@@ -96,7 +100,16 @@ public class EntityDescriptor<T> {
         boolean hasPk = hasPrimaryKey(fl0).isPresent();
         boolean hasIndex = hasIndex(fl0).isPresent();
         boolean hasAttribute = hasAttribute(fl0).isPresent();
-        if (hasPk || hasIndex || hasAttribute) { mappings.add(fl0); }
+        boolean hasCollection = hasCollection(fl0).isPresent();
+        if (hasCollection && (hasIndex || hasAttribute)) {
+          String msg = String.format("Collection field [%s] cannot specify index or attribute constraints", fl0);
+          throw new IllegalStateException(msg);
+        }
+        if (hasCollection && collectionCodec == null) {
+          String msg = String.format("Collection field [%s] found, but no collection codec is assigned.", fl0);
+          throw new IllegalStateException(msg);
+        }
+        if (hasPk || hasIndex || hasAttribute || hasCollection) { mappings.add(fl0); }
       });
       cl0 = cl0.getSuperclass();
     }
@@ -112,7 +125,8 @@ public class EntityDescriptor<T> {
               boolean isPk = isOwnPrimaryKey(target, fl0);
               boolean isIndex = isOwnIndex(target, fl0);
               boolean hasAttribute = hasAttribute(fl0).isPresent();
-              return isPk || isIndex || hasAttribute;
+              boolean hasCollection = hasCollection(fl0).isPresent();
+              return isPk || isIndex || hasAttribute || hasCollection;
             }).findFirst();
         fTarget.ifPresent(field -> result.put(key, field));
       }
@@ -157,7 +171,14 @@ public class EntityDescriptor<T> {
   }
 
   private Object doExtract(T target, Field f) {
-    try { return f.get(target); }
+    try {
+      Object payload = f.get(target);
+      boolean isCollection = Collection.class.isAssignableFrom(f.getType());
+      if (isCollection) {
+        payload = collectionCodec.write((Collection) payload);
+      }
+      return payload;
+    }
     catch (Exception e) {
       throw new IllegalStateException("Object field extraction failed", e);
     }

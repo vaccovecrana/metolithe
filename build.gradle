@@ -6,7 +6,7 @@ buildscript {
 subprojects {
 
   group 'io.vacco.metolithe'
-  version 0.81
+  version 0.90
 
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
