@@ -10,5 +10,5 @@ public class InvalidAttributeCollectionEntity {
   @MtIdGroup(number = 0, position = 1)
   @MtAttribute(nil = false, len = 32) public String entName;
   @MtAttribute(nil = false, len = 32)
-  @MtCollection public Set<String> options = new HashSet<>();
+  @MtCollection(sqlType = "varchar(128)") public Set<String> options = new HashSet<>();
 }

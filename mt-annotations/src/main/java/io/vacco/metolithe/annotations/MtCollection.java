@@ -8,9 +8,17 @@ import java.lang.annotation.Target;
 /**
  * To be placed on a collection property which must be persisted,
  * or an aggregator annotation for a property collection field.
+ * <p>
+ * TODO add in-depth documentation.
  *
  * @since 0.90
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface MtCollection {}
+public @interface MtCollection {
+  /**
+   * @return the SQL type used to store the serialized form of this
+   * collection instance.
+   */
+  String sqlType();
+}

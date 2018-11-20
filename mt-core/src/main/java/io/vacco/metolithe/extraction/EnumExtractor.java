@@ -10,8 +10,7 @@ public class EnumExtractor<T extends Enum<T>> implements ObjectMapperRsExtractor
 
   public EnumExtractor(Class<T> target) { this.target = requireNonNull(target); }
 
-  @Override
-  public T extract(ResultSet rs, Integer idx) {
+  @Override public T extract(ResultSet rs, Integer idx) {
     try {
       String enumValue = rs.getString(idx);
       if (enumValue != null) { return Enum.valueOf(target, enumValue); }

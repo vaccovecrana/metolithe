@@ -39,7 +39,7 @@ public abstract class BaseQueryFactory<T, K> {
     Class<?> idClass = TypeUtil.toWrapperClass(idGenerator.defaultValue().getClass());
     Class<?> entityPkClass = TypeUtil.toWrapperClass(descriptor.getField(descriptor.getPrimaryKeyField()).getType());
     if (!idClass.isAssignableFrom(entityPkClass)) {
-      String msg = "Primary key field for target class [%s] with field type [%s] does not match Id generator class [%s]";
+      String msg = "Primary key field for target class [%s] with field type [%s] not supported by Id generator class [%s]";
       throw new IllegalArgumentException(String.format(msg, descriptor.getTarget(), idClass, entityPkClass));
     }
   }

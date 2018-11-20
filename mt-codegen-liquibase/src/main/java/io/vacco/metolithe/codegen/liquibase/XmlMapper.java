@@ -1,53 +1,49 @@
 package io.vacco.metolithe.codegen.liquibase;
 
 import io.vacco.metolithe.annotations.*;
-import io.vacco.metolithe.extraction.AnnotationExtractor;
-import io.vacco.metolithe.extraction.TypeMapper;
+import io.vacco.metolithe.extraction.*;
 import org.joox.Match;
 import org.slf4j.*;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
 
 import static java.lang.String.*;
 import static java.util.Objects.*;
 import static org.joox.JOOX.$;
-import static io.vacco.metolithe.extraction.FieldFilter.*;
 
 public class XmlMapper {
 
   private static final Logger log = LoggerFactory.getLogger(XmlMapper.class);
 
-  public static Match mapEntity(Class<?> entity, Collection<Field> attributes, TypeMapper tm) {
+  public static Match mapEntity(EntityMetadata em, TypeMapper tm) {
     try {
-      requireNonNull(entity);
-      requireNonNull(attributes);
+      requireNonNull(em);
+      requireNonNull(tm);
       URL xmlTemplate = requireNonNull(XmlMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml"));
-      String entityName = toSnakeCase(entity.getSimpleName());
+      String entityName = toSnakeCase(em.getTarget().getSimpleName());
       Match lb = $(xmlTemplate);
       Match cs = $("changeSet").attr("author", "generated").attr("id", entityName);
       Match ct = $("createTable").attr("tableName", entityName);
-      attributes.stream().map(fld0 -> XmlMapper.mapAttribute(entity, fld0, tm)).forEach(ct::append);
+      em.rawFields().map(fld0 -> XmlMapper.mapAttribute(em.getTarget(), fld0, tm)).forEach(ct::append);
       cs.append(ct);
-      attributes.stream().map(fld0 -> XmlMapper.mapIndex(entity, fld0)).filter(Objects::nonNull).forEach(cs::append);
+      em.rawFields().map(fld0 -> XmlMapper.mapIndex(em.getTarget(), fld0)).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
       return lb;
     } catch (Exception e) {
-      log.error("Unable to map entity [{}]", entity);
+      log.error("Unable to map entity [{}]", em.getTarget());
       log.error(e.getMessage(), e);
       throw new IllegalStateException(e);
     }
   }
 
-  private static Match mapAttribute(Class<?> root, Field target, TypeMapper tm) {
-    requireNonNull(root);
-    requireNonNull(target);
+  private static Match mapAttribute(Class<?> root, FieldMetadata fm, TypeMapper tm) {
+    requireNonNull(fm);
     requireNonNull(tm);
     Match columnXml = $("column")
-        .attr("name", target.getName().toLowerCase())
-        .attr("type", tm.resolveSqlType(target.getType(), AnnotationExtractor.asArray(target)));
-    Optional<MtId> oid = hasOwnPrimaryKey(root, target);
-    Optional<MtAttribute> nn = hasNotNull(target);
+        .attr("name", fm.field.getName().toLowerCase())
+        .attr("type", tm.resolveSqlType(fm));
+    Optional<MtId> oid = fm.hasPrimaryKeyOf(root);
+    Optional<MtAttribute> nn = fm.hasNotNull();
     boolean isTargetPk = oid.isPresent();
     Match cn = (isTargetPk || nn.isPresent()) ? $("constraints") : null;
     if (cn != null) {
@@ -58,14 +54,14 @@ public class XmlMapper {
     return columnXml;
   }
 
-  private static Match mapIndex(Class<?> root, Field target) {
-    requireNonNull(target);
-    if (isOwnIndex(root, target)) {
+  private static Match mapIndex(Class<?> root, FieldMetadata fm) {
+    requireNonNull(fm);
+    if (fm.hasIndexOf(root).isPresent()) {
       String entityName = toSnakeCase(root.getSimpleName());
       Match idx = $("createIndex")
-          .attr("indexName", format("%s_%s_idx", entityName, target.getName().toLowerCase()))
+          .attr("indexName", format("%s_%s_idx", entityName, fm.field.getName().toLowerCase()))
           .attr("tableName", entityName);
-      idx.append($("column").attr("name", target.getName().toLowerCase()));
+      idx.append($("column").attr("name", fm.field.getName().toLowerCase()));
       return idx;
     }
     return null;

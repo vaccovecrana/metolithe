@@ -9,5 +9,5 @@ public class CollectionEntity {
   @MtId public long entId;
   @MtIdGroup(number = 0, position = 1)
   @MtAttribute(nil = false, len = 32) public String entName;
-  @MtCollection public Set<String> options = new HashSet<>();
+  @MtCollection(sqlType = "varchar(128)") public Set<String> options = new HashSet<>();
 }

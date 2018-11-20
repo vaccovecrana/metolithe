@@ -3,6 +3,7 @@ package io.vacco.mt.unit;
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
 import io.vacco.metolithe.core.Murmur3LongGenerator;
+import io.vacco.metolithe.extraction.EntityMetadata;
 import io.vacco.metolithe.extraction.TypeMapper;
 import io.vacco.metolithe.util.Base64CollectionCodec;
 import io.vacco.metolithe.util.Murmur3;
@@ -26,10 +27,8 @@ import org.junit.runner.RunWith;
 import org.slf4j.*;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.sql.DriverManager;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
@@ -43,8 +42,8 @@ public class MetoLitheSpec {
   private static FluentJdbc jdbc;
   private static SmartPhoneDao smartPhoneDao;
   private static PhoneDao phoneDao;
-  private static Map<Class<?>, Collection<Field>> entities = new HashMap<>();
-  private static List<Match> entityXmlNodes = new ArrayList<>();
+  private static Collection<EntityMetadata> entities;
+  private static Map<Class<?>, Match> entityXmlNodes = new HashMap<>();
   private static List<File> xmlFiles = new ArrayList<>();
 
   private static String dbUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
@@ -92,41 +91,26 @@ public class MetoLitheSpec {
         c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).getField("lolo"));
     it("Cannot extract an invalid field.",
-        c -> c.expected(IllegalStateException.class),
+        c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).extract(null, "lolo"));
     it("Can extract an object's values without its primary key attribute.", () ->
         new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null)
-            .extractAll(new SmartPhone(), false)
-    );
-    it("Cannot map a class with invalid data.", c -> c.expected(IllegalStateException.class),
-        () -> XmlMapper.mapEntity(SmartPhone.class, null, new TypeMapper())
-    );
+            .extractAll(new SmartPhone(), false));
     it("Scans the target classpath packages for annotated classes.", () ->
-        new EntityExtractor().apply(EntityDescriptor.CaseFormat.KEEP_CASE,
-            new Base64CollectionCodec(),"io.vacco.mt.schema.valid")
-            .forEach(ed0 -> {
-              entities.put(ed0.getTarget(), ed0.getAllFields());
-              log.info(ed0.getFormat().toString());
-            })
-    );
-    it("Generates xml mappings for extracted entities.", () ->
-        entityXmlNodes.addAll(
-            entities.entrySet().stream().map(e0 ->
-                XmlMapper.mapEntity(e0.getKey(), e0.getValue(), new TypeMapper(new Base64CollectionCodec()))
-            ).collect(Collectors.toList()))
-    );
+        entities = new EntityExtractor().apply("io.vacco.mt.schema.valid"));
+    it("Generates XML mappings for each entity.", () ->
+        entities.forEach(em -> entityXmlNodes.put(em.getTarget(), XmlMapper.mapEntity(em, new TypeMapper()))));
     it("Prints each entity generated XML data.", () ->
-        entityXmlNodes.stream().map(XmlChangeSetWriter::getData).forEach(log::info));
+        entityXmlNodes.values().stream().map(XmlChangeSetWriter::getData).forEach(log::info));
     it("Maps and writes entity XML files.", () -> {
       File targetDir = new File("/tmp/testlogs");
       targetDir.mkdirs();
-      for (Map.Entry<Class<?>, Collection<Field>> e0 : entities.entrySet()) {
-        Match xml = XmlMapper.mapEntity(e0.getKey(), e0.getValue(), new TypeMapper(new Base64CollectionCodec()));
-        File xmlFile = XmlChangeSetWriter.write(e0.getKey(), xml, targetDir);
+      entityXmlNodes.forEach((clazz, xml) -> {
+        File xmlFile = XmlChangeSetWriter.write(clazz, xml, targetDir);
         assertNotNull(xmlFile);
         assertTrue(xmlFile.exists());
         xmlFiles.add(xmlFile);
-      }
+      });
     });
     it("Creates an in-memory database and applies the generated change logs.", () -> {
       JdbcConnection conn = new JdbcConnection(DriverManager.getConnection(dbUrl));
@@ -143,10 +127,11 @@ public class MetoLitheSpec {
     it("Cannot create a Dao for an entity with duplicate primary key field positions.",
         c -> c.expected(IllegalStateException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
     it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
-        c -> c.expected(IllegalArgumentException.class), () -> new InvalidEntityDao(jdbc, "public"));
+        c -> c.expected(IllegalArgumentException.class), () -> new MismatchingIdDao(jdbc, "public"));
     it("Initializes a new Dao.", () -> {
       smartPhoneDao = new SmartPhoneDao(jdbc, "public");
       assertNotNull(smartPhoneDao);
+      assertNotNull(smartPhoneDao.getDescriptor().getFormat());
     });
     it("Cannot load a non-existing object.", () -> {
       Optional<SmartPhone> lol = smartPhoneDao.load(999L);
@@ -339,7 +324,7 @@ public class MetoLitheSpec {
     it("Clears remaining coverage classes.", () -> {
       new CollectionEntity();
       new DuplicateIdEntity();
-      new InvalidEntity();
+      new MismatchingIdEntity();
       new Bus();
       new TypeUtil();
       new Murmur3();
