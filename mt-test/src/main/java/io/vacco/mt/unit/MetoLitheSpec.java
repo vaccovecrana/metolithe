@@ -128,6 +128,8 @@ public class MetoLitheSpec {
         c -> c.expected(IllegalStateException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
     it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
         c -> c.expected(IllegalArgumentException.class), () -> new MismatchingIdDao(jdbc, "public"));
+    it("Cannot create a Dao for an entity with a mismatching collection codec definition.",
+        c -> c.expected(IllegalStateException.class), () -> new InvalidCollectionTypeDao(jdbc, "public"));
     it("Initializes a new Dao.", () -> {
       smartPhoneDao = new SmartPhoneDao(jdbc, "public");
       assertNotNull(smartPhoneDao);

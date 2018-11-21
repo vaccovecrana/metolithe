@@ -39,7 +39,7 @@ public class EntityDescriptor<T> {
       if (collectionCodec == null) {
         String msg = String.format("Collection field [%s] found, but no collection codec is assigned.", fm);
         throw new IllegalStateException(msg);
-      } else if (mc.sqlType().equalsIgnoreCase(collectionCodec.getTargetSqlType())) {
+      } else if (!mc.sqlType().equalsIgnoreCase(collectionCodec.getTargetSqlType())) {
         String msg = String.format(
             "Collection codec with target SQL type [%s] does not support encoding for field of type [%s]",
             collectionCodec.getTargetSqlType(), mc.sqlType());

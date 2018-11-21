@@ -1,13 +1,13 @@
-package io.vacco.mt.schema.valid;
+package io.vacco.mt.schema.invalid;
 
 import io.vacco.metolithe.annotations.*;
 import java.util.HashSet;
 import java.util.Set;
 
 @MtEntity
-public class CollectionEntity {
+public class InvalidCollectionTypeEntity {
   @MtId public long entId;
   @MtIdGroup(number = 0, position = 1)
   @MtAttribute(nil = false, len = 32) public String entName;
-  @MtCollection(sqlType = "varchar(4096)") public Set<String> options = new HashSet<>();
+  @MtCollection(sqlType = "blob") public Set<String> options = new HashSet<>();
 }
