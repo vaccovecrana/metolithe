@@ -44,11 +44,11 @@ public class XmlMapper {
         .attr("type", tm.resolveSqlType(fm));
     Optional<MtId> oid = fm.hasPrimaryKeyOf(root);
     Optional<MtAttribute> nn = fm.hasNotNull();
-    boolean isTargetPk = oid.isPresent();
-    Match cn = (isTargetPk || nn.isPresent()) ? $("constraints") : null;
+    Optional<MtCollection> oc = fm.hasCollection();
+    Match cn = (oid.isPresent() || nn.isPresent() || oc.isPresent()) ? $("constraints") : null;
     if (cn != null) {
-      if (isTargetPk) { cn.attr("primaryKey", "true"); }
-      if (nn.isPresent()) { cn.attr("nullable", "false"); }
+      if (oid.isPresent()) { cn.attr("primaryKey", "true"); }
+      if (nn.isPresent() || oc.isPresent()) { cn.attr("nullable", "false"); }
       columnXml.append(cn);
     }
     return columnXml;
