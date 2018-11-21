@@ -7,6 +7,7 @@ import io.vacco.metolithe.spi.MtCollectionCodec;
 import io.vacco.metolithe.util.TypeUtil;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.*;
 import static java.util.stream.Collectors.joining;
@@ -81,12 +82,18 @@ public class EntityDescriptor<T> {
   }
 
   public Object [] extractPkComponents(T target) {
+    if (pkFieldGroups.isEmpty()) {
+      String msg = String.join("\n",
+          "Entity [%s] does not define primary key attribute groups.",
+          "Either set the primary key value externally or define id attribute groups in your entity.");
+      throw new IllegalStateException(String.format(msg, target));
+    }
     Optional<Object []> components = pkFieldGroups.values().stream()
         .map(fMap -> fMap.values().stream().map(fl -> doExtract(target, fl.field)).toArray(Object[]::new))
         .filter(TypeUtil::allNonNull)
         .findFirst();
     if (!components.isPresent()) {
-      String msg = String.format("No non-null primary key component value set available for [%s]", target);
+      String msg = String.format("No non-null primary key component attribute set available for [%s]", target);
       throw new IllegalStateException(msg);
     }
     return components.get();
@@ -120,20 +127,18 @@ public class EntityDescriptor<T> {
         throw new IllegalArgumentException(msg);
       }
     }));
-    if (pkFields.isEmpty()) {
-      throw new IllegalStateException(String.format("No field group definitions were found for class [%s].", target));
-    }
     return pkFields;
   }
 
   private String getSeedPkComponent() {
-    Optional<String> opk = fields.entrySet().stream()
+    List<String> opk = fields.entrySet().stream()
         .filter(e0 -> e0.getValue().hasPrimaryKeyOf(target).isPresent())
-        .map(Map.Entry::getKey).findFirst();
-    if (!opk.isPresent()) {
-      throw new IllegalStateException(String.format("%s does not define a primary key (MtId) field.", target));
+        .map(Map.Entry::getKey).collect(Collectors.toList());
+    if (opk.isEmpty()) { throw new IllegalStateException(String.format("%s does not define a primary key (MtId) field.", target)); }
+    if (opk.size() > 1) {
+      throw new IllegalStateException(String.format("Multiple primary key (MtId) field definitions found, specify only one: [%s]", opk));
     }
-    return opk.get();
+    return opk.get(0);
   }
 
   private Object doExtract(T target, Field f) {

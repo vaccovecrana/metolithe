@@ -72,9 +72,6 @@ public class MetoLitheSpec {
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
         () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
-    it("Cannot describe an entity without primary key groups.",
-        c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(MissingPkGroupEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
     it("Cannot describe an entity with duplicate id group positions.",
         c -> c.expected(IllegalArgumentException.class),
         () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
@@ -138,6 +135,12 @@ public class MetoLitheSpec {
     it("Cannot load a non-existing object.", () -> {
       Optional<SmartPhone> lol = smartPhoneDao.load(999L);
       assertFalse(lol.isPresent());
+    });
+    it("Cannot persist an entity without primary key groups and no explicitly assigned external id field.",
+        c -> c.expected(IllegalStateException.class), () -> {
+      BlogTagDao bd = new BlogTagDao(jdbc, "public");
+      BlogTag bt = new BlogTag();
+      bd.setId(bt);
     });
     it("Fails to explicitly load an non-existing object.", c -> c.expected(IllegalArgumentException.class),
         () -> smartPhoneDao.loadExisting(99999L)
