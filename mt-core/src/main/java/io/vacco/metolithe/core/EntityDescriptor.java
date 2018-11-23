@@ -1,42 +1,35 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-import io.vacco.metolithe.extraction.EntityMetadata;
-import io.vacco.metolithe.extraction.FieldMetadata;
+import io.vacco.metolithe.extraction.*;
 import io.vacco.metolithe.spi.MtCollectionCodec;
-import io.vacco.metolithe.util.TypeUtil;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.*;
 import static java.util.stream.Collectors.joining;
 
-public class EntityDescriptor<T> {
+public class EntityDescriptor<T> implements FieldExtractor<T> {
 
   public enum CaseFormat { UPPER_CASE, LOWER_CASE, KEEP_CASE }
   public static final String COMMA_SPC = ", ";
 
   private final Class<T> target;
   private final Map<String, FieldMetadata> fields;
-  private final String pkFieldName;
-  private final Map<Integer, Map<Integer, FieldMetadata>> pkFieldGroups;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
-  private MtCollectionCodec<?> collectionCodec;
+  private final IdMetadata<T> idMetadata;
+  private final MtCollectionCodec<?> collectionCodec;
 
   public EntityDescriptor(Class<T> target, CaseFormat format, MtCollectionCodec<?> collectionCodec) {
     this.target = requireNonNull(target);
     this.format = requireNonNull(format);
     this.collectionCodec = collectionCodec;
-
-    EntityMetadata em = new EntityMetadata(target);
-    this.fields = em.fieldIndex(this::setCase);
-    this.pkFieldName = getSeedPkComponent();
-    this.pkFieldGroups = assignPkComponents();
+    this.fields = new EntityMetadata(target).fieldIndex(this::setCase);
+    this.idMetadata = new IdMetadata<>(target, fields, this);
     this.entityAnnotation = requireNonNull(target.getDeclaredAnnotation(MtEntity.class));
 
-    em.rawFields().forEach(fm -> fm.hasCollection().ifPresent(mc -> {
+    fields.values().forEach(fm -> fm.hasCollection().ifPresent(mc -> {
       if (collectionCodec == null) {
         String msg = String.format("Collection field [%s] found, but no collection codec is assigned.", fm);
         throw new IllegalStateException(msg);
@@ -51,7 +44,7 @@ public class EntityDescriptor<T> {
 
   public Collection<String> propertyNames(boolean includePrimaryKey) {
     Set<String> fNames = new LinkedHashSet<>(fields.keySet());
-    if (!includePrimaryKey) { fNames.remove(pkFieldName); }
+    if (!includePrimaryKey) { fNames.remove(idMetadata.getIdFieldName()); }
     return fNames;
   }
 
@@ -77,33 +70,12 @@ public class EntityDescriptor<T> {
   public Map<String, Object> extractAll(T target, boolean includePrimaryKey) {
     Map<String, Object> vals = new LinkedHashMap<>();
     fields.forEach((fName, fl) -> vals.put(fName, extract(target, fName)));
-    if (!includePrimaryKey) { vals.remove(pkFieldName); }
+    if (!includePrimaryKey) { vals.remove(idMetadata.getIdFieldName()); }
     return vals;
   }
 
-  public Object [] extractPkComponents(T target) {
-    if (pkFieldGroups.isEmpty()) {
-      String msg = String.join("\n",
-          "Entity [%s] does not define primary key attribute groups.",
-          "Either set the primary key value externally or define id attribute groups in your entity.");
-      throw new IllegalStateException(String.format(msg, target));
-    }
-    Optional<Object []> components = pkFieldGroups.values().stream()
-        .map(fMap -> fMap.values().stream().map(fl -> doExtract(target, fl.field)).toArray(Object[]::new))
-        .filter(TypeUtil::allNonNull)
-        .findFirst();
-    if (!components.isPresent()) {
-      String msg = String.format("No non-null primary key component attribute set available for [%s]", target);
-      throw new IllegalStateException(msg);
-    }
-    return components.get();
-  }
+  public Object [] extractPkComponents(T target) { return idMetadata.extractPkComponents(target); }
 
-  public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
-  public MtCollectionCodec<?> getCollectionCodec() { return collectionCodec; }
-  public Class<T> getTarget() { return target; }
-  public CaseFormat getFormat() { return format; }
-  public String getPrimaryKeyField() { return pkFieldName; }
   public Field getField(String name) {
     requireNonNull(name);
     FieldMetadata fm = fields.get(name);
@@ -111,37 +83,7 @@ public class EntityDescriptor<T> {
     return fm.field;
   }
 
-  private Map<Integer, Map<Integer, FieldMetadata>> assignPkComponents() {
-    Map<Integer, Map<Integer, FieldMetadata>> pkFields = new TreeMap<>();
-    fields.values().forEach(fm -> fm.hasIdGroup().ifPresent(mtGrp -> {
-      Map<Integer, FieldMetadata> groupMap = pkFields.computeIfAbsent(mtGrp.number(), group -> new TreeMap<>());
-      if (!groupMap.containsKey(mtGrp.position())) {
-        groupMap.put(mtGrp.position(), fm);
-      } else {
-        String msg = String.format(
-            String.join("\n",
-                "[%s] contains duplicate primary key field group positions:",
-                "field: [%s], group: [%s], position: [%s]",
-                "Specify a unique position value for each primary key field group."
-            ), target, fm, mtGrp.number(), mtGrp.position());
-        throw new IllegalArgumentException(msg);
-      }
-    }));
-    return pkFields;
-  }
-
-  private String getSeedPkComponent() {
-    List<String> opk = fields.entrySet().stream()
-        .filter(e0 -> e0.getValue().hasPrimaryKeyOf(target).isPresent())
-        .map(Map.Entry::getKey).collect(Collectors.toList());
-    if (opk.isEmpty()) { throw new IllegalStateException(String.format("%s does not define a primary key (MtId) field.", target)); }
-    if (opk.size() > 1) {
-      throw new IllegalStateException(String.format("Multiple primary key (MtId) field definitions found, specify only one: [%s]", opk));
-    }
-    return opk.get(0);
-  }
-
-  private Object doExtract(T target, Field f) {
+  public Object doExtract(T target, Field f) {
     try {
       if (Collection.class.isAssignableFrom(f.getType())) {
         return collectionCodec.write((Collection) f.get(target));
@@ -160,4 +102,11 @@ public class EntityDescriptor<T> {
     }
     return in.field.getName();
   }
+
+  public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
+  public MtCollectionCodec<?> getCollectionCodec() { return collectionCodec; }
+  public Class<T> getTarget() { return target; }
+  public CaseFormat getFormat() { return format; }
+  public String getPrimaryKeyField() { return idMetadata.getIdFieldName(); }
+  public Collection<FieldMetadata> getFields() { return fields.values(); }
 }

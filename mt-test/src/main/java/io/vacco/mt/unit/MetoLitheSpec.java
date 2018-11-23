@@ -4,6 +4,7 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
 import io.vacco.metolithe.core.Murmur3LongGenerator;
 import io.vacco.metolithe.extraction.EntityMetadata;
+import io.vacco.metolithe.extraction.FieldMetadata;
 import io.vacco.metolithe.extraction.TypeMapper;
 import io.vacco.metolithe.util.Base64CollectionCodec;
 import io.vacco.metolithe.util.Murmur3;
@@ -343,6 +344,11 @@ public class MetoLitheSpec {
       sp.getDeviceUid();
       sp.getOs();
       sp.getGpsPrecision();
+
+      Optional<FieldMetadata> ofm = new EntityMetadata(SmartPhone.class).rawFields().findFirst();
+      assertTrue(ofm.isPresent());
+      assertNotNull(ofm.get().getRawAnnotations());
+      assertEquals(ofm.get(), ofm.get());
     });
   }
 }

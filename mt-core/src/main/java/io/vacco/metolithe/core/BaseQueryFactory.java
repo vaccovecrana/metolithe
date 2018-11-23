@@ -19,7 +19,6 @@ public abstract class BaseQueryFactory<T, K> {
   private String sourceSchema;
   private EntityDescriptor<T> descriptor;
   private ObjectMappers objectMappers;
-
   protected final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
   private final MtIdGenerator<K> generator;
 
@@ -29,10 +28,10 @@ public abstract class BaseQueryFactory<T, K> {
     this.sourceSchema = requireNonNull(sourceSchema);
     this.generator = requireNonNull(idGenerator);
     this.descriptor = requireNonNull(descriptor);
-    Arrays.stream(descriptor.getTarget().getDeclaredFields())
+    descriptor.getFields().stream().map(fm -> fm.field)
         .filter(fld -> fld.getType().isEnum())
         .forEach(fld -> extractors.put(fld.getType(), new EnumExtractor(fld.getType())));
-    Arrays.stream(descriptor.getTarget().getDeclaredFields())
+    descriptor.getFields().stream().map(fm -> fm.field)
         .filter(fld -> Collection.class.isAssignableFrom(fld.getType()))
         .forEach(fld -> extractors.put(fld.getType(), descriptor.getCollectionCodec()));
     this.objectMappers = ObjectMappers.builder().extractors(extractors).build();
