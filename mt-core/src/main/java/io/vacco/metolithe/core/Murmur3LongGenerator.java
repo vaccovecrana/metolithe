@@ -15,7 +15,7 @@ public class Murmur3LongGenerator implements MtIdGenerator<Long> {
   public Murmur3LongGenerator() { this.seed = Murmur3.DEFAULT_SEED; }
   public Murmur3LongGenerator(int seed) { this.seed = seed; }
 
-  @Override public Long apply(Object... parts) {
+  @Override public Long apply(Object... parts) { // TODO implement int generator code as well
     Objects.requireNonNull(parts);
     Optional<byte []> oba = Arrays.stream(parts)
         .filter(Objects::nonNull)

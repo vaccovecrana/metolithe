@@ -34,6 +34,18 @@ public class FieldMetadata {
         .map(an0 -> (MtId) an0).findFirst();
   }
 
+  public Optional<MtId> hasPrimaryKeyOf(Class<?> target) {
+    Optional<MtId> id = hasPrimaryKey();
+    if (field.getDeclaringClass() == target) return id;
+    return Optional.empty();
+  }
+
+  public Optional<MtIdPart> hasPrimaryKeyPart() {
+    return scan(field)
+        .filter(an0 -> an0.annotationType() == MtIdPart.class)
+        .map(an0 -> (MtIdPart) an0).findFirst();
+  }
+
   public Optional<MtAttribute> hasAttribute() {
     return scan(field)
         .filter(an0 -> an0.annotationType() == MtAttribute.class)
@@ -70,12 +82,6 @@ public class FieldMetadata {
   public Optional<MtIndex> hasIndexOf(Class<?> target) {
     Optional<MtIndex> idx = hasIndex();
     if (idx.isPresent() && field.getDeclaringClass() == target) return idx;
-    return Optional.empty();
-  }
-
-  public Optional<MtId> hasPrimaryKeyOf(Class<?> target) {
-    Optional<MtId> id = hasPrimaryKey();
-    if (field.getDeclaringClass() == target) return id;
     return Optional.empty();
   }
 

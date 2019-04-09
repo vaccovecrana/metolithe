@@ -19,7 +19,8 @@ public class TypeMapper {
       if (maxSize.isPresent()) { return format("varchar(%s)", maxSize.get().len()); }
       return "varchar";
     }
-    if (wt0 == Long.class || wt0 == Integer.class) { return "bigint"; }
+    if (wt0 == Integer.class) { return "int"; }
+    if (wt0 == Long.class) { return "bigint"; }
     if (wt0 == Double.class) { return "double"; }
     if (Enum.class.isAssignableFrom(fm.field.getType())) {
       Optional<MtAttribute> maxLength = fm.hasLength();

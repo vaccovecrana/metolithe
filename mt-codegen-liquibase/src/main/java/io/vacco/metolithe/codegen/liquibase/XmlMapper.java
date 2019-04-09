@@ -6,6 +6,7 @@ import org.joox.Match;
 import org.slf4j.*;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.String.*;
 import static java.util.Objects.*;
@@ -21,12 +22,15 @@ public class XmlMapper {
       requireNonNull(tm);
       URL xmlTemplate = requireNonNull(XmlMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml"));
       String entityName = toSnakeCase(em.getTarget().getSimpleName());
+      Class<?> root = em.getTarget();
       Match lb = $(xmlTemplate);
       Match cs = $("changeSet").attr("author", "generated").attr("id", entityName);
       Match ct = $("createTable").attr("tableName", entityName);
-      em.rawFields().map(fld0 -> XmlMapper.mapAttribute(em.getTarget(), fld0, tm)).forEach(ct::append);
+      em.rawFields().map(fld0 -> XmlMapper.mapAttribute(fld0, tm)).forEach(ct::append);
       cs.append(ct);
-      em.rawFields().map(fld0 -> XmlMapper.mapIndex(em.getTarget(), fld0)).filter(Objects::nonNull).forEach(cs::append);
+      Optional<Match> pka = mapPrimaryKeyAttributes(root, em);
+      pka.ifPresent(cs::append);
+      em.rawFields().map(fld0 -> XmlMapper.mapIndex(root, fld0)).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
       return lb;
     } catch (Exception e) {
@@ -36,18 +40,35 @@ public class XmlMapper {
     }
   }
 
-  private static Match mapAttribute(Class<?> root, FieldMetadata fm, TypeMapper tm) {
+  private static Optional<Match> mapPrimaryKeyAttributes(Class<?> root, EntityMetadata em) {
+    Collection<FieldMetadata> pkFields = em.rawFields().filter(fm -> fm.hasPrimaryKeyOf(root).isPresent())
+        .collect(Collectors.toList());
+    Collection<FieldMetadata> pkPartFields = em.rawFields().filter(fm -> fm.hasPrimaryKeyPart().isPresent())
+        .collect(Collectors.toList());
+    Collection<FieldMetadata> pkAll = new ArrayList<>(pkFields);
+    pkAll.addAll(pkPartFields);
+    if (pkFields.size() > 1) {
+      String err = format("Class [%s] defines more than one target primary key field: %s", root, pkFields);
+      throw new IllegalStateException(err);
+    }
+    if (!pkAll.isEmpty()) {
+      Match apk = $("addPrimaryKey").attr("columnNames", pkFields.stream()
+          .map(pk -> pk.field.getName()).collect(Collectors.joining(", ")));
+      return Optional.of(apk);
+    }
+    return Optional.empty();
+  }
+
+  private static Match mapAttribute(FieldMetadata fm, TypeMapper tm) {
     requireNonNull(fm);
     requireNonNull(tm);
     Match columnXml = $("column")
         .attr("name", fm.field.getName().toLowerCase())
         .attr("type", tm.resolveSqlType(fm));
-    Optional<MtId> oid = fm.hasPrimaryKeyOf(root);
     Optional<MtAttribute> nn = fm.hasNotNull();
     Optional<MtCollection> oc = fm.hasCollection();
-    Match cn = (oid.isPresent() || nn.isPresent() || oc.isPresent()) ? $("constraints") : null;
+    Match cn = (nn.isPresent() || oc.isPresent()) ? $("constraints") : null;
     if (cn != null) {
-      if (oid.isPresent()) { cn.attr("primaryKey", "true"); }
       if (nn.isPresent() || oc.isPresent()) { cn.attr("nullable", "false"); }
       columnXml.append(cn);
     }
