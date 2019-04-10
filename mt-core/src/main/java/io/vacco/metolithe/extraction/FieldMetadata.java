@@ -24,8 +24,7 @@ public class FieldMetadata {
   public boolean isEntityField() {
     return hasPrimaryKey().isPresent()
         || hasAttribute().isPresent()
-        || hasCollection().isPresent()
-        || hasIndex().isPresent();
+        || hasCollection().isPresent();
   }
 
   public Optional<MtId> hasPrimaryKey() {
@@ -86,7 +85,9 @@ public class FieldMetadata {
   }
 
   public boolean isValidCollectionField() {
-    return hasCollection().isPresent() && !(hasIndex().isPresent() || hasAttribute().isPresent());
+    if (hasIndex().isPresent()) return false;
+    if (hasAttribute().isPresent()) return false;
+    return hasCollection().isPresent();
   }
 
   public Annotation [] getRawAnnotations() { return scan(field).toArray(Annotation[]::new); }

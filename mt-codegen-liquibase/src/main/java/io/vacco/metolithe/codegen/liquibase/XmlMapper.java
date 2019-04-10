@@ -21,16 +21,15 @@ public class XmlMapper {
       requireNonNull(em);
       requireNonNull(tm);
       URL xmlTemplate = requireNonNull(XmlMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml"));
-      String entityName = toSnakeCase(em.getTarget().getSimpleName());
       Class<?> root = em.getTarget();
       Match lb = $(xmlTemplate);
-      Match cs = $("changeSet").attr("author", "generated").attr("id", entityName);
-      Match ct = $("createTable").attr("tableName", entityName);
+      Match cs = $("changeSet").attr("author", "generated").attr("id", em.getName());
+      Match ct = $("createTable").attr("tableName", em.getName());
       em.rawFields().map(fld0 -> XmlMapper.mapAttribute(fld0, tm)).forEach(ct::append);
       cs.append(ct);
       Optional<Match> pka = mapPrimaryKeyAttributes(root, em);
       pka.ifPresent(cs::append);
-      em.rawFields().map(fld0 -> XmlMapper.mapIndex(root, fld0)).filter(Objects::nonNull).forEach(cs::append);
+      em.rawFields().map(fld0 -> XmlMapper.mapIndex(em, fld0)).filter(Objects::nonNull).forEach(cs::append);
       lb.append(cs);
       return lb;
     } catch (Exception e) {
@@ -52,7 +51,9 @@ public class XmlMapper {
       throw new IllegalStateException(err);
     }
     if (!pkAll.isEmpty()) {
-      Match apk = $("addPrimaryKey").attr("columnNames", pkFields.stream()
+      Match apk = $("addPrimaryKey")
+          .attr("tableName", em.getName())
+          .attr("columnNames", pkFields.stream()
           .map(pk -> pk.field.getName()).collect(Collectors.joining(", ")));
       return Optional.of(apk);
     }
@@ -67,28 +68,25 @@ public class XmlMapper {
         .attr("type", tm.resolveSqlType(fm));
     Optional<MtAttribute> nn = fm.hasNotNull();
     Optional<MtCollection> oc = fm.hasCollection();
-    Match cn = (nn.isPresent() || oc.isPresent()) ? $("constraints") : null;
+    Optional<MtId> pk = fm.hasPrimaryKey();
+    Optional<MtIdPart> pkp = fm.hasPrimaryKeyPart();
+    Match cn = (nn.isPresent() || oc.isPresent() || pk.isPresent() || pkp.isPresent()) ? $("constraints") : null;
     if (cn != null) {
-      if (nn.isPresent() || oc.isPresent()) { cn.attr("nullable", "false"); }
+      cn.attr("nullable", "false");
       columnXml.append(cn);
     }
     return columnXml;
   }
 
-  private static Match mapIndex(Class<?> root, FieldMetadata fm) {
+  private static Match mapIndex(EntityMetadata em, FieldMetadata fm) {
     requireNonNull(fm);
-    if (fm.hasIndexOf(root).isPresent()) {
-      String entityName = toSnakeCase(root.getSimpleName());
+    if (fm.hasIndexOf(em.getTarget()).isPresent()) {
       Match idx = $("createIndex")
-          .attr("indexName", format("%s_%s_idx", entityName, fm.field.getName().toLowerCase()))
-          .attr("tableName", entityName);
+          .attr("indexName", format("%s_%s_idx", em.getName(), fm.field.getName().toLowerCase()))
+          .attr("tableName", em.getName());
       idx.append($("column").attr("name", fm.field.getName().toLowerCase()));
       return idx;
     }
     return null;
-  }
-
-  private static String toSnakeCase(String in) {
-    return requireNonNull(in).replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
   }
 }

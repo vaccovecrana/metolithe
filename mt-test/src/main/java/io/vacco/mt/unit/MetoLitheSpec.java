@@ -57,6 +57,8 @@ public class MetoLitheSpec {
   private static String phoneNo2 = "617-555-5555";
   private static String phoneNo3 = "787-555-5555";
 
+  private static long userId = 123456;
+
   private static long generatedId1;
   private static long generatedId2;
 
@@ -252,11 +254,11 @@ public class MetoLitheSpec {
       BusDao bd = new BusDao(jdbc, "public");
       Bus b = new Bus();
       b.licensePlate = "5AA777";
-      long id0 = bd.idOf(b);
+      int id0 = bd.idOf(b);
       b.licensePlate = "2ZZ999";
-      long id1 = bd.idOf(b);
+      int id1 = bd.idOf(b);
       b.licensePlate = "5AA777";
-      long id2 = bd.idOf(b);
+      int id2 = bd.idOf(b);
       assertNotEquals(id0, id1);
       assertEquals(id0, id2);
     });
@@ -285,7 +287,9 @@ public class MetoLitheSpec {
       p.setActive(true);
       p.setNumber(phoneNo3);
       p.setSerialNumber(serialNo3);
+      p.setUserId(userId);
       p = phoneDao.save(p);
+      assertTrue(p.getPhoneId() != 0);
       assertNotNull(p);
     });
     it("Can create a list query of target parameters", () -> {

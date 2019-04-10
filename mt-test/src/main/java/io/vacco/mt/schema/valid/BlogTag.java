@@ -1,11 +1,8 @@
 package io.vacco.mt.schema.valid;
 
-import io.vacco.metolithe.annotations.MtAttribute;
-import io.vacco.metolithe.annotations.MtEntity;
-import io.vacco.metolithe.annotations.MtId;
+import io.vacco.metolithe.annotations.*;
 
-@MtEntity
-public class BlogTag {
-  @MtId public long blogId = 0;
+@MtEntity public class BlogTag {
+  @MtId public int blogId = 0;
   @MtAttribute public long categoryFkId = 0;
 }

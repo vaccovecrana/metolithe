@@ -7,7 +7,7 @@ import io.vacco.metolithe.annotations.MtIdGroup;
 
 @MtEntity(fixedId = false)
 public class Bus {
-  @MtId public long busId;
+  @MtId public int busId;
 
   @MtIdGroup(number = 0, position = 0)
   @MtAttribute(len = 8)

@@ -34,9 +34,13 @@ public class EntityMetadata {
     return metadata.stream().collect(Collectors.toMap(keyNameFn, Function.identity()));
   }
 
+  private static String toSnakeCase(String in) {
+    return requireNonNull(in).replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
+  }
+
   public Stream<FieldMetadata> rawFields() {
     return metadata.stream();
   }
-
+  public String getName() { return toSnakeCase(target.getSimpleName()); }
   public Class<?> getTarget() { return target; }
 }

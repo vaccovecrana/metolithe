@@ -7,6 +7,9 @@ public class Phone {
 
   @MtId private long phoneId;
 
+  @MtAttribute(nil = false) @MtIdPart
+  private long userId;
+
   @MtAttribute(nil = false, len = 16)
   @MtIdGroup(number = 0, position = 0)
   private String serialNumber;
@@ -27,4 +30,6 @@ public class Phone {
   public void setActive(boolean active) { this.active = active; }
 
   public long getPhoneId() { return phoneId; }
+  public long getUserId() { return userId; }
+  public void setUserId(long userId) { this.userId = userId; }
 }
