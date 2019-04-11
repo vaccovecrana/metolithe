@@ -39,12 +39,6 @@ public class FieldMetadata {
     return Optional.empty();
   }
 
-  public Optional<MtIdPart> hasPrimaryKeyPart() {
-    return scan(field)
-        .filter(an0 -> an0.annotationType() == MtIdPart.class)
-        .map(an0 -> (MtIdPart) an0).findFirst();
-  }
-
   public Optional<MtAttribute> hasAttribute() {
     return scan(field)
         .filter(an0 -> an0.annotationType() == MtAttribute.class)

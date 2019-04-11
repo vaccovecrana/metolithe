@@ -1,8 +1,11 @@
 package io.vacco.metolithe.extraction;
 
+import io.vacco.metolithe.annotations.MtId;
 import io.vacco.metolithe.util.TypeUtil;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 public class IdMetadata<T> {
 
@@ -12,20 +15,18 @@ public class IdMetadata<T> {
 
   public IdMetadata(Class<T> root, Map<String, FieldMetadata> fieldIndex, FieldExtractor<T> fieldExtractor) {
     this.fieldExtractor = Objects.requireNonNull(fieldExtractor);
-    List<String> opk = fieldIndex.entrySet().stream()
-        .filter(e0 -> e0.getValue().hasPrimaryKeyOf(root).isPresent())
-        .map(Map.Entry::getKey).collect(Collectors.toList());
-    if (opk.isEmpty()) {
-      throw new IllegalStateException(String.format("%s does not define a primary key (MtId) field.", root));
+    List<Map.Entry<String, FieldMetadata>> storageTargetFields = fieldIndex.entrySet().stream()
+        .filter(e -> e.getValue().hasPrimaryKeyOf(root).map(MtId::groupTarget).orElse(false))
+        .collect(Collectors.toList());
+    if (storageTargetFields.size() != 1) {
+      String err = format("Class [%s] is missing, or defines more than one primary key storage field: %s", root, storageTargetFields);
+      throw new IllegalStateException(err);
     }
-    if (opk.size() > 1) {
-      throw new IllegalStateException(String.format("Multiple primary key (MtId) field definitions found, specify only one: [%s]", opk));
-    }
-    this.idFieldName = opk.get(0);
+    this.idFieldName = storageTargetFields.get(0).getKey();
 
-    Map<Integer, Map<Integer, FieldMetadata>> pkFields = new TreeMap<>();
+    Map<Integer, Map<Integer, FieldMetadata>> pkGroups = new TreeMap<>();
     fieldIndex.values().forEach(fm -> fm.hasIdGroup().ifPresent(mtGrp -> {
-      Map<Integer, FieldMetadata> groupMap = pkFields.computeIfAbsent(mtGrp.number(), group -> new TreeMap<>());
+      Map<Integer, FieldMetadata> groupMap = pkGroups.computeIfAbsent(mtGrp.number(), group -> new TreeMap<>());
       if (!groupMap.containsKey(mtGrp.position())) {
         groupMap.put(mtGrp.position(), fm);
       } else {
@@ -38,7 +39,7 @@ public class IdMetadata<T> {
         throw new IllegalArgumentException(msg);
       }
     }));
-    this.pkFieldGroups = pkFields;
+    this.pkFieldGroups = pkGroups;
   }
 
   public Object [] extractPkComponents(T target) {

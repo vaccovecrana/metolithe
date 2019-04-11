@@ -7,7 +7,8 @@ public class Phone {
 
   @MtId private long phoneId;
 
-  @MtAttribute(nil = false) @MtIdPart
+  @MtId(groupTarget = false)
+  @MtAttribute(nil = false)
   private long userId;
 
   @MtAttribute(nil = false, len = 16)
