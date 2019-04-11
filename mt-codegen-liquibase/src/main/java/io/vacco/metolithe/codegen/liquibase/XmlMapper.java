@@ -53,8 +53,10 @@ public class XmlMapper {
     if (!pkAll.isEmpty()) {
       Match apk = $("addPrimaryKey")
           .attr("tableName", em.getName())
-          .attr("columnNames", pkFields.stream()
-          .map(pk -> pk.field.getName()).collect(Collectors.joining(", ")));
+          .attr("columnNames", pkAll.stream()
+              .map(pk -> pk.field.getName())
+              .collect(Collectors.joining(", "))
+          );
       return Optional.of(apk);
     }
     return Optional.empty();
