@@ -200,7 +200,7 @@ public class MetoLitheSpec {
       smartPhoneDao.merge(sp);
     });
     it("Can delete an existing object based on an attribute value.", () -> {
-      long dc = smartPhoneDao.deleteWhereEq("number", phoneNo2);
+      long dc = smartPhoneDao.deleteWhereEnEq(SmartPhone.fields.number, phoneNo2);
       assertEquals(1, dc);
       SmartPhone sp = new SmartPhone();
       sp.setSerialNumber(serialNo2);

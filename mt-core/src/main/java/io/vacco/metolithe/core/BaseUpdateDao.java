@@ -61,6 +61,10 @@ public abstract class BaseUpdateDao<T, K> extends BaseDao<T, K> {
         .namedParam(field, value).run().affectedRows();
   }
 
+  public long deleteWhereEnEq(Enum fieldName, Object value) {
+    return deleteWhereEq(fieldName.toString(), value);
+  }
+
   public long deleteWhereIdEq(K id) {
     requireNonNull(id, classError(DaoError.MISSING_ID));
     return deleteWhereEq(getDescriptor().getPrimaryKeyField(), id);
