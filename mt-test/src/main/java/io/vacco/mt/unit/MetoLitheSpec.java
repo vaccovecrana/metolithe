@@ -168,7 +168,7 @@ public class MetoLitheSpec {
       assertTrue(osp.isPresent());
     });
     it("Can find an object by an attribute.", () -> {
-      Collection<SmartPhone> spc = smartPhoneDao.loadWhereEq("number", phoneNo);
+      Collection<SmartPhone> spc = smartPhoneDao.loadWhereEnEq(SmartPhone.fields.number, phoneNo);
       assertNotNull(spc);
       assertEquals(spc.size(), 1);
       assertEquals(phoneNo, spc.iterator().next().getNumber());

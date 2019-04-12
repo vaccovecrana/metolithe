@@ -61,6 +61,10 @@ public abstract class BaseDao<T, K> extends BaseQueryFactory<T, K> {
         .namedParam(field, value).listResult(mapToDefault());
   }
 
+  public Collection<T> loadWhereEnEq(Enum fieldName, Object value) {
+    return loadWhereEq(fieldName.name(), value);
+  }
+
   public T loadExisting(K id) {
     Optional<T> record = load(id);
     if (!record.isPresent()) {

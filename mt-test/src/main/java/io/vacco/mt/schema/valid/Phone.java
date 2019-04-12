@@ -5,6 +5,8 @@ import io.vacco.metolithe.annotations.*;
 @MtEntity()
 public class Phone {
 
+  public enum fields { number }
+
   @MtId private long phoneId;
 
   @MtId(groupTarget = false)
