@@ -109,4 +109,11 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
   public CaseFormat getFormat() { return format; }
   public String getPrimaryKeyField() { return idMetadata.getIdFieldName(); }
   public Collection<FieldMetadata> getFields() { return fields.values(); }
+
+  public <V> EntityCollection<T, V> wrap(Collection<V> value) {
+    EntityCollection<T, V> out = new EntityCollection<>();
+    out.descriptor = this;
+    out.value = value;
+    return out;
+  }
 }
