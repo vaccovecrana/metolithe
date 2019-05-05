@@ -1,5 +1,6 @@
 package io.vacco.mt.dao;
 
+import io.vacco.metolithe.base.Murmur3LongGenerator;
 import io.vacco.metolithe.core.*;
 import io.vacco.mt.schema.invalid.MismatchingIdEntity;
 import org.codejargon.fluentjdbc.api.FluentJdbc;

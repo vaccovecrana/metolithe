@@ -3,6 +3,7 @@ package io.vacco.metolithe.extraction;
 import io.vacco.metolithe.annotations.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -85,6 +86,13 @@ public class FieldMetadata {
   }
 
   public Annotation [] getRawAnnotations() { return scan(field).toArray(Annotation[]::new); }
+
+  public Optional<Class<?>> getCollectionType() {
+    if (!hasCollection().isPresent()) return Optional.empty();
+    ParameterizedType t = (ParameterizedType) field.getGenericType();
+    Class<?> typeClass = (Class<?>) t.getActualTypeArguments()[0];
+    return Optional.of(typeClass);
+  }
 
   private Stream<Annotation> scan(Field f) {
     return Arrays.stream(f.getDeclaredAnnotations()).flatMap(an0 -> {

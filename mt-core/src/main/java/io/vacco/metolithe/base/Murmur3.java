@@ -1,4 +1,4 @@
-package io.vacco.metolithe.util;
+package io.vacco.metolithe.base;
 
 /**
  * Sourced from https://github.com/apache/hive/blob/master/storage-api/src/java/org/apache/hive/common/util/Murmur3.java

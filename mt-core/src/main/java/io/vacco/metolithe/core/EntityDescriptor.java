@@ -16,6 +16,7 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
 
   private final Class<T> target;
   private final Map<String, FieldMetadata> fields;
+  private final Map<Field, FieldMetadata> fieldIndex;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
   private final IdMetadata<T> idMetadata;
@@ -28,8 +29,10 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
     this.fields = new EntityMetadata(target).fieldIndex(this::setCase);
     this.idMetadata = new IdMetadata<>(target, fields, this);
     this.entityAnnotation = requireNonNull(target.getDeclaredAnnotation(MtEntity.class));
+    this.fieldIndex = new HashMap<>();
 
     fields.values().forEach(fm -> fm.hasCollection().ifPresent(mc -> {
+      fieldIndex.put(fm.field, fm);
       if (collectionCodec == null) {
         String msg = String.format("Collection field [%s] found, but no collection codec is assigned.", fm);
         throw new IllegalStateException(msg);
@@ -86,7 +89,13 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
   public Object doExtract(T target, Field f) {
     try {
       if (Collection.class.isAssignableFrom(f.getType())) {
-        return collectionCodec.write((Collection) f.get(target));
+        Optional<Class<?>> collectionType = fieldIndex.get(f).getCollectionType();
+        if (!collectionType.isPresent()) {
+          String msg = String.format("Missing collection field metadata for field [%s]", f);
+          throw new IllegalStateException(msg);
+        }
+        EntityCollection ec = new EntityCollection().with((Collection) f.get(target), collectionType.get());
+        return collectionCodec.write(ec);
       }
       return f.get(target);
     }
@@ -109,11 +118,4 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
   public CaseFormat getFormat() { return format; }
   public String getPrimaryKeyField() { return idMetadata.getIdFieldName(); }
   public Collection<FieldMetadata> getFields() { return fields.values(); }
-
-  public <V> EntityCollection<T, V> wrap(Collection<V> value) {
-    EntityCollection<T, V> out = new EntityCollection<>();
-    out.descriptor = this;
-    out.value = value;
-    return out;
-  }
 }

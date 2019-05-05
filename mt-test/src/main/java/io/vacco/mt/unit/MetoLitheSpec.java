@@ -2,12 +2,12 @@ package io.vacco.mt.unit;
 
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.EntityDescriptor;
-import io.vacco.metolithe.core.Murmur3LongGenerator;
+import io.vacco.metolithe.base.Murmur3LongGenerator;
 import io.vacco.metolithe.extraction.EntityMetadata;
 import io.vacco.metolithe.extraction.FieldMetadata;
 import io.vacco.metolithe.extraction.TypeMapper;
-import io.vacco.metolithe.util.Base64CollectionCodec;
-import io.vacco.metolithe.util.Murmur3;
+import io.vacco.metolithe.base.Base64CollectionCodec;
+import io.vacco.metolithe.base.Murmur3;
 import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
 import io.vacco.mt.schema.invalid.*;
@@ -229,6 +229,8 @@ public class MetoLitheSpec {
       ce.options.add("Why");
       ce.options.add("not");
       ce.options.add("Zoidberg?");
+      ce.colors.add(CollectionEntity.Color.RED);
+      ce.colors.add(CollectionEntity.Color.BLUE);
       cd.setId(ce);
       cd.save(ce);
       CollectionEntity ce0 = cd.loadExisting(ce.entId);

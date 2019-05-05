@@ -1,8 +1,7 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.base;
 
 import io.vacco.metolithe.spi.MtIdGenerator;
 import io.vacco.metolithe.util.ArrayConcat;
-import io.vacco.metolithe.util.Murmur3;
 
 import java.util.Arrays;
 import java.util.Objects;

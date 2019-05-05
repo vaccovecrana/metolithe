@@ -2,8 +2,8 @@ package io.vacco.mt.dao;
 
 import io.vacco.metolithe.core.BaseUpdateDao;
 import io.vacco.metolithe.core.EntityDescriptor;
-import io.vacco.metolithe.core.Murmur3LongGenerator;
-import io.vacco.metolithe.util.Base64CollectionCodec;
+import io.vacco.metolithe.base.Murmur3LongGenerator;
+import io.vacco.metolithe.base.Base64CollectionCodec;
 import io.vacco.mt.schema.valid.CollectionEntity;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 

@@ -1,5 +1,6 @@
-package io.vacco.metolithe.util;
+package io.vacco.metolithe.base;
 
+import io.vacco.metolithe.core.EntityCollection;
 import io.vacco.metolithe.spi.MtCollectionCodec;
 import java.io.*;
 import java.sql.ResultSet;
@@ -12,16 +13,18 @@ public class Base64CollectionCodec implements MtCollectionCodec<String> {
 
   private static final String SIGMA_COL = "Σ:";
 
-  @Override public String write(Collection<?> payload) {
+  @Override
+  public String write(EntityCollection collection) {
     try {
-      requireNonNull(payload);
+      requireNonNull(collection);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(baos);
-      oos.writeObject(payload);
+      oos.writeObject(collection.value);
       oos.close();
       String b64 = Base64.getEncoder().encodeToString(baos.toByteArray());
       return String.format("%s%s", SIGMA_COL, b64);
-    } catch (Exception e) { throw new IllegalStateException(e); }  }
+    } catch (Exception e) { throw new IllegalStateException(e); }
+  }
 
   @Override public Collection<?> read(String payload) {
     try {

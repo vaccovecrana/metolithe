@@ -1,5 +1,6 @@
 package io.vacco.mt.dao;
 
+import io.vacco.metolithe.base.Murmur3IntGenerator;
 import io.vacco.metolithe.core.*;
 import io.vacco.mt.schema.valid.Bus;
 import org.codejargon.fluentjdbc.api.FluentJdbc;

@@ -5,13 +5,13 @@ import org.codejargon.fluentjdbc.api.mapper.ObjectMapperRsExtractor;
 import java.util.Collection;
 import java.util.function.Function;
 
-public interface MtCollectionCodec<O> extends
-    Function<EntityCollection<?, ?>, O>, ObjectMapperRsExtractor<Collection<?>> {
-  O write(Collection<?> payload, Class<?> targetType);
+public interface MtCollectionCodec<O> extends Function<EntityCollection, O>, ObjectMapperRsExtractor<Collection<?>> {
+
+  O write(EntityCollection collection);
   Collection<?> read(O payload);
   String getTargetSqlType();
 
-  @Override default O apply(EntityCollection<?, ?> entityCollection) {
-    entityCollection.descriptor.getFields().iterator().next().
+  @Override default O apply(EntityCollection entityCollection) {
+    return write(entityCollection);
   }
 }
