@@ -125,7 +125,7 @@ public class MetoLitheSpec {
       conn.close();
     });
     it("Cannot create a Dao for an entity with duplicate primary key field positions.",
-        c -> c.expected(IllegalStateException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
+        c -> c.expected(IllegalArgumentException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
     it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
         c -> c.expected(IllegalArgumentException.class), () -> new MismatchingIdDao(jdbc, "public"));
     it("Cannot create a Dao for an entity with a mismatching collection codec definition.",

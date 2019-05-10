@@ -1,9 +1,7 @@
 package io.vacco.metolithe.extraction;
 
-import io.vacco.metolithe.annotations.MtId;
 import io.vacco.metolithe.util.TypeUtil;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -15,14 +13,13 @@ public class IdMetadata<T> {
 
   public IdMetadata(Class<T> root, Map<String, FieldMetadata> fieldIndex, FieldExtractor<T> fieldExtractor) {
     this.fieldExtractor = Objects.requireNonNull(fieldExtractor);
-    List<Map.Entry<String, FieldMetadata>> storageTargetFields = fieldIndex.entrySet().stream()
-        .filter(e -> e.getValue().hasPrimaryKeyOf(root).map(MtId::groupTarget).orElse(false))
-        .collect(Collectors.toList());
-    if (storageTargetFields.size() != 1) {
-      String err = format("Class [%s] is missing, or defines more than one primary key storage field: %s", root, storageTargetFields);
+    Optional<Map.Entry<String, FieldMetadata>> oMtId = fieldIndex.entrySet().stream()
+        .filter(fm -> fm.getValue().hasPrimaryKeyOf(root).isPresent()).findFirst();
+    if (!oMtId.isPresent()) {
+      String err = format("Class [%s] is missing a primary key storage field.", root);
       throw new IllegalStateException(err);
     }
-    this.idFieldName = storageTargetFields.get(0).getKey();
+    this.idFieldName = oMtId.get().getKey();
 
     Map<Integer, Map<Integer, FieldMetadata>> pkGroups = new TreeMap<>();
     fieldIndex.values().forEach(fm -> fm.hasIdGroup().ifPresent(mtGrp -> {

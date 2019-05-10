@@ -9,7 +9,6 @@ public class Phone {
 
   @MtId private long phoneId;
 
-  @MtId(groupTarget = false)
   @MtAttribute(nil = false)
   private long userId;
 

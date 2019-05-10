@@ -6,6 +6,7 @@ import org.joox.Match;
 import org.slf4j.*;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.String.*;
 import static java.util.Objects.*;
@@ -23,9 +24,11 @@ public class XmlMapper {
       Match lb = $(xmlTemplate);
       Match cs = $("changeSet").attr("author", "generated").attr("id", em.getName());
       Match ct = $("createTable").attr("tableName", em.getName());
+      Match uq = mapUniqueConstraints(em);
       em.rawFields().map(fld0 -> XmlMapper.mapAttribute(em, fld0, tm)).forEach(ct::append);
       cs.append(ct);
       em.rawFields().map(fld0 -> XmlMapper.mapIndex(em, fld0)).filter(Objects::nonNull).forEach(cs::append);
+      if (uq != null) { cs.append(uq); }
       lb.append(cs);
       return lb;
     } catch (Exception e) {
@@ -63,6 +66,22 @@ public class XmlMapper {
           .attr("tableName", em.getName());
       idx.append($("column").attr("name", fm.field.getName().toLowerCase()));
       return idx;
+    }
+    return null;
+  }
+
+  private static Match mapUniqueConstraints(EntityMetadata em) {
+    requireNonNull(em);
+    List<FieldMetadata> idGroupFields = em.rawFields()
+        .filter(fm -> fm.hasIdGroup().isPresent())
+        .collect(Collectors.toList());
+    if (!idGroupFields.isEmpty()) {
+      return $("addUniqueConstraint")
+          .attr("tableName", em.getName())
+          .attr("constraintName", format("%s_unique", em.getName()))
+          .attr("columnNames", idGroupFields.stream()
+              .map(fm -> fm.field.getName().toLowerCase())
+              .collect(Collectors.joining(",")));
     }
     return null;
   }
