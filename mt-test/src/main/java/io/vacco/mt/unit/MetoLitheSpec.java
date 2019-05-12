@@ -173,6 +173,33 @@ public class MetoLitheSpec {
       assertEquals(spc.size(), 1);
       assertEquals(phoneNo, spc.iterator().next().getNumber());
     });
+    it("Can find a collection of persisted objects given their ids.", () -> {
+      BlogTagDao bd = new BlogTagDao(jdbc, "public");
+      BlogTag bt = new BlogTag();
+      BlogTag bt1 = new BlogTag();
+      BlogTag bt2 = new BlogTag();
+      BlogTag bt3 = new BlogTag();
+
+      bt.blogId = 10;
+      bt1.blogId = 11;
+      bt2.blogId = 12;
+      bt3.blogId = 13;
+
+      bt.categoryFkId = 10;
+      bt1.categoryFkId = 11;
+      bt2.categoryFkId = 12;
+      bt3.categoryFkId = 13;
+
+      bd.merge(bt);
+      bd.merge(bt1);
+      bd.merge(bt2);
+      bd.merge(bt3);
+
+      List<Integer> ids = Arrays.asList(10, 11, 12, 13);
+      Map<Integer, BlogTag> tags = bd.loadWhereEnIn(BlogTag.fields.blogid, ids);
+      assertFalse(tags.isEmpty());
+      assertEquals(4, tags.size());
+    });
     it("Can update an existing object.", () -> {
       SmartPhone sp = smartPhoneDao.loadExisting(generatedId1);
       sp.setBatteryType(null);

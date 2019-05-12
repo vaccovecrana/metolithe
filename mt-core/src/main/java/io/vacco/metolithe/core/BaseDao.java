@@ -65,6 +65,28 @@ public abstract class BaseDao<T, K> extends BaseQueryFactory<T, K> {
     return loadWhereEq(fieldName.name(), value);
   }
 
+  public <V> Map<V, T> loadWhereIn(String field, Collection<?> ids) {
+    Objects.requireNonNull(field);
+    Objects.requireNonNull(ids);
+    if (ids.isEmpty()) { return Collections.emptyMap(); }
+    Map<String, Object> pids = new HashMap<>();
+    Set ids0 = new HashSet<>(ids);
+    String pidParams = toNamedParam(pids, ids0, field);
+    String query = String.format("select %s from %s where %s in (%s)",
+        getDescriptor().propertyNamesCsv(true),
+        getSchemaName(), field, pidParams);
+    List<T> raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
+    Map<V, T> result = new HashMap<>();
+    raw.forEach(obj -> result.put(
+        getDescriptor().extract(obj, getDescriptor().getPrimaryKeyField()), obj
+    ));
+    return result;
+  }
+
+  public <V> Map<V, T> loadWhereEnIn(Enum fieldName, Collection<?> ids) {
+    return loadWhereIn(fieldName.toString(), ids);
+  }
+
   public T loadExisting(K id) {
     Optional<T> record = load(id);
     if (!record.isPresent()) {

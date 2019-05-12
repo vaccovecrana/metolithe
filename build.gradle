@@ -6,7 +6,7 @@ buildscript {
 subprojects {
 
   group 'io.vacco.metolithe'
-  version "1.2.0"
+  version "1.2.1"
 
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
@@ -22,7 +22,7 @@ subprojects {
     fuentJdbc = "org.codejargon:fluentjdbc:1.8.3"
     fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:2.18.1"
     joox = "org.jooq:joox-java-6:1.6.0"
-    liquibase = "org.liquibase:liquibase-core:3.6.2"
+    liquibase = "org.liquibase:liquibase-core:3.6.3"
 
     junit = "junit:junit:4.12"
     j8Spec = "io.github.j8spec:j8spec:3.0.0"
