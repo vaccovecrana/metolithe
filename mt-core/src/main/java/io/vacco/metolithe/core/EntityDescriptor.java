@@ -2,7 +2,6 @@ package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
 import io.vacco.metolithe.extraction.*;
-import io.vacco.metolithe.spi.MtCollectionCodec;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -16,33 +15,16 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
 
   private final Class<T> target;
   private final Map<String, FieldMetadata> fields;
-  private final Map<Field, FieldMetadata> fieldIndex;
   private final CaseFormat format;
   private final MtEntity entityAnnotation;
   private final IdMetadata<T> idMetadata;
-  private final MtCollectionCodec<?> collectionCodec;
 
-  public EntityDescriptor(Class<T> target, CaseFormat format, MtCollectionCodec<?> collectionCodec) {
+  public EntityDescriptor(Class<T> target, CaseFormat format) {
     this.target = requireNonNull(target);
     this.format = requireNonNull(format);
-    this.collectionCodec = collectionCodec;
     this.fields = new EntityMetadata(target).fieldIndex(this::setCase);
     this.idMetadata = new IdMetadata<>(target, fields, this);
     this.entityAnnotation = requireNonNull(target.getDeclaredAnnotation(MtEntity.class));
-    this.fieldIndex = new HashMap<>();
-
-    fields.values().forEach(fm -> fm.hasCollection().ifPresent(mc -> {
-      fieldIndex.put(fm.field, fm);
-      if (collectionCodec == null) {
-        String msg = String.format("Collection field [%s] found, but no collection codec is assigned.", fm);
-        throw new IllegalStateException(msg);
-      } else if (!mc.sqlType().equalsIgnoreCase(collectionCodec.getTargetSqlType())) {
-        String msg = String.format(
-            "Collection codec with target SQL type [%s] does not support encoding for field of type [%s]",
-            collectionCodec.getTargetSqlType(), mc.sqlType());
-        throw new IllegalStateException(msg);
-      }
-    }));
   }
 
   public Collection<String> propertyNames(boolean includePrimaryKey) {
@@ -88,15 +70,6 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
 
   public Object doExtract(T target, Field f) {
     try {
-      if (Collection.class.isAssignableFrom(f.getType())) {
-        Optional<Class<?>> collectionType = fieldIndex.get(f).getCollectionType();
-        if (!collectionType.isPresent()) {
-          String msg = String.format("Missing collection field metadata for field [%s]", f);
-          throw new IllegalStateException(msg);
-        }
-        EntityCollection ec = new EntityCollection().with((Collection) f.get(target), collectionType.get());
-        return collectionCodec.write(ec);
-      }
       return f.get(target);
     }
     catch (Exception e) {
@@ -113,7 +86,6 @@ public class EntityDescriptor<T> implements FieldExtractor<T> {
   }
 
   public boolean isFixedPrimaryKey() { return entityAnnotation.fixedId(); }
-  public MtCollectionCodec<?> getCollectionCodec() { return collectionCodec; }
   public Class<T> getTarget() { return target; }
   public CaseFormat getFormat() { return format; }
   public String getPrimaryKeyField() { return idMetadata.getIdFieldName(); }

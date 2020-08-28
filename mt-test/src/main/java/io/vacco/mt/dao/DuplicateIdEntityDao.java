@@ -10,7 +10,7 @@ public class DuplicateIdEntityDao extends BaseUpdateDao<DuplicateIdEntity, Long>
 
   public DuplicateIdEntityDao(FluentJdbc jdbc, String sourceSchema) {
     super(jdbc, sourceSchema, new EntityDescriptor<>(
-        DuplicateIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null
+        DuplicateIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE
     ), new Murmur3LongGenerator());
   }
 }

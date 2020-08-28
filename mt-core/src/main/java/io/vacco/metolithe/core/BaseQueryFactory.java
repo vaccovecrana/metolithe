@@ -31,9 +31,6 @@ public abstract class BaseQueryFactory<T, K> {
     descriptor.getFields().stream().map(fm -> fm.field)
         .filter(fld -> fld.getType().isEnum())
         .forEach(fld -> extractors.put(fld.getType(), new EnumExtractor(fld.getType())));
-    descriptor.getFields().stream().map(fm -> fm.field)
-        .filter(fld -> Collection.class.isAssignableFrom(fld.getType()))
-        .forEach(fld -> extractors.put(fld.getType(), descriptor.getCollectionCodec()));
     this.objectMappers = ObjectMappers.builder().extractors(extractors).build();
     Class<?> idClass = TypeUtil.toWrapperClass(idGenerator.defaultValue().getClass());
     Class<?> entityPkClass = TypeUtil.toWrapperClass(descriptor.getField(descriptor.getPrimaryKeyField()).getType());
@@ -51,8 +48,7 @@ public abstract class BaseQueryFactory<T, K> {
     boolean isNull = currentPk == null;
     if (isFixed && !isDefault && !isNull) { return currentPk; }
     Object [] pkValues = getDescriptor().extractPkComponents(target);
-    Object pkVal = generator.apply(pkValues);
-    return (K) pkVal;
+    return generator.apply(pkValues);
   }
 
   public T setId(T target) {

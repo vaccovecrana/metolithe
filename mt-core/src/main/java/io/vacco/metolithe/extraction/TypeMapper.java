@@ -1,7 +1,6 @@
 package io.vacco.metolithe.extraction;
 
 import io.vacco.metolithe.annotations.MtAttribute;
-import io.vacco.metolithe.annotations.MtCollection;
 import io.vacco.metolithe.util.TypeUtil;
 import java.util.*;
 
@@ -25,10 +24,6 @@ public class TypeMapper {
     if (Enum.class.isAssignableFrom(fm.field.getType())) {
       Optional<MtAttribute> maxLength = fm.hasLength();
       if (maxLength.isPresent()) { return format("varchar(%s)", maxLength.get().len()); }
-    }
-    if (Collection.class.isAssignableFrom(fm.field.getType())) {
-      Optional<MtCollection> col = fm.hasCollection();
-      if (col.isPresent()) { return col.get().sqlType(); }
     }
     throw new IllegalArgumentException(format("Unable to map type/annotation set: [%s], [%s]",
         fm.field, Arrays.asList(fm.getRawAnnotations())));

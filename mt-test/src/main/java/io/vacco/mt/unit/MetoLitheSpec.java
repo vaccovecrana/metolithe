@@ -6,7 +6,6 @@ import io.vacco.metolithe.base.Murmur3LongGenerator;
 import io.vacco.metolithe.extraction.EntityMetadata;
 import io.vacco.metolithe.extraction.FieldMetadata;
 import io.vacco.metolithe.extraction.TypeMapper;
-import io.vacco.metolithe.base.Base64CollectionCodec;
 import io.vacco.metolithe.base.Murmur3;
 import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
@@ -80,27 +79,18 @@ public class MetoLitheSpec {
     });
     it("Cannot describe an entity without a primary key attribute.",
         c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
+        () -> new EntityDescriptor<>(MissingIdEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE));
     it("Cannot describe an entity with duplicate id group positions.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
-    it("Cannot describe a collection entity with attribute descriptions in collection fields.",
-        c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(InvalidAttributeCollectionEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, new Base64CollectionCodec()));
-    it("Cannot describe a collection entity with index descriptions in collection fields.",
-        c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(InvalidIndexCollectionAttribute.class, EntityDescriptor.CaseFormat.KEEP_CASE, new Base64CollectionCodec()));
-    it("Cannot describe a collection entity without a collection codec.",
-        c -> c.expected(IllegalStateException.class),
-        () -> new EntityDescriptor<>(CollectionEntity.class, EntityDescriptor.CaseFormat.KEEP_CASE, null));
+        () -> new EntityDescriptor<>(DuplicatePositionIdGroup.class, EntityDescriptor.CaseFormat.KEEP_CASE));
     it("Cannot access a non-existing entity field name.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).getField("lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).getField("lolo"));
     it("Cannot extract an invalid field.",
         c -> c.expected(IllegalArgumentException.class),
-        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null).extract(null, "lolo"));
+        () -> new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE).extract(null, "lolo"));
     it("Can extract an object's values without its primary key attribute.", () ->
-        new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE, null)
+        new EntityDescriptor<>(SmartPhone.class, EntityDescriptor.CaseFormat.KEEP_CASE)
             .extractAll(new SmartPhone(), false));
     it("Scans the target classpath packages for annotated classes.", () ->
         entities = new EntityExtractor().apply("io.vacco.mt.schema.valid"));
@@ -134,8 +124,6 @@ public class MetoLitheSpec {
         c -> c.expected(IllegalArgumentException.class), () -> new DuplicateIdEntityDao(jdbc, "public"));
     it("Cannot interact with an initialized Dao with mismatching primary key definitions.",
         c -> c.expected(IllegalArgumentException.class), () -> new MismatchingIdDao(jdbc, "public"));
-    it("Cannot create a Dao for an entity with a mismatching collection codec definition.",
-        c -> c.expected(IllegalStateException.class), () -> new InvalidCollectionTypeDao(jdbc, "public"));
     it("Initializes a new Dao.", () -> {
       smartPhoneDao = new SmartPhoneDao(jdbc, "public");
       assertNotNull(smartPhoneDao);
@@ -254,21 +242,6 @@ public class MetoLitheSpec {
       });
       assertTrue(b);
     });
-    it("Can save an object which specifies collection fields.", () -> {
-      CollectionEntityDao cd = new CollectionEntityDao(jdbc, "public");
-      CollectionEntity ce = new CollectionEntity();
-      ce.entName = "Zoidberg";
-      ce.options = new TreeSet<>();
-      ce.options.add("Why");
-      ce.options.add("not");
-      ce.options.add("Zoidberg?");
-      ce.colors.add(CollectionEntity.Color.RED);
-      ce.colors.add(CollectionEntity.Color.BLUE);
-      cd.setId(ce);
-      cd.save(ce);
-      CollectionEntity ce0 = cd.loadExisting(ce.entId);
-      assertNotNull(ce0);
-    });
     it("Can rollback a transaction.", c -> c.expected(IllegalStateException.class), () -> {
       SmartPhone sp0 = smartPhoneDao.loadExisting(generatedId1);
       SmartPhone sp1 = smartPhoneDao.loadExisting(generatedId2);
@@ -344,7 +317,6 @@ public class MetoLitheSpec {
       TypeUtil.toWrapperClass(float.class);
       TypeUtil.toWrapperClass(short.class);
       TypeUtil.toWrapperClass(byte.class);
-      assertFalse(TypeUtil.allNonNull(null));
       assertFalse(TypeUtil.allNonNull(new Object []{}));
     });
     it("Can delete an existing object based on its id.", () -> {
@@ -367,7 +339,6 @@ public class MetoLitheSpec {
       pdc.setId(pc);
     });
     it("Clears remaining coverage classes.", () -> {
-      new CollectionEntity();
       new DuplicateIdEntity();
       new MismatchingIdEntity();
       new Bus();

@@ -22,12 +22,7 @@ public class EntityMetadata {
     this.metadata = classes.stream().flatMap(cl -> Arrays.stream(cl.getDeclaredFields())
         .map(FieldMetadata::new)
         .filter(FieldMetadata::isEntityField))
-        .peek(fm -> {
-          if (fm.hasCollection().isPresent() && !fm.isValidCollectionField()) {
-            String msg = String.format("Collection field [%s] cannot specify index or attribute constraints", fm.field);
-            throw new IllegalStateException(msg);
-          }
-        }).collect(Collectors.toCollection(LinkedHashSet::new));
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   public Map<String, FieldMetadata> fieldIndex(Function<FieldMetadata, String> keyNameFn) {

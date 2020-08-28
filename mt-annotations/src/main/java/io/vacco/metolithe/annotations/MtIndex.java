@@ -1,13 +1,9 @@
 package io.vacco.metolithe.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * To be placed on a property field intended to be an index,
- * or an attribute aggregator annotation for a property field.
+ * To be placed on a property field intended to be an index.
  *
  * @since 0.10
  */

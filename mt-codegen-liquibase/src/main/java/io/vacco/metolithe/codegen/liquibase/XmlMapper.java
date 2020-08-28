@@ -45,9 +45,8 @@ public class XmlMapper {
         .attr("name", fm.field.getName().toLowerCase())
         .attr("type", tm.resolveSqlType(fm));
     Optional<MtAttribute> nn = fm.hasNotNull();
-    Optional<MtCollection> oc = fm.hasCollection();
     Optional<MtId> pk = fm.hasPrimaryKeyOf(em.getTarget());
-    Match cn = (nn.isPresent() || oc.isPresent() || pk.isPresent()) ? $("constraints") : null;
+    Match cn = (nn.isPresent() || pk.isPresent()) ? $("constraints") : null;
     if (cn != null) {
       cn.attr("nullable", "false");
       if (pk.isPresent()) {

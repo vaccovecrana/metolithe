@@ -8,7 +8,7 @@ import org.codejargon.fluentjdbc.api.FluentJdbc;
 public class BlogTagDao extends BaseUpdateDao<BlogTag, Integer> {
   public BlogTagDao(FluentJdbc jdbc, String sourceSchema) {
     super(jdbc, sourceSchema, new EntityDescriptor<>(
-        BlogTag.class, EntityDescriptor.CaseFormat.KEEP_CASE, null),
+        BlogTag.class, EntityDescriptor.CaseFormat.KEEP_CASE),
         new Murmur3IntGenerator());
   }
 }

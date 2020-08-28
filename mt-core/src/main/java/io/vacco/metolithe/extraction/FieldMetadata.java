@@ -23,9 +23,7 @@ public class FieldMetadata {
   }
 
   public boolean isEntityField() {
-    return hasPrimaryKey().isPresent()
-        || hasAttribute().isPresent()
-        || hasCollection().isPresent();
+    return hasPrimaryKey().isPresent() || hasAttribute().isPresent();
   }
 
   public Optional<MtId> hasPrimaryKey() {
@@ -44,13 +42,6 @@ public class FieldMetadata {
     return scan(field)
         .filter(an0 -> an0.annotationType() == MtAttribute.class)
         .map(an0 -> (MtAttribute) an0)
-        .findFirst();
-  }
-
-  public Optional<MtCollection> hasCollection() {
-    return scan(field)
-        .filter(an0 -> an0.annotationType() == MtCollection.class)
-        .map(an0 -> (MtCollection) an0)
         .findFirst();
   }
 
@@ -79,20 +70,7 @@ public class FieldMetadata {
     return Optional.empty();
   }
 
-  public boolean isValidCollectionField() {
-    if (hasIndex().isPresent()) return false;
-    if (hasAttribute().isPresent()) return false;
-    return hasCollection().isPresent();
-  }
-
   public Annotation [] getRawAnnotations() { return scan(field).toArray(Annotation[]::new); }
-
-  public Optional<Class<?>> getCollectionType() {
-    if (!hasCollection().isPresent()) return Optional.empty();
-    ParameterizedType t = (ParameterizedType) field.getGenericType();
-    Class<?> typeClass = (Class<?>) t.getActualTypeArguments()[0];
-    return Optional.of(typeClass);
-  }
 
   private Stream<Annotation> scan(Field f) {
     return Arrays.stream(f.getDeclaredAnnotations()).flatMap(an0 -> {
