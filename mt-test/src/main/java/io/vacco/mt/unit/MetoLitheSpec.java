@@ -12,6 +12,7 @@ import io.vacco.metolithe.util.TypeUtil;
 import io.vacco.mt.dao.*;
 import io.vacco.mt.schema.invalid.*;
 import io.vacco.mt.schema.valid.*;
+import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.Contexts;
@@ -37,6 +38,11 @@ import static org.junit.Assert.*;
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
 public class MetoLitheSpec {
+
+  static {
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
+  }
 
   private static Logger log = LoggerFactory.getLogger(MetoLitheSpec.class);
 
