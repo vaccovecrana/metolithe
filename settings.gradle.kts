@@ -1,1 +1,3 @@
-include("mt-annotations", "mt-core", "mt-codegen-liquibase", "mt-test")
+include(
+    "mt-annotations", "mt-core", "mt-test"
+)
