@@ -1,5 +1,6 @@
 package io.vacco.metolithe.test;
 
+import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.schema.*;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 import static j8spec.J8Spec.*;
 import static io.vacco.shax.logging.ShArgument.*;
+import static io.vacco.metolithe.core.MtCaseFormat.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -63,10 +65,22 @@ public class MtAnnotationsSpec {
 
   private static <T> void logDescriptor(MtDescriptor<T> d, T data, Logger log) {
     List<Class<Enum<?>>> enums0 = d.getEnumFields();
-    Object[] comps0 = d.getPk(data);
+    Object[] comps0 = d.getPkValues(data);
     Map<MtFieldDescriptor, Object> allComps = d.getAll(data);
+
     log.info("{}", kv("enums", enums0));
     log.info("{}", kv("comps", comps0));
     log.info("{}", kv("allComps", allComps));
+
+    for (MtCaseFormat f : MtCaseFormat.values()) {
+      log.info("{}", propNames(d, f, true));
+      log.info("{}", propNames(d, f, false));
+      log.info("{}", propNamesCsv(d, f, true));
+      log.info("{}", propNamesCsv(d, f, false));
+      log.info("{}", placeholderCsv(d, f, true));
+      log.info("{}", placeholderCsv(d, f, false));
+      log.info("{}", placeHolderAssignmentCsv(d, f, true));
+      log.info("{}", placeHolderAssignmentCsv(d, f, false));
+    }
   }
 }
