@@ -6,7 +6,8 @@ import io.vacco.metolithe.annotations.*;
 
   private static final String idxName = "geo_idx";
 
-  @MtFk(Device.class) public long did;
+  @MtFk(Device.class)
+  @MtUnique(idx = 0, inPk = false) public long did;
   @MtFk(User.class) public int uid;
 
   // not the best composite index, but a good example anyway.

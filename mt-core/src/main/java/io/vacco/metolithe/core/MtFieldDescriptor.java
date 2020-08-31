@@ -13,50 +13,46 @@ import static java.util.Arrays.*;
 
 public class MtFieldDescriptor {
 
-  private static final Class<?>[] rt = new Class[] {
-      Retention.class, Target.class
-  };
-
-  private static final Class<?>[] mta = new Class[] {
+  private static final List<Class<? extends Annotation>> rt = asList(Retention.class, Target.class);
+  private static final List<Class<? extends Annotation>> mta = asList(
       MtCompIndex.class, MtEntity.class, MtField.class,
       MtFk.class, MtIndex.class, MtNotNull.class,
       MtPk.class, MtUnique.class, MtVarchar.class
-  };
+  );
 
   private final Field f;
-  private final Set<Annotation> annotations;
+  private final List<Annotation> annotations;
 
-  private boolean inSet(Annotation a, Class<?>[] annotations) {
-    Class<? extends Annotation> ac0 = a.getClass();
-    for (Class<?> ac : annotations) {
-      if (ac.isAssignableFrom(ac0)) {
-        return true;
-      }
-    }
-    return false;
+  private boolean match(Class<? extends Annotation> to, Class<? extends Annotation> from) {
+    return to.isAssignableFrom(from);
   }
 
-  private boolean isMtAnnotation(Annotation a) { return inSet(a, mta); }
-  private boolean isRtAnnotation(Annotation a) { return inSet(a, rt); }
+  private boolean inSet(Class<? extends Annotation> ac0, List<Class<? extends Annotation>> acl) {
+    return acl.stream().anyMatch(ac -> match(ac, ac0));
+  }
 
   private Stream<Annotation> scan(Annotation a) {
-    if (isRtAnnotation(a)) {
-      return empty();
-    }
-    return concat(
-        of(a), stream(a.annotationType().getAnnotations()).flatMap(this::scan)
-    );
+    if (inSet(a.annotationType(), rt)) { return empty(); }
+    return concat(of(a), stream(a.annotationType().getAnnotations()).flatMap(this::scan));
   }
 
   public MtFieldDescriptor(Field f) {
     this.f = requireNonNull(f);
     this.annotations = stream(f.getAnnotations())
         .flatMap(this::scan)
-        .filter(this::isMtAnnotation)
-        .collect(Collectors.toSet());
+        .filter(a -> inSet(a.annotationType(), mta))
+        .collect(Collectors.toList());
   }
 
-  @Override public int hashCode() { return this.f.hashCode(); }
+  public Field getField() { return f; }
+
+  public <T extends Annotation> Optional<T> get(Class<T> annotation) {
+    return annotations.stream()
+        .filter(an0 -> match(annotation, an0.annotationType()))
+        .map(an0 -> (T) an0).findFirst();
+  }
+
+  public boolean isPk() { return get(MtPk.class).isPresent(); }
 
   @Override public String toString() {
     return String.format("%s=[%s]",

@@ -4,10 +4,7 @@ import io.vacco.metolithe.annotations.*;
 
 @MtEntity public class UserFollow {
   @MtFk(User.class)
-  @MtPk(position = 0)
-  public int from;
-
-  @MtPk(position = 1)
+  @MtUnique(idx = 0, inPk = false) public int from;
   @MtFk(User.class)
-  public int to;
+  @MtUnique(idx = 1, inPk = false) public int to;
 }
