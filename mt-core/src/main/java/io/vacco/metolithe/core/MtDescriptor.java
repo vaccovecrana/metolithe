@@ -77,6 +77,8 @@ public class MtDescriptor<T> {
     return withPk ? fields : fieldsNoPk;
   }
 
+  public Class<T> getTarget() { return target; }
+
   @Override
   public String toString() {
     return format("<%s>%s", target.getSimpleName(), fields);

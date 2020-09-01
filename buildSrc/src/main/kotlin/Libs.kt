@@ -3,7 +3,6 @@ object Libs {
   const val slf4jApi = "org.slf4j:slf4j-api:1.7.30"
 
   const val fluentJdbc = "org.codejargon:fluentjdbc:1.8.3"
-  const val fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:2.18.1"
   const val joox = "org.jooq:joox-java-6:1.6.0"
   const val liquibase = "org.liquibase:liquibase-core:3.6.3"
 

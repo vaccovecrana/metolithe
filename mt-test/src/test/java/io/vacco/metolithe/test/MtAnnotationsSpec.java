@@ -3,6 +3,7 @@ package io.vacco.metolithe.test;
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
+import io.vacco.metolithe.core.MtTypeMapper;
 import io.vacco.metolithe.schema.*;
 import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
@@ -20,13 +21,11 @@ import static io.vacco.metolithe.core.MtCaseFormat.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtAnnotationsSpec {
+public class MtAnnotationsSpec extends MtSpec {
+
+  private static final Logger log = LoggerFactory.getLogger(MtAnnotationsSpec.class);
+
   static {
-
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
-
-    final Logger log = LoggerFactory.getLogger(MtAnnotationsSpec.class);
 
     User u0 = new User();
     u0.alias = "Jane";
@@ -50,10 +49,7 @@ public class MtAnnotationsSpec {
 
     describe("MT annotations", () -> {
       it("Can describe annotated entities",
-          () -> Stream.of(
-              Device.class, DeviceLocation.class, DeviceTag.class,
-              Phone.class, User.class, UserFollow.class
-          ).map(MtDescriptor::new).forEach(d -> log.info(d.toString()))
+          () -> Stream.of(testSchema).map(MtDescriptor::new).forEach(d -> log.info(d.toString()))
       );
       it("Can extract primary key components from entities", () -> {
         logDescriptor(new MtDescriptor<>(User.class), u0, log);
@@ -81,6 +77,10 @@ public class MtAnnotationsSpec {
       log.info("{}", placeholderCsv(d, f, false));
       log.info("{}", placeHolderAssignmentCsv(d, f, true));
       log.info("{}", placeHolderAssignmentCsv(d, f, false));
+    }
+
+    for (MtFieldDescriptor fd : allComps.keySet()) {
+      log.info("SQL type [{}] -> {}", MtTypeMapper.sqlTypeOf(fd), fd);
     }
   }
 }
