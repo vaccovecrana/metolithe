@@ -5,6 +5,7 @@ import io.vacco.metolithe.annotations.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
 import static java.lang.String.*;
@@ -41,8 +42,8 @@ public class MtDescriptor<T> {
         .collect(toList());
   }
 
-  public List<MtFieldDescriptor> get(Class<? extends Annotation> target) {
-    return fields.stream().filter(fd -> fd.get(target).isPresent()).collect(toList());
+  public Stream<MtFieldDescriptor> get(Class<? extends Annotation> target) {
+    return fields.stream().filter(fd -> fd.get(target).isPresent());
   }
 
   public Map<String, List<MtFieldDescriptor>> getCompositeIndexes() {

@@ -26,8 +26,7 @@ public class MtTypeMapper {
     if (wt0 == Boolean.class) { return "boolean"; }
     if (wt0 == String.class) {
       Optional<MtVarchar> maxSize = fd.get(MtVarchar.class);
-      if (maxSize.isPresent()) { return format("varchar(%s)", maxSize.get().value()); }
-      return "varchar";
+      return format("varchar(%s)", maxSize.get().value());
     }
     if (wt0 == Integer.class) { return "int"; }
     if (wt0 == Long.class) { return "bigint"; }

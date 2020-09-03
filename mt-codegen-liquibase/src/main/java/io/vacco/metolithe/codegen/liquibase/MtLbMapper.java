@@ -5,7 +5,6 @@ import io.vacco.metolithe.core.*;
 import io.vacco.oriax.alg.OxKos;
 import io.vacco.oriax.core.*;
 import org.joox.Match;
-import org.slf4j.*;
 
 import java.net.URL;
 import java.util.*;
@@ -21,8 +20,6 @@ import static java.util.stream.Collectors.*;
 import static java.util.Arrays.*;
 
 public class MtLbMapper {
-
-  private static final Logger log = LoggerFactory.getLogger(MtLbMapper.class);
 
   private Match mapAttribute(MtFieldDescriptor d) {
     Match columnXml = $("column")
@@ -74,7 +71,7 @@ public class MtLbMapper {
     return $("addUniqueConstraint")
         .attr("tableName", d.getTarget().getSimpleName())
         .attr("constraintName", format("%s_unq", d.getTarget().getSimpleName()))
-        .attr("columnNames", d.get(MtUnique.class).stream()
+        .attr("columnNames", d.get(MtUnique.class)
             .sorted(comparingInt(fd -> fd.get(MtUnique.class).get().idx()))
             .map(fd -> fd.getField().getName()).collect(joining(",")));
   }
@@ -84,18 +81,30 @@ public class MtLbMapper {
   }
 
   public List<Match> mapForeignKeys(List<OxVtx<MtDescriptor<?>>> classGroup) {
-    return classGroup.stream().map(v -> v.data).flatMap(d -> d.get(MtFk.class).stream()
+    return classGroup.stream().map(v -> v.data).flatMap(d -> d.get(MtFk.class)
         .map(fd -> {
-          String field = fd.getField().getName();
+          MtFk fk = fd.get(MtFk.class).get();
+          MtDescriptor<?> fkTarget = new MtDescriptor<>(fk.value());
+          MtFieldDescriptor targetPk = fkTarget.get(MtPk.class).findFirst().get();
+          if (!fd.getField().getType().equals(targetPk.getField().getType())) {
+            throw new IllegalArgumentException(format(
+                "Foreign key type mismatch: [%s:%s:%s] -> [%s:%s:%s]",
+                d.getTarget().getSimpleName(), fd.getField().getName(), fd.getField().getType(),
+                fkTarget.getTarget().getSimpleName(), targetPk.getField().getName(), targetPk.getField().getType()
+            ));
+          }
           String from = d.getTarget().getSimpleName();
-          String to = fd.get(MtFk.class).get().value().getSimpleName();
-          Match cs = changeSet(Integer.toHexString(hash32(toStringConcat(from, to, field).get(), DEFAULT_SEED)));
+          String fromField = fd.getField().getName();
+          String to = fkTarget.getTarget().getSimpleName();
+          String toField = targetPk.getField().getName();
+          String fkId = Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED));
+          Match cs = changeSet(fkId);
           cs.append(
               $("addForeignKeyConstraint")
-                  .attr("baseColumnNames", field)
+                  .attr("baseColumnNames", fromField)
                   .attr("baseTableName", from)
-                  .attr("constraintName", format("fk_%s_%s_%s", from, to, field))
-                  .attr("referencedColumnNames", field)
+                  .attr("constraintName", fkId)
+                  .attr("referencedColumnNames", toField)
                   .attr("referencedTableName", to)
           );
           return cs;
@@ -106,12 +115,10 @@ public class MtLbMapper {
     Match cs = changeSet(d.getTarget().getSimpleName());
     Match ct = $("createTable").attr("tableName", d.getTarget().getSimpleName());
     asList(MtPk.class, MtFk.class, MtField.class, MtVarchar.class)
-        .forEach(cl -> d.get(cl).stream().map(this::mapAttribute).forEach(ct::append));
+        .forEach(cl -> d.get(cl).map(this::mapAttribute).forEach(ct::append));
     cs.append(ct);
-    if (!d.get(MtUnique.class).isEmpty()) {
-      cs.append(mapUniqueConstraints(d));
-    }
-    d.get(MtIndex.class).stream().map(fd -> mapIndex(d, fd)).forEach(cs::append);
+    d.get(MtUnique.class).findFirst().ifPresent(fd -> cs.append(mapUniqueConstraints(d)));
+    d.get(MtIndex.class).map(fd -> mapIndex(d, fd)).forEach(cs::append);
     d.getCompositeIndexes().forEach((k, v) -> cs.append(mapCompIndex(d, v)));
     return cs;
   }
@@ -142,9 +149,8 @@ public class MtLbMapper {
       });
       return lb;
     } catch (Exception e) {
-      log.error("Unable to map entity classes [{}]", Arrays.toString(schemaClasses));
-      log.error(e.getMessage(), e);
-      throw new IllegalStateException(e);
+      String msg = format("Unable to map entity classes [%s]", Arrays.toString(schemaClasses));
+      throw new IllegalStateException(msg, e);
     }
   }
 }
