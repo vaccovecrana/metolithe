@@ -25,28 +25,4 @@ public class MtLbWriter {
       transformer.transform(new DOMSource(node.document()), new StreamResult(out));
     } catch (Exception e) { throw new IllegalStateException(e); }
   }
-
-  public static String getData(Match rootNode) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    writeTo(rootNode, baos);
-    return baos.toString();
-  }
-
-  public static File write(Class<?> entity, Match xmlData, File outDir) {
-    try {
-      requireNonNull(entity);
-      requireNonNull(xmlData);
-      requireNonNull(outDir);
-      if (!outDir.exists() || !outDir.isDirectory()) {
-        throw new IllegalArgumentException("Bad output folder " + outDir.getAbsolutePath());
-      }
-      File xmlFile = new File(outDir, String.format("%s.xml", toDashCase(entity.getSimpleName())));
-      writeTo(xmlData, new FileOutputStream(xmlFile));
-      return xmlFile;
-    } catch (Exception e) { throw new IllegalStateException(e); }
-  }
-
-  private static String toDashCase(String in) {
-    return requireNonNull(in).replaceAll("(.)(\\p{Upper})", "$1-$2").toLowerCase();
-  }
 }
