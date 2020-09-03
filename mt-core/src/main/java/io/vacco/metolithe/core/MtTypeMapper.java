@@ -22,7 +22,7 @@ public class MtTypeMapper {
   }
 
   public static String sqlTypeOf(MtFieldDescriptor fd) {
-    Class<?> wt0 = toWrapperClass(fd.getField().getType());
+    Class<?> wt0 = toWrapperClass(fd.getFieldType());
     if (wt0 == Boolean.class) { return "boolean"; }
     if (wt0 == String.class) {
       Optional<MtVarchar> maxSize = fd.get(MtVarchar.class);
@@ -31,7 +31,7 @@ public class MtTypeMapper {
     if (wt0 == Integer.class) { return "int"; }
     if (wt0 == Long.class) { return "bigint"; }
     if (wt0 == Double.class) { return "double"; }
-    if (Enum.class.isAssignableFrom(fd.getField().getType())) {
+    if (Enum.class.isAssignableFrom(fd.getFieldType())) {
       return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
     }
     throw new IllegalArgumentException(format("Unable to map type/annotation set: %s", fd));

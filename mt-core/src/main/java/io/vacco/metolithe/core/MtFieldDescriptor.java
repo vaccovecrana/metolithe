@@ -23,6 +23,7 @@ public class MtFieldDescriptor {
 
   private final Field f;
   private final List<Annotation> annotations;
+  private final MtCaseFormat fmt;
 
   private boolean match(Class<? extends Annotation> to, Class<? extends Annotation> from) {
     return to.isAssignableFrom(from);
@@ -37,15 +38,14 @@ public class MtFieldDescriptor {
     return concat(of(a), stream(a.annotationType().getAnnotations()).flatMap(this::scan));
   }
 
-  public MtFieldDescriptor(Field f) {
+  public MtFieldDescriptor(Field f, MtCaseFormat fmt) {
     this.f = requireNonNull(f);
+    this.fmt = requireNonNull(fmt);
     this.annotations = stream(f.getAnnotations())
         .flatMap(this::scan)
         .filter(a -> inSet(a.annotationType(), mta))
         .collect(Collectors.toList());
   }
-
-  public Field getField() { return f; }
 
   public <T extends Annotation> Optional<T> get(Class<T> annotation) {
     return annotations.stream()
@@ -54,6 +54,17 @@ public class MtFieldDescriptor {
   }
 
   public boolean isPk() { return get(MtPk.class).isPresent(); }
+
+  public MtCaseFormat getFormat() { return fmt; }
+  public String getFieldName() { return fmt.of(this.f.getName()); }
+  public Class<?> getFieldType() { return f.getType(); }
+  public Object getValue(Object o) {
+    try {
+      return f.get(o);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   @Override public String toString() {
     return String.format("%s=[%s]",

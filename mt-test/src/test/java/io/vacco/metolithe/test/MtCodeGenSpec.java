@@ -1,6 +1,7 @@
 package io.vacco.metolithe.test;
 
 import io.vacco.metolithe.codegen.liquibase.*;
+import io.vacco.metolithe.core.MtCaseFormat;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -28,7 +29,7 @@ public class MtCodeGenSpec extends MtSpec {
 
     describe("MT Schema code generation", () -> {
       it("Generates Liquibase changelogs", () -> {
-        Match lbChangeLog = new MtLbMapper().mapSchema(testSchema);
+        Match lbChangeLog = new MtLbMapper().mapSchema(MtCaseFormat.UPPER_CASE, testSchema);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         MtLbWriter.writeTo(lbChangeLog, baos);
         MtLbWriter.writeTo(lbChangeLog, new FileOutputStream(xmlFile));

@@ -1,11 +1,7 @@
 package io.vacco.metolithe.test;
 
-import io.vacco.metolithe.core.MtCaseFormat;
-import io.vacco.metolithe.core.MtDescriptor;
-import io.vacco.metolithe.core.MtFieldDescriptor;
-import io.vacco.metolithe.core.MtTypeMapper;
+import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
-import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
@@ -49,12 +45,14 @@ public class MtAnnotationsSpec extends MtSpec {
 
     describe("MT annotations", () -> {
       it("Can describe annotated entities",
-          () -> Stream.of(testSchema).map(MtDescriptor::new).forEach(d -> log.info(d.toString()))
+          () -> Stream.of(testSchema)
+              .map(clazz -> new MtDescriptor<>(clazz, LOWER_CASE))
+              .forEach(d -> log.info(d.toString()))
       );
       it("Can extract primary key components from entities", () -> {
-        logDescriptor(new MtDescriptor<>(User.class), u0, log);
-        logDescriptor(new MtDescriptor<>(Device.class), d0, log);
-        logDescriptor(new MtDescriptor<>(Phone.class), p0, log);
+        logDescriptor(new MtDescriptor<>(User.class, UPPER_CASE), u0, log);
+        logDescriptor(new MtDescriptor<>(Device.class, LOWER_CASE), d0, log);
+        logDescriptor(new MtDescriptor<>(Phone.class, KEEP_CASE), p0, log);
       });
     });
   }
@@ -67,17 +65,6 @@ public class MtAnnotationsSpec extends MtSpec {
     log.info("{}", kv("enums", enums0));
     log.info("{}", kv("comps", comps0));
     log.info("{}", kv("allComps", allComps));
-
-    for (MtCaseFormat f : MtCaseFormat.values()) {
-      log.info("{}", propNames(d, f, true));
-      log.info("{}", propNames(d, f, false));
-      log.info("{}", propNamesCsv(d, f, true));
-      log.info("{}", propNamesCsv(d, f, false));
-      log.info("{}", placeholderCsv(d, f, true));
-      log.info("{}", placeholderCsv(d, f, false));
-      log.info("{}", placeHolderAssignmentCsv(d, f, true));
-      log.info("{}", placeHolderAssignmentCsv(d, f, false));
-    }
 
     for (MtFieldDescriptor fd : allComps.keySet()) {
       log.info("SQL type [{}] -> {}", MtTypeMapper.sqlTypeOf(fd), fd);
