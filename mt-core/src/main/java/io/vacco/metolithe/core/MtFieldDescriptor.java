@@ -15,9 +15,10 @@ public class MtFieldDescriptor {
 
   private static final List<Class<? extends Annotation>> rt = asList(Retention.class, Target.class);
   private static final List<Class<? extends Annotation>> mta = asList(
-      MtCompIndex.class, MtEntity.class, MtField.class,
-      MtFk.class, MtIndex.class, MtNotNull.class,
-      MtPk.class, MtUnique.class, MtVarchar.class
+      MtEntity.class,
+      MtPk.class, MtFk.class,
+      MtField.class, MtVarchar.class, MtNotNull.class,
+      MtCompIndex.class, MtIndex.class, MtUnique.class
   );
 
   private final Field f;

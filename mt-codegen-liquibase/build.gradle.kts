@@ -1,6 +1,7 @@
 dependencies {
   implementation(project(":mt-annotations"))
   implementation(project(":mt-core"))
+  implementation(Libs.oriax)
   implementation(Libs.joox)
   implementation(Libs.slf4jApi)
   implementation(Libs.liquibase) {

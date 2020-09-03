@@ -1,7 +1,8 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.annotations.MtUnique;
+import io.vacco.metolithe.annotations.*;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -38,6 +39,16 @@ public class MtDescriptor<T> {
         .filter(fd -> Enum.class.isAssignableFrom(fd.getField().getType()))
         .map(fd -> (Class<E>) fd.getField().getType())
         .collect(toList());
+  }
+
+  public List<MtFieldDescriptor> get(Class<? extends Annotation> target) {
+    return fields.stream().filter(fd -> fd.get(target).isPresent()).collect(toList());
+  }
+
+  public Map<String, List<MtFieldDescriptor>> getCompositeIndexes() {
+    return fieldsNoPk.stream()
+        .filter(fd -> fd.get(MtCompIndex.class).isPresent())
+        .collect(groupingBy(fd -> fd.get(MtCompIndex.class).get().name()));
   }
 
   private Object doGet(Field f, T t) {
