@@ -85,8 +85,15 @@ public class MtDescriptor<T> {
   public List<MtFieldDescriptor> getFields(boolean withPk) {
     return withPk ? fields : fieldsNoPk;
   }
+  public Optional<MtFieldDescriptor> getPkField() { return pkField != null ? Optional.of(pkField) : Optional.empty(); }
+  public Optional<MtFieldDescriptor> getField(String name) {
+    return fields.stream().filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst();
+  }
+
   public String getName() { return fmt.of(target.getSimpleName()); }
   public MtCaseFormat getFormat() { return fmt; }
+
+  protected Class<T> getTarget() { return target; }
 
   @Override
   public String toString() {

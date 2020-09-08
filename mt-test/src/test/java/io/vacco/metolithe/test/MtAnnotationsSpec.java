@@ -69,5 +69,14 @@ public class MtAnnotationsSpec extends MtSpec {
     for (MtFieldDescriptor fd : allComps.keySet()) {
       log.info("SQL type [{}] -> {}", MtTypeMapper.sqlTypeOf(fd), fd);
     }
+
+    log.info("{}", propNames(d, true));
+    log.info("{}", propNames(d, false));
+    log.info("{}", propNamesCsv(d, true));
+    log.info("{}", propNamesCsv(d, false));
+    log.info("{}", placeholderCsv(d, true));
+    log.info("{}", placeholderCsv(d, false));
+    log.info("{}", placeHolderAssignmentCsv(d, true));
+    log.info("{}", placeHolderAssignmentCsv(d, false));
   }
 }
