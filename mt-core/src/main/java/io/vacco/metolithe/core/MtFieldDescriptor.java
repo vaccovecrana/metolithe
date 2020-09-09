@@ -58,9 +58,18 @@ public class MtFieldDescriptor {
   public MtCaseFormat getFormat() { return fmt; }
   public String getFieldName() { return fmt.of(this.f.getName()); }
   public Class<?> getFieldType() { return f.getType(); }
+
   public Object getValue(Object o) {
     try {
       return f.get(o);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  public <T> void setValue(T o, Object val) {
+    try {
+      f.set(o, val);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException(e);
     }

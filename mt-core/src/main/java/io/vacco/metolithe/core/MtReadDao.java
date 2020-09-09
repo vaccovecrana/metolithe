@@ -16,29 +16,18 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     super(schemaName, jdbc, d, idFn);
   }
 
-  private String getInsertQuery() {
-    return getQueryCache().computeIfAbsent("insert", k ->
-        format("insert into %s (%s) values (%s)", getSchemaName(),
-            propNamesCsv(dsc, true), placeholderCsv(dsc, true)
-        )
-    );
-  }
-
   protected String getSelectWhereEqQuery(String field) {
-    return getQueryCache().computeIfAbsent("selectWhereEq" + field,
+    String fn = dsc.getFormat().of(field);
+    return getQueryCache().computeIfAbsent("selectWhereEq" + fn,
         k -> format("select %s from %s where %s = :%s",
-            propNamesCsv(dsc, true), getSchemaName(), field, field)
+            propNamesCsv(dsc, true), getSchemaName(), fn, fn)
     );
-  }
-
-  private String getSelectByIdQuery() {
-    return getSelectWhereEqQuery(dsc.getName());
   }
 
   public Optional<T> load(K id) {
     Optional<MtFieldDescriptor> pkf = dsc.getPkField();
     if (pkf.isPresent()) {
-      return sql().query().select(getSelectByIdQuery())
+      return sql().query().select(getSelectWhereEqQuery(pkf.get().getFieldName()))
           .namedParam(pkf.get().getFieldName(), id)
           .firstResult(mapToDefault());
     }
@@ -48,20 +37,20 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   public Collection<T> loadWhereEq(String field, Object value) {
     return sql().query()
         .select(getSelectWhereEqQuery(field))
-        .namedParam(field, value)
+        .namedParam(dsc.getFormat().of(field), value)
         .listResult(mapToDefault());
   }
 
-  public Collection<T> loadWhereEnEq(Enum<?> fieldName, Object value) {
-    return loadWhereEq(fieldName.name(), value);
+  public <V extends Enum<V>> Collection<T> loadWhereEnEq(String fieldName, V value) {
+    return loadWhereEq(fieldName, value);
   }
 
   @SafeVarargs
-  public final <V> Map<V, List<T>> loadWhereIn(String field, V... vals) {
-    if (vals == null || vals.length == 0) { return Collections.emptyMap(); }
+  public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
+    if (values == null || values.length == 0) { return Collections.emptyMap(); }
     Optional<MtFieldDescriptor> ofd = dsc.getField(field);
     if (ofd.isPresent()) {
-      Map<String, Object> pids = toNamedParamMap(asList(vals), field);
+      Map<String, Object> pids = toNamedParamMap(asList(values), field);
       String query = String.format("select %s from %s where %s in (%s)",
           propNamesCsv(dsc, true), getSchemaName(), field, toNamedParamLabels(pids)
       );
@@ -72,8 +61,8 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   @SafeVarargs
-  public final <V extends Enum<V>> Map<V, List<T>> loadWhereEnIn(V fieldName, V... enumVals) {
-    return loadWhereIn(fieldName.toString(), enumVals);
+  public final <V extends Enum<V>> Map<V, List<T>> loadWhereEnIn(String field, V... enums) {
+    return loadWhereIn(field, enums);
   }
 
   public T loadExisting(K id) {
@@ -97,12 +86,4 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
         .map(param -> format(":%s", param))
         .collect(joining(", "));
   }
-/*
-  public <J> J inTransaction(UnsafeSupplier<J> processor) {
-    return sql().query().transaction().in(() -> {
-      try { return processor.get(); }
-      catch (Exception e) { throw new IllegalStateException(e); }
-    });
-  }
-*/
 }

@@ -4,7 +4,13 @@ public class MtException {
 
   public static class MtMissingIdException extends RuntimeException {
     public MtMissingIdException(Object field) {
-      super(field == null ? "" : field.toString());
+      super(field == null ? "missing" : field.toString());
+    }
+  }
+
+  public static class MtAccessException extends RuntimeException {
+    public MtAccessException(Object target) {
+      super(target == null ? "missing" : target.toString());
     }
   }
 

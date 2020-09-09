@@ -16,6 +16,7 @@ public class MtDescriptor<T> {
 
   private final Class<T> target;
   private final MtCaseFormat fmt;
+
   private final List<MtFieldDescriptor> fields;
   private final List<MtFieldDescriptor> fieldsNoPk;
   private final MtFieldDescriptor pkField;
@@ -70,10 +71,10 @@ public class MtDescriptor<T> {
     return pkValues.values().toArray();
   }
 
-  public Map<MtFieldDescriptor, Object> getAll(T t) {
-    Map<MtFieldDescriptor, Object> comps = new LinkedHashMap<>();
+  public Map<String, Object> getAll(T t) {
+    Map<String, Object> comps = new LinkedHashMap<>();
     for (MtFieldDescriptor fd : fields) {
-      comps.put(fd, fd.getValue(t));
+      comps.put(fd.getFieldName(), fd.getValue(t));
     }
     return comps;
   }

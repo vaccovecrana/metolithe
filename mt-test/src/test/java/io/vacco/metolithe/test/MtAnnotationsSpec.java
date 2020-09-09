@@ -60,15 +60,11 @@ public class MtAnnotationsSpec extends MtSpec {
   private static <T> void logDescriptor(MtDescriptor<T> d, T data, Logger log) {
     List<Class<Enum<?>>> enums0 = d.getEnumFields();
     Object[] comps0 = d.getPkValues(data);
-    Map<MtFieldDescriptor, Object> allComps = d.getAll(data);
+    Map<String, Object> allComps = d.getAll(data);
 
     log.info("{}", kv("enums", enums0));
     log.info("{}", kv("comps", comps0));
     log.info("{}", kv("allComps", allComps));
-
-    for (MtFieldDescriptor fd : allComps.keySet()) {
-      log.info("SQL type [{}] -> {}", MtTypeMapper.sqlTypeOf(fd), fd);
-    }
 
     log.info("{}", propNames(d, true));
     log.info("{}", propNames(d, false));
