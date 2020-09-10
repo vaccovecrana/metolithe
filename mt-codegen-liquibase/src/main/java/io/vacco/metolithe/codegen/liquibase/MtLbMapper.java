@@ -5,7 +5,9 @@ import io.vacco.metolithe.core.*;
 import io.vacco.oriax.alg.OxKos;
 import io.vacco.oriax.core.*;
 import org.joox.Match;
+import org.xml.sax.SAXException;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,11 +89,10 @@ public class MtLbMapper {
           MtDescriptor<?> fkTarget = new MtDescriptor<>(fk.value(), fd.getFormat());
           MtFieldDescriptor targetPk = fkTarget.get(MtPk.class).findFirst().get();
           if (!fd.getFieldType().equals(targetPk.getFieldType())) {
-            throw new IllegalArgumentException(format(
-                "Foreign key type mismatch: [%s:%s:%s] -> [%s:%s:%s]",
-                d.getName(), fd.getFieldName(), fd.getFieldType(),
-                fkTarget.getName(), targetPk.getFieldName(), targetPk.getFieldType()
-            ));
+            throw new MtException.MtForeignKeyMismatchException(
+                d.getName(), fd.getFieldName(), fd.getFieldType().getTypeName(),
+                fkTarget.getName(), targetPk.getFieldName(), targetPk.getFieldType().getTypeName()
+            );
           }
           String from = d.getName();
           String fromField = fd.getFieldName();
@@ -123,7 +124,7 @@ public class MtLbMapper {
     return cs;
   }
 
-  public Match mapSchema(MtCaseFormat fmt, Class<?> ... schemaClasses) {
+  public Match mapSchema(MtCaseFormat fmt, Class<?> ... schemaClasses) throws IOException, SAXException {
     List<OxVtx<MtDescriptor<?>>> descriptors = Arrays.stream(schemaClasses)
         .map(clazz -> new MtDescriptor<>(clazz, fmt))
         .map(fd -> new OxVtx<MtDescriptor<?>>(fd.getName(), fd))
@@ -140,17 +141,12 @@ public class MtLbMapper {
           );
     }
 
-    try {
-      URL xmlTemplate = MtLbMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml");
-      Match lb = $(xmlTemplate);
-      OxKos.apply(schema).forEach((k, v) -> {
-        v.stream().map(v0 -> mapClass(v0.data)).forEach(lb::append);
-        mapForeignKeys(v).forEach(lb::append);
-      });
-      return lb;
-    } catch (Exception e) {
-      String msg = format("Unable to map entity classes [%s]", Arrays.toString(schemaClasses));
-      throw new IllegalStateException(msg, e);
-    }
+    URL xmlTemplate = MtLbMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml");
+    Match lb = $(xmlTemplate);
+    OxKos.apply(schema).forEach((k, v) -> {
+      v.stream().map(v0 -> mapClass(v0.data)).forEach(lb::append);
+      mapForeignKeys(v).forEach(lb::append);
+    });
+    return lb;
   }
 }

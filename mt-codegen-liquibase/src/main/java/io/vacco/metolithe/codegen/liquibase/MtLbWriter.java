@@ -10,19 +10,17 @@ import static java.util.Objects.*;
 
 public class MtLbWriter {
 
-  public static void writeTo(Match node, OutputStream out) {
-    try {
-      requireNonNull(node);
-      requireNonNull(out);
-      requireNonNull(node);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-      transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-      transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-      transformer.transform(new DOMSource(node.document()), new StreamResult(out));
-    } catch (Exception e) { throw new IllegalStateException(e); }
+  public static void writeTo(Match node, OutputStream out) throws TransformerException {
+    requireNonNull(node);
+    requireNonNull(out);
+    requireNonNull(node);
+    TransformerFactory tf = TransformerFactory.newInstance();
+    Transformer transformer = tf.newTransformer();
+    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+    transformer.transform(new DOMSource(node.document()), new StreamResult(out));
   }
 }

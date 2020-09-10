@@ -16,7 +16,7 @@ public class MtEnumExtractor<T extends Enum<T>> implements ObjectMapperRsExtract
       if (enumValue != null) { return Enum.valueOf(target, enumValue); }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("Unable to extract enum value.", e);
+      throw new MtException.MtEnumExtractionException(target, e);
     }
   }
 }

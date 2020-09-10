@@ -63,7 +63,7 @@ public class MtFieldDescriptor {
     try {
       return f.get(o);
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
+      throw new MtException.MtAccessException(e);
     }
   }
 
@@ -71,7 +71,7 @@ public class MtFieldDescriptor {
     try {
       f.set(o, val);
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
+      throw new MtException.MtAccessException(e);
     }
   }
 

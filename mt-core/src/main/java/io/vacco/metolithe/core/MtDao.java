@@ -35,8 +35,7 @@ public abstract class MtDao<T, K> {
       Class<?> idFnClass = idFn.getIdType();
       Class<?> entityPkClass = MtTypeMapper.toWrapperClass(opk.get().getFieldType());
       if (!idFnClass.isAssignableFrom(entityPkClass)) {
-        String msg = "Primary key field for target class [%s] with field type [%s] not supported by Id generator of type [%s]";
-        throw new IllegalArgumentException(String.format(msg, d.getName(), idFnClass, entityPkClass));
+        throw new MtException.MtIdGeneratorMismatchException(d.getClassName(), entityPkClass, idFnClass);
       }
     }
   }
@@ -56,7 +55,8 @@ public abstract class MtDao<T, K> {
 
   protected String getSchemaName(Class<?> clazz) {
     String tableName = clazz.getSimpleName().replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
-    return dsc.getFormat().of(String.format("%s.%s", schemaName, tableName));
+    String raw = String.format("%s.%s", schemaName, tableName);
+    return dsc.getFormat().of(raw);
   }
 
   protected Map<String, String> getQueryCache() { return queryCache; }

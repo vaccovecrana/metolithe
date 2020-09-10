@@ -18,7 +18,7 @@ public class MtTypeMapper {
     else if (float.class.equals(type)) return Float.class;
     else if (short.class.equals(type)) return Short.class;
     else if (byte.class.equals(type)) return Byte.class;
-    else throw new IllegalArgumentException("Not a primitive type class: " + type.getName());
+    else throw new MtException.MtPrimitiveMappingException(type);
   }
 
   public static String sqlTypeOf(MtFieldDescriptor fd) {
@@ -34,6 +34,6 @@ public class MtTypeMapper {
     if (Enum.class.isAssignableFrom(fd.getFieldType())) {
       return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
     }
-    throw new IllegalArgumentException(format("Unable to map type/annotation set: %s", fd));
+    throw new MtException.MtSqlTypeMappingException(fd);
   }
 }

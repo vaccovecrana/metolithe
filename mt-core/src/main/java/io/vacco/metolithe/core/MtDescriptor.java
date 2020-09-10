@@ -30,9 +30,7 @@ public class MtDescriptor<T> {
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
     List<MtFieldDescriptor> pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {
-      throw new IllegalArgumentException(format(
-          "%s defines multiple primary key fields: %s", target.getCanonicalName(), pkds
-      ));
+      throw new MtException.MtMultiplePkDefinitionsException(pkds);
     }
     this.pkField = pkds.isEmpty() ? null : pkds.get(0);
   }
@@ -61,10 +59,7 @@ public class MtDescriptor<T> {
       Optional<MtUnique> ou = fd.get(MtUnique.class);
       if (ou.isPresent() && ou.get().inPk()) {
         Object comp = fd.getValue(t);
-        if (comp == null) throw new IllegalArgumentException(format(
-            "Missing primary key component for [%s] on [%s]",
-            t.getClass().getCanonicalName(), fd
-        ));
+        if (comp == null) throw new MtException.MtMissingPkComponentException(t, fd);
         pkValues.put(ou.get().idx(), comp);
       }
     }
@@ -91,6 +86,7 @@ public class MtDescriptor<T> {
     return fields.stream().filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst();
   }
 
+  public String getClassName() { return target.getCanonicalName(); }
   public String getName() { return fmt.of(target.getSimpleName()); }
   public MtCaseFormat getFormat() { return fmt; }
 
