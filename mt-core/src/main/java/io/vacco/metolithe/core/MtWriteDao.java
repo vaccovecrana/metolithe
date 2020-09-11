@@ -15,17 +15,20 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   private <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
     Optional<MtFieldDescriptor> opk = dsc.getPkField();
+    Object[] pkVals = dsc.getPkValues(target);
     if (opk.isPresent()) {
-      Object[] pkVals = dsc.getPkValues(target);
       K id = pkVals.length == 0 ? (K) opk.get().getValue(target) : idFn.apply(pkVals);
       return bfn.apply(opk.get(), id);
+    } else {
+      return bfn.apply(null, null);
     }
-    throw new MtException.MtAccessException(target);
   }
 
   public T save(T rec) {
     return withId(rec, (fd, pk) -> {
-      fd.setValue(rec, pk);
+      if (fd != null) {
+        fd.setValue(rec, pk);
+      }
       String query = getQueryCache().computeIfAbsent("insert", k ->
           format("insert into %s (%s) values (%s)", getSchemaName(),
               propNamesCsv(dsc, true), placeholderCsv(dsc, true)

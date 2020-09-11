@@ -32,6 +32,8 @@ public class MtDaoSpec extends MtSpec {
           schema, jdbc, new MtDescriptor<>(User.class, fmt), new MtMurmur3IFn());
       MtWriteDao<DeviceTag, Long> dtDao = new MtWriteDao<>(
           schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
+      MtWriteDao<UserFollow, Void> ufDao = new MtWriteDao<>(
+          schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtNoopIdFn());
 
       log.info("{}", kv("p0", pDao.save(p0)));
       Phone p01 = pDao.loadExisting(p0.pid);
@@ -72,6 +74,12 @@ public class MtDaoSpec extends MtSpec {
 
       log.info("{}", kv("u0m", uDao.merge(u0)));
       log.info("{}", kv("u1m", uDao.merge(u1)));
+
+      UserFollow uf0 = new UserFollow();
+      uf0.fromUid = u0.uid;
+      uf0.toUid = u1.uid;
+
+      log.info("{}", kv("uf0m", ufDao.merge(uf0)));
 
       System.out.println();
     });
