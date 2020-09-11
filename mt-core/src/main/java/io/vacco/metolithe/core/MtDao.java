@@ -14,9 +14,10 @@ public abstract class MtDao<T, K> {
 
   private final String schemaName;
   private final FluentJdbc jdbc;
-  protected final MtDescriptor<T> dsc;
   private final ObjectMappers mappers;
-  private final MtIdFn<K> idFn;
+
+  protected final MtDescriptor<T> dsc;
+  protected final MtIdFn<K> idFn;
 
   protected final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
   protected final Map<String, String> queryCache = new ConcurrentHashMap<>();
@@ -40,10 +41,6 @@ public abstract class MtDao<T, K> {
     }
   }
 
-  public K idOf(T target) {
-    return idFn.apply(dsc.getPkValues(target));
-  }
-
   public FluentJdbc sql() { return jdbc; }
 
   public Mapper<T> mapToDefault() { return this.mappers.forClass(this.dsc.getTarget()); }
@@ -54,8 +51,7 @@ public abstract class MtDao<T, K> {
   }
 
   protected String getSchemaName(Class<?> clazz) {
-    String tableName = clazz.getSimpleName().replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
-    String raw = String.format("%s.%s", schemaName, tableName);
+    String raw = String.format("%s.%s", schemaName, dsc.getFormat().of(clazz.getSimpleName()));
     return dsc.getFormat().of(raw);
   }
 

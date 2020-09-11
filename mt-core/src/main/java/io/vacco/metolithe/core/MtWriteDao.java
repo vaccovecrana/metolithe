@@ -16,7 +16,9 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   private <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
     Optional<MtFieldDescriptor> opk = dsc.getPkField();
     if (opk.isPresent()) {
-      return bfn.apply(opk.get(), idOf(target));
+      Object[] pkVals = dsc.getPkValues(target);
+      K id = pkVals.length == 0 ? (K) opk.get().getValue(target) : idFn.apply(pkVals);
+      return bfn.apply(opk.get(), id);
     }
     throw new MtException.MtAccessException(target);
   }

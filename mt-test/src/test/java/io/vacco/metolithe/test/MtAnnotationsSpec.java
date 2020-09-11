@@ -5,7 +5,6 @@ import io.vacco.metolithe.schema.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
-import org.slf4j.*;
 
 import java.util.List;
 import java.util.Map;
@@ -19,9 +18,7 @@ import static io.vacco.metolithe.core.MtCaseFormat.*;
 @RunWith(J8SpecRunner.class)
 public class MtAnnotationsSpec extends MtSpec {
 
-  private static final Logger log = LoggerFactory.getLogger(MtAnnotationsSpec.class);
-
-  private static <T> void logDescriptor(MtDescriptor<T> d, T data, Logger log) {
+  private static <T> void logDescriptor(MtDescriptor<T> d, T data) {
     List<Class<Enum<?>>> enums0 = d.getEnumFields();
     Object[] comps0 = d.getPkValues(data);
     Map<String, Object> allComps = d.getAll(data);
@@ -48,9 +45,9 @@ public class MtAnnotationsSpec extends MtSpec {
               .forEach(d -> log.info(d.toString()))
       );
       it("Can extract primary key components from entities", () -> {
-        logDescriptor(new MtDescriptor<>(User.class, UPPER_CASE), u0, log);
-        logDescriptor(new MtDescriptor<>(Device.class, LOWER_CASE), d0, log);
-        logDescriptor(new MtDescriptor<>(Phone.class, KEEP_CASE), p0, log);
+        logDescriptor(new MtDescriptor<>(User.class, UPPER_CASE), u0);
+        logDescriptor(new MtDescriptor<>(Device.class, LOWER_CASE), d0);
+        logDescriptor(new MtDescriptor<>(Phone.class, KEEP_CASE), p0);
       });
     });
   }

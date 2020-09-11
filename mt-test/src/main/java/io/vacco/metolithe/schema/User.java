@@ -8,5 +8,5 @@ import io.vacco.metolithe.annotations.*;
   @St64 public String alias;
   @St128 @MtUnique(idx = 0, inPk = false) public String email;
   @MtFk(DeviceTag.class) public long tid;
-  @St64 public String tagSignature;
+  @St64Opt public String tagSignature;
 }

@@ -4,6 +4,8 @@ import java.util.List;
 
 public class MtException {
 
+  private static final String UNKNOWN = "unknown";
+
   public static class MtForeignKeyMismatchException extends RuntimeException {
     public final String src, srcField, srcFieldType;
     public final String dst, dstField, dstFieldType;
@@ -50,7 +52,7 @@ public class MtException {
   public static class MtPrimitiveMappingException extends RuntimeException {
     public final String sourceType;
     public MtPrimitiveMappingException(Class<?> type) {
-      this.sourceType = type.getCanonicalName();
+      this.sourceType = type != null ? type.getCanonicalName() : UNKNOWN;
     }
   }
 
@@ -65,19 +67,19 @@ public class MtException {
     public final String target;
     public MtEnumExtractionException(Class<?> target, Exception e) {
       super(e);
-      this.target = target.getCanonicalName();
+      this.target = target != null ? target.getCanonicalName() : UNKNOWN;
     }
   }
 
   public static class MtMissingIdException extends RuntimeException {
     public MtMissingIdException(Object field) {
-      super(field == null ? "missing" : field.toString());
+      super(field == null ? UNKNOWN : field.toString());
     }
   }
 
   public static class MtAccessException extends RuntimeException {
     public MtAccessException(Object target) {
-      super(target == null ? "missing" : target.toString());
+      super(target == null ? UNKNOWN : target.toString());
     }
   }
 

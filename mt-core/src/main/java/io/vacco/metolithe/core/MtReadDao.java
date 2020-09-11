@@ -50,9 +50,9 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     if (values == null || values.length == 0) { return Collections.emptyMap(); }
     Optional<MtFieldDescriptor> ofd = dsc.getField(field);
     if (ofd.isPresent()) {
-      Map<String, Object> pids = toNamedParamMap(asList(values), field);
+      Map<String, Object> pids = toNamedParamMap(asList(values), ofd.get().getFieldName());
       String query = String.format("select %s from %s where %s in (%s)",
-          propNamesCsv(dsc, true), getSchemaName(), field, toNamedParamLabels(pids)
+          propNamesCsv(dsc, true), getSchemaName(), ofd.get().getFieldName(), toNamedParamLabels(pids)
       );
       List<T> raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
       return raw.stream().collect(groupingBy(r -> (V) ofd.get().getValue(r)));

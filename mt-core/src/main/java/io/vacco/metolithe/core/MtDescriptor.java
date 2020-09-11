@@ -53,7 +53,9 @@ public class MtDescriptor<T> {
   }
 
   public Object[] getPkValues(T t) {
-    if (t == null || this.pkField == null) return empty;
+    if (t == null || this.pkField == null) {
+      return empty;
+    }
     Map<Integer, Object> pkValues = new TreeMap<>();
     for (MtFieldDescriptor fd : fields) {
       Optional<MtUnique> ou = fd.get(MtUnique.class);
