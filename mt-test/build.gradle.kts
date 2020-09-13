@@ -9,7 +9,7 @@ tasks.withType<Test> {
 tasks.withType<JacocoReport> {
   sourceSets(
       project(":mt-core").sourceSets.main.get(),
-      project(":mt-codegen-liquibase").sourceSets.main.get()
+      project(":mt-codegen").sourceSets.main.get()
   )
 }
 
@@ -18,7 +18,7 @@ dependencies {
   implementation(project(":mt-core"))
   implementation(Libs.fluentJdbc)
 
-  implementation(project(":mt-codegen-liquibase"))
+  implementation(project(":mt-codegen"))
   implementation(Libs.joox)
   implementation(Libs.liquibase) {
     exclude("ch.qos.logback", "logback-classic")

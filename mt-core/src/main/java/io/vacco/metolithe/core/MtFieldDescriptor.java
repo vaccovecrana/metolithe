@@ -56,8 +56,9 @@ public class MtFieldDescriptor {
   public boolean isPk() { return get(MtPk.class).isPresent(); }
 
   public MtCaseFormat getFormat() { return fmt; }
+  public String getFieldClassName() { return this.f.getType().getCanonicalName(); }
   public String getFieldName() { return fmt.of(this.f.getName()); }
-  public Class<?> getFieldType() { return f.getType(); }
+  public Class<?> getType() { return f.getType(); }
 
   public Object getValue(Object o) {
     try {
@@ -76,11 +77,9 @@ public class MtFieldDescriptor {
   }
 
   @Override public String toString() {
-    return String.format("%s=[%s]",
-        f.getName(),
-        annotations.stream()
-            .map(a -> a.annotationType().getSimpleName())
-            .collect(Collectors.joining(", "))
-    );
+    String ants = annotations.stream()
+        .map(a -> a.annotationType().getSimpleName())
+        .collect(Collectors.joining(", "));
+    return String.format("%s=[%s]", f.getName(), ants);
   }
 }

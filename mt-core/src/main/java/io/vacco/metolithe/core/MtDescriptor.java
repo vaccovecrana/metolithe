@@ -14,7 +14,7 @@ public class MtDescriptor<T> {
 
   private static final Object[] empty = new Object[] {};
 
-  private final Class<T> target;
+  private final Class<T> cl;
   private final MtCaseFormat fmt;
 
   private final List<MtFieldDescriptor> fields;
@@ -22,7 +22,7 @@ public class MtDescriptor<T> {
   private final MtFieldDescriptor pkField;
 
   public MtDescriptor(Class<T> entity, MtCaseFormat fmt) {
-    this.target = Objects.requireNonNull(entity);
+    this.cl = Objects.requireNonNull(entity);
     this.fmt = Objects.requireNonNull(fmt);
     this.fields = Arrays.stream(entity.getFields())
         .filter(f -> isPublic(f.getModifiers()) && !isStatic(f.getModifiers()))
@@ -37,8 +37,8 @@ public class MtDescriptor<T> {
 
   public <E extends Enum<?>> List<Class<E>> getEnumFields() {
     return fields.stream()
-        .filter(fd -> Enum.class.isAssignableFrom(fd.getFieldType()))
-        .map(fd -> (Class<E>) fd.getFieldType())
+        .filter(fd -> Enum.class.isAssignableFrom(fd.getType()))
+        .map(fd -> (Class<E>) fd.getType())
         .collect(toList());
   }
 
@@ -77,7 +77,7 @@ public class MtDescriptor<T> {
   }
 
   public boolean matches(Class<?> other) {
-    return target == other;
+    return cl == other;
   }
 
   public List<MtFieldDescriptor> getFields(boolean withPk) {
@@ -88,14 +88,13 @@ public class MtDescriptor<T> {
     return fields.stream().filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst();
   }
 
-  public String getClassName() { return target.getCanonicalName(); }
-  public String getName() { return fmt.of(target.getSimpleName()); }
+  public Class<T> getType() { return cl; }
+  public String getClassName() { return cl.getCanonicalName(); }
+  public String getName() { return fmt.of(cl.getSimpleName()); }
   public MtCaseFormat getFormat() { return fmt; }
-
-  protected Class<T> getTarget() { return target; }
 
   @Override
   public String toString() {
-    return format("<%s>%s", target.getSimpleName(), fields);
+    return format("<%s>%s", cl.getSimpleName(), fields);
   }
 }

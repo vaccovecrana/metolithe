@@ -75,10 +75,6 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return sql().query().update(query).namedParam(fn, value).run().affectedRows();
   }
 
-  public <V extends Enum<V>> long deleteWhereEnEq(String field, V value) {
-    return deleteWhereEq(field, value);
-  }
-
   public long deleteWhereIdEq(K id) {
     Optional<MtFieldDescriptor> opk = dsc.getPkField();
     return opk.map(mtFieldDescriptor -> deleteWhereEq(mtFieldDescriptor.getFieldName(), id)).orElse(-1L);

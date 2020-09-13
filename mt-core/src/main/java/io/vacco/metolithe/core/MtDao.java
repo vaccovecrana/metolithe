@@ -34,7 +34,7 @@ public abstract class MtDao<T, K> {
     Optional<MtFieldDescriptor> opk = d.get(MtPk.class).findFirst();
     if (opk.isPresent()) {
       Class<?> idFnClass = idFn.getIdType();
-      Class<?> entityPkClass = MtTypeMapper.toWrapperClass(opk.get().getFieldType());
+      Class<?> entityPkClass = MtTypeMapper.toWrapperClass(opk.get().getType());
       if (!idFnClass.isAssignableFrom(entityPkClass)) {
         throw new MtException.MtIdGeneratorMismatchException(d.getClassName(), entityPkClass, idFnClass);
       }
@@ -43,11 +43,11 @@ public abstract class MtDao<T, K> {
 
   public FluentJdbc sql() { return jdbc; }
 
-  public Mapper<T> mapToDefault() { return this.mappers.forClass(this.dsc.getTarget()); }
+  public Mapper<T> mapToDefault() { return this.mappers.forClass(this.dsc.getType()); }
   public ObjectMappers getMappers() { return mappers; }
 
   public String getSchemaName() {
-    return getSchemaName(this.dsc.getTarget());
+    return getSchemaName(this.dsc.getType());
   }
 
   protected String getSchemaName(Class<?> clazz) {

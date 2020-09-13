@@ -2,6 +2,7 @@ package io.vacco.metolithe.test;
 
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
+import io.vacco.metolithe.test.dao.UserDao;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.codejargon.fluentjdbc.api.*;
@@ -15,15 +16,14 @@ import static io.vacco.shax.logging.ShArgument.*;
 @RunWith(J8SpecRunner.class)
 public class MtDaoSpec extends MtSpec {
 
+  private static final String schema = "public";
+  private static final FluentJdbc jdbc = new FluentJdbcBuilder()
+      .connectionProvider(ds)
+      .afterQueryListener(edt -> log.info("[{}], {}", edt.success(), edt.sql()))
+      .build();
+
   static {
-    it("Creates base DAOs for inserting data", () -> {
-
-      String schema = "public";
-      FluentJdbc jdbc = new FluentJdbcBuilder()
-          .connectionProvider(ds)
-          .afterQueryListener(edt -> log.info("[{}], {}", edt.success(), edt.sql()))
-          .build();
-
+    it("Creates base DAOs for data access", () -> {
       MtWriteDao<Phone, Integer> pDao = new MtWriteDao<>(
           schema, jdbc, new MtDescriptor<>(Phone.class, fmt), new MtMurmur3IFn());
       MtWriteDao<Device, Long> dDao = new MtWriteDao<>(
@@ -52,7 +52,6 @@ public class MtDaoSpec extends MtSpec {
       d0.type = Device.DType.IOS;
       log.info("{}", kv("d0u", dDao.merge(d0)));
       log.info("{}", kv("d1s", dDao.merge(d1)));
-      log.info("{}", kv("ldEnIn", dDao.loadWhereEnIn("type", Device.DType.IOS)));
 
       DeviceTag dt0 = new DeviceTag();
       dt0.claimTimeUtcMs = System.currentTimeMillis();
@@ -82,6 +81,13 @@ public class MtDaoSpec extends MtSpec {
       log.info("{}", kv("uf0m", ufDao.merge(uf0)));
 
       System.out.println();
+    });
+
+    it("Uses generated POJO DAOs for data access", () -> {
+      UserDao ud = new UserDao(schema, fmt, jdbc, new MtMurmur3IFn());
+      log.info("{}", kv("loadWhereEqJane", ud.loadWhereAliasEq("Jane")));
+      log.info("{}", kv("loadWhereEmailEq", ud.loadWhereEmailIn("joe@me.com")));
+      log.info("");
     });
   }
 }

@@ -41,10 +41,6 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
         .listResult(mapToDefault());
   }
 
-  public <V extends Enum<V>> Collection<T> loadWhereEnEq(String fieldName, V value) {
-    return loadWhereEq(fieldName, value);
-  }
-
   @SafeVarargs
   public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
     if (values == null || values.length == 0) { return Collections.emptyMap(); }
@@ -58,11 +54,6 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       return raw.stream().collect(groupingBy(r -> (V) ofd.get().getValue(r)));
     }
     return emptyMap();
-  }
-
-  @SafeVarargs
-  public final <V extends Enum<V>> Map<V, List<T>> loadWhereEnIn(String field, V... enums) {
-    return loadWhereIn(field, enums);
   }
 
   public T loadExisting(K id) {
