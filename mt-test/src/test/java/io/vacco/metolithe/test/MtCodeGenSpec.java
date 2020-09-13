@@ -1,6 +1,9 @@
 package io.vacco.metolithe.test;
 
+import io.vacco.metolithe.codegen.dao.MtDaoMapper;
 import io.vacco.metolithe.codegen.liquibase.*;
+import io.vacco.metolithe.schema.Phone;
+import io.vacco.metolithe.schema.User;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -23,6 +26,10 @@ public class MtCodeGenSpec extends MtSpec {
     ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
 
     describe("MT Schema code generation", () -> {
+      it("Generates typed field DAO definitions", () -> {
+        File out = new File(".", "src/main/java");
+        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", Phone.class, User.class);
+      });
       it("Generates Liquibase changelogs", () -> {
         Match lbChangeLog = new MtLbMapper().mapSchema(fmt, testSchema);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

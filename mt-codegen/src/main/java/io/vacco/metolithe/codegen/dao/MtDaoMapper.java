@@ -1,11 +1,12 @@
 package io.vacco.metolithe.codegen.dao;
 
-import io.marioslab.basis.template.Template;
-import io.marioslab.basis.template.TemplateContext;
-import io.marioslab.basis.template.TemplateLoader;
-import io.vacco.metolithe.core.MtDescriptor;
-import io.vacco.metolithe.core.MtTypeMapper;
+import io.marioslab.basis.template.*;
+import io.vacco.metolithe.core.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.function.Function;
 
 public class MtDaoMapper {
@@ -14,7 +15,7 @@ public class MtDaoMapper {
 
   public String mapFrom(MtDescriptor<?> d, String outPackage) {
     TemplateLoader loader = new TemplateLoader.ClasspathTemplateLoader();
-    Template template = loader.load("/io/vacco/metolithe/codegen/dao/MtDao.hbs");
+    Template template = loader.load("/io/vacco/metolithe/codegen/dao/MtDao.bt");
     TemplateContext context = new TemplateContext();
 
     Class<?> mtPkClass = MtTypeMapper.toWrapperClass(d.getPkField().isPresent() ? d.getPkField().get().getType() : Void.class);
@@ -26,5 +27,17 @@ public class MtDaoMapper {
     context.set("toWrapper", (Function<Class<?>, String>) MtTypeMapper::wrapperClassOf);
 
     return template.render(context);
+  }
+
+  public void mapSchema(File outDir, String outPackage, Class<?> ... schemaClasses) throws IOException {
+    if (!outDir.isDirectory()) { throw new MtException.MtAccessException(outDir); }
+    File out = new File(outDir, outPackage.replace(".", "/"));
+    if (!out.exists() && !out.mkdirs()) { throw new MtException.MtAccessException(out); }
+    for (Class<?> cl : schemaClasses) {
+      MtDescriptor<?> d = new MtDescriptor<>(cl, MtCaseFormat.KEEP_CASE);
+      String daoSrc = mapFrom(d, outPackage);
+      File daoFile = new File(out, String.format("%sDao.java", d.getName()));
+      Files.write(daoFile.toPath(), daoSrc.getBytes(StandardCharsets.UTF_8));
+    }
   }
 }

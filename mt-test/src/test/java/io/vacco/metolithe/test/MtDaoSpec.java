@@ -2,7 +2,7 @@ package io.vacco.metolithe.test;
 
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
-import io.vacco.metolithe.test.dao.UserDao;
+import io.vacco.metolithe.test.dao.PhoneDao;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.codejargon.fluentjdbc.api.*;
@@ -11,6 +11,8 @@ import org.junit.runner.RunWith;
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
 import static io.vacco.shax.logging.ShArgument.*;
+
+import io.vacco.metolithe.test.dao.UserDao;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -24,12 +26,12 @@ public class MtDaoSpec extends MtSpec {
 
   static {
     it("Creates base DAOs for data access", () -> {
-      MtWriteDao<Phone, Integer> pDao = new MtWriteDao<>(
-          schema, jdbc, new MtDescriptor<>(Phone.class, fmt), new MtMurmur3IFn());
+      MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
+      PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
       MtWriteDao<Device, Long> dDao = new MtWriteDao<>(
           schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
       MtWriteDao<User, Integer> uDao = new MtWriteDao<>(
-          schema, jdbc, new MtDescriptor<>(User.class, fmt), new MtMurmur3IFn());
+          schema, jdbc, new MtDescriptor<>(User.class, fmt), m3Ifn);
       MtWriteDao<DeviceTag, Long> dtDao = new MtWriteDao<>(
           schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
       MtWriteDao<UserFollow, Void> ufDao = new MtWriteDao<>(
@@ -42,7 +44,7 @@ public class MtDaoSpec extends MtSpec {
       assertEquals(p0.number, p01.number);
 
       log.info("{}", kv("p1s", pDao.save(p1)));
-      log.info("{}", kv("loadWhereEq", pDao.loadWhereEq("countryCode", 1)));
+      log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
       log.info("{}", kv("p1Del", pDao.deleteWhereIdEq(p1.pid)));
       log.info("{}", kv("p1s", pDao.save(p1)));
       log.info("{}", kv("p0Del", pDao.delete(p0)));
@@ -79,8 +81,6 @@ public class MtDaoSpec extends MtSpec {
       uf0.toUid = u1.uid;
 
       log.info("{}", kv("uf0m", ufDao.merge(uf0)));
-
-      System.out.println();
     });
 
     it("Uses generated POJO DAOs for data access", () -> {

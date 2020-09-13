@@ -2,6 +2,25 @@
 
 A minimal, opinionated, flat key/value JDBC object storage framework.
 
+## 2.0 Functionality
+
+- [x] No support for composite primary keys (explain why).
+- [x] Unique constraints.
+- [x] Composite index attributes.
+- [x] Static DAO code generation.
+- [ ] Pagination support.
+
+## Documentation topics
+
+- [ ] How are primary key fields assigned and extracted.
+- [ ] Strategies for choosing primary key component fields (or not at all).
+- [ ] `int` vs `Integer`, when to use which?
+
+Entities which do not define a primary key field can only be saved, loaded or deleted using one of its
+attributes. Therefore, calls to `update` or `merge` on a DAO instance will fail.
+
+This restriction is by design in this framework.
+
 # Disclaimer
 
 > This project is not production ready, and still requires security and code correctness audits. You use this

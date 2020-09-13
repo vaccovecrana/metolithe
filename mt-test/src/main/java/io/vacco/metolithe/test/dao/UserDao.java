@@ -14,9 +14,9 @@ import java.util.Map;
 public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lang.Integer> {
 
   public UserDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
-    super(schema, jdbc, new MtDescriptor(io.vacco.metolithe.schema.User.class, fmt), idFn);
+    super(schema, jdbc, new MtDescriptor<>(io.vacco.metolithe.schema.User.class, fmt), idFn);
   }
-
+  
   public Collection<io.vacco.metolithe.schema.User> loadWherePwEq(java.lang.String pw) {
     return loadWhereEq("pw", pw);
   }
@@ -28,7 +28,7 @@ public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lan
   public long deleteWherePwEq(java.lang.String pw) {
     return deleteWhereEq("pw", pw);
   }
-
+  
   public Collection<io.vacco.metolithe.schema.User> loadWhereAliasEq(java.lang.String alias) {
     return loadWhereEq("alias", alias);
   }
@@ -40,7 +40,7 @@ public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lan
   public long deleteWhereAliasEq(java.lang.String alias) {
     return deleteWhereEq("alias", alias);
   }
-
+  
   public Collection<io.vacco.metolithe.schema.User> loadWhereEmailEq(java.lang.String email) {
     return loadWhereEq("email", email);
   }
@@ -52,7 +52,7 @@ public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lan
   public long deleteWhereEmailEq(java.lang.String email) {
     return deleteWhereEq("email", email);
   }
-
+  
   public Collection<io.vacco.metolithe.schema.User> loadWhereTidEq(java.lang.Long tid) {
     return loadWhereEq("tid", tid);
   }
@@ -64,7 +64,7 @@ public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lan
   public long deleteWhereTidEq(java.lang.Long tid) {
     return deleteWhereEq("tid", tid);
   }
-
+  
   public Collection<io.vacco.metolithe.schema.User> loadWhereTagSignatureEq(java.lang.String tagSignature) {
     return loadWhereEq("tagSignature", tagSignature);
   }
@@ -76,5 +76,5 @@ public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lan
   public long deleteWhereTagSignatureEq(java.lang.String tagSignature) {
     return deleteWhereEq("tagSignature", tagSignature);
   }
-
+  
 }
