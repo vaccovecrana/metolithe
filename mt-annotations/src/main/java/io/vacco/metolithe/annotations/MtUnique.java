@@ -4,4 +4,7 @@ import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface MtIndex {}
+public @interface MtUnique {
+  int idx();
+  boolean inPk();
+}
