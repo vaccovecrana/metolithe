@@ -29,4 +29,5 @@ dependencies {
   implementation(Libs.shax)
   implementation(Libs.slf4jApi)
   implementation(Libs.h2)
+  implementation(Libs.lang3)
 }

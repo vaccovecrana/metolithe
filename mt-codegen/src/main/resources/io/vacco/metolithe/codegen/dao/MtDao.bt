@@ -12,7 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 public class {{mtDsc.getName()}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mtPkClassName}}> {
-
+  {{if mtDsc.getPkField().isPresent()}}
+  public static final String {{mtDsc.getPkField().get().getFieldName()}} = "{{mtDsc.getPkField().get().getFieldName()}}";
+  {{end}}
+  {{for mtField in mtFields}}public static final String {{mtField.getFieldName()}} = "{{mtField.getFieldName()}}";
+  {{end}}
   public {{mtDsc.getName()}}Dao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
     super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
   }

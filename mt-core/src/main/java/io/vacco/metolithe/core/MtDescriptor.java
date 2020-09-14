@@ -84,8 +84,10 @@ public class MtDescriptor<T> {
     return withPk ? fields : fieldsNoPk;
   }
   public Optional<MtFieldDescriptor> getPkField() { return pkField != null ? Optional.of(pkField) : Optional.empty(); }
-  public Optional<MtFieldDescriptor> getField(String name) {
-    return fields.stream().filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst();
+  public MtFieldDescriptor getField(String name) {
+    return fields.stream()
+        .filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst()
+        .orElseThrow(() -> new MtException.MtMissingFieldException(name, this));
   }
 
   public Class<T> getType() { return cl; }

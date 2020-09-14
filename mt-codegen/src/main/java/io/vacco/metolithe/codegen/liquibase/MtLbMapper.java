@@ -50,19 +50,20 @@ public class MtLbMapper {
 
   private Match mapIndex(MtDescriptor<?> d, MtFieldDescriptor fm) {
     Match idx = createIndex(
-        format("%s_%s_idx", d.getName(), fm.getFieldName()),
-        d.getName()
+        d.getFormat().of(
+            format("idx_%s_%s", d.getName(), fm.getFieldName())
+        ), d.getName()
     );
     idx.append(column(fm.getFieldName()));
     return idx;
   }
 
-  private Match mapCompIndex(MtDescriptor<?> d, List<MtFieldDescriptor> components) {
+  private Match mapCompIndex(String indexName, MtDescriptor<?> d, List<MtFieldDescriptor> components) {
     Object[] fields = components.stream()
         .sorted(comparingInt(fd -> fd.get(MtCompIndex.class).get().idx()))
         .map(MtFieldDescriptor::getFieldName).toArray();
-    String indexId = Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED));
-    Match idx = createIndex(indexId, d.getName());
+    String indexId = format("idx_%s_%s", indexName, Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED)));
+    Match idx = createIndex(d.getFormat().of(indexId), d.getName());
     for (MtFieldDescriptor fd : components) {
       idx.append(column(fd.getFieldName()));
     }
@@ -72,7 +73,7 @@ public class MtLbMapper {
   private Match mapUniqueConstraints(MtDescriptor<?> d) {
     return $("addUniqueConstraint")
         .attr("tableName", d.getName())
-        .attr("constraintName", d.getFormat().of(format("%s_unq", d.getName())))
+        .attr("constraintName", d.getFormat().of(format("unq_%s", d.getName())))
         .attr("columnNames", d.get(MtUnique.class)
             .sorted(comparingInt(fd -> fd.get(MtUnique.class).get().idx()))
             .map(MtFieldDescriptor::getFieldName).collect(joining(",")));
@@ -98,8 +99,8 @@ public class MtLbMapper {
           String fromField = fd.getFieldName();
           String to = fkTarget.getName();
           String toField = targetPk.getFieldName();
-          String fkId = Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED));
-          Match cs = changeSet(fkId);
+          String fkId = format("fk_%s", Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED)));
+          Match cs = changeSet(d.getFormat().of(fkId));
           cs.append(
               $("addForeignKeyConstraint")
                   .attr("baseColumnNames", fromField)
@@ -120,7 +121,7 @@ public class MtLbMapper {
     cs.append(ct);
     d.get(MtUnique.class).findFirst().ifPresent(fd -> cs.append(mapUniqueConstraints(d)));
     d.get(MtIndex.class).map(fd -> mapIndex(d, fd)).forEach(cs::append);
-    d.getCompositeIndexes().forEach((k, v) -> cs.append(mapCompIndex(d, v)));
+    d.getCompositeIndexes().forEach((k, v) -> cs.append(mapCompIndex(k, d, v)));
     return cs;
   }
 
