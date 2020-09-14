@@ -10,7 +10,7 @@ import io.vacco.metolithe.annotations.*;
   @MtIndex @MtUnique(idx = 0, inPk = true)
   public int countryCode;
 
-  @St16 @MtUnique(idx = 1, inPk = true)
+  @St16 @MtIndex @MtUnique(idx = 1, inPk = true)
   public String number;
 
   @MtField public int smsVerificationCode;

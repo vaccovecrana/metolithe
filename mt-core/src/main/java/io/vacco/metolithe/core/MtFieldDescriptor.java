@@ -60,11 +60,11 @@ public class MtFieldDescriptor {
   public String getFieldName() { return fmt.of(this.f.getName()); }
   public Class<?> getType() { return f.getType(); }
 
-  public Object getValue(Object o) {
+  public <V> V getValue(Object o) {
     try {
-      return f.get(o);
-    } catch (IllegalAccessException e) {
-      throw new MtException.MtAccessException(e);
+      return (V) f.get(o);
+    } catch (Exception e) {
+      throw new MtException.MtFieldAccessException(o, null, e);
     }
   }
 
@@ -72,7 +72,7 @@ public class MtFieldDescriptor {
     try {
       f.set(o, val);
     } catch (IllegalAccessException e) {
-      throw new MtException.MtAccessException(e);
+      throw new MtException.MtFieldAccessException(o, val, e);
     }
   }
 

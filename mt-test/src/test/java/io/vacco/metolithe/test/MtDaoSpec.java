@@ -5,6 +5,7 @@ import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.PhoneDao;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.codejargon.fluentjdbc.api.*;
 import org.junit.runner.RunWith;
 
@@ -13,6 +14,10 @@ import static org.junit.Assert.*;
 import static io.vacco.shax.logging.ShArgument.*;
 
 import io.vacco.metolithe.test.dao.UserDao;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -24,10 +29,12 @@ public class MtDaoSpec extends MtSpec {
       .afterQueryListener(edt -> log.info("[{}], {}", edt.success(), edt.sql()))
       .build();
 
+  private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
+  private static final PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
+
   static {
     it("Creates base DAOs for data access", () -> {
-      MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
-      PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
+
       MtWriteDao<Device, Long> dDao = new MtWriteDao<>(
           schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
       MtWriteDao<User, Integer> uDao = new MtWriteDao<>(
@@ -88,6 +95,23 @@ public class MtDaoSpec extends MtSpec {
       log.info("{}", kv("loadWhereEqJane", ud.loadWhereAliasEq("Jane")));
       log.info("{}", kv("loadWhereEmailEq", ud.loadWhereEmailIn("joe@me.com")));
       log.info("");
+    });
+
+    it("Can paginate over record collections", () -> {
+      List<Phone> phones = IntStream.range(0, 64).mapToObj(i -> {
+        Phone p = new Phone();
+        p.countryCode = 1;
+        p.number = RandomStringUtils.randomNumeric(10);
+        p.smsVerificationCode = Integer.parseInt(RandomStringUtils.randomNumeric(6));
+        return p;
+      }).collect(Collectors.toList());
+      for (Phone p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
+      MtKeysetPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.number, 16);
+      while (page0.next != null) {
+        log.info("{}", kv("page0", page0));
+        page0 = pDao.loadPage(page0.next, PhoneDao.number, 16);
+      }
+      log.info("{}", kv("page0", page0));
     });
   }
 }

@@ -4,7 +4,7 @@ import io.vacco.metolithe.annotations.*;
 
 @MtEntity public class DeviceLocation {
 
-  private static final String idxName = "geo_idx";
+  private static final String idxName = "gloc";
 
   @MtFk(Device.class)
   @MtUnique(idx = 0, inPk = false) public long did;

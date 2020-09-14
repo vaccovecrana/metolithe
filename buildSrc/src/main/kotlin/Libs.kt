@@ -10,4 +10,5 @@ object Libs {
 
   const val j8Spec = "io.github.j8spec:j8spec:3.0.0"
   const val h2 = "com.h2database:h2:1.4.197"
+  const val lang3 = "org.apache.commons:commons-lang3:3.11"
 }

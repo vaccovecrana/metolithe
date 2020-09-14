@@ -12,7 +12,15 @@ import java.util.List;
 import java.util.Map;
 
 public class UserDao extends MtWriteDao<io.vacco.metolithe.schema.User, java.lang.Integer> {
-
+  
+  public static final String uid = "uid";
+  
+  public static final String pw = "pw";
+  public static final String alias = "alias";
+  public static final String email = "email";
+  public static final String tid = "tid";
+  public static final String tagSignature = "tagSignature";
+  
   public UserDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.metolithe.schema.User.class, fmt), idFn);
   }

@@ -4,7 +4,6 @@ import io.marioslab.basis.template.*;
 import io.vacco.metolithe.core.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.function.Function;
@@ -29,15 +28,18 @@ public class MtDaoMapper {
     return template.render(context);
   }
 
-  public void mapSchema(File outDir, String outPackage, Class<?> ... schemaClasses) throws IOException {
-    if (!outDir.isDirectory()) { throw new MtException.MtAccessException(outDir); }
-    File out = new File(outDir, outPackage.replace(".", "/"));
-    if (!out.exists() && !out.mkdirs()) { throw new MtException.MtAccessException(out); }
-    for (Class<?> cl : schemaClasses) {
-      MtDescriptor<?> d = new MtDescriptor<>(cl, MtCaseFormat.KEEP_CASE);
-      String daoSrc = mapFrom(d, outPackage);
-      File daoFile = new File(out, String.format("%sDao.java", d.getName()));
-      Files.write(daoFile.toPath(), daoSrc.getBytes(StandardCharsets.UTF_8));
+  public void mapSchema(File outDir, String outPackage, Class<?> ... schemaClasses) {
+    try {
+      File out = new File(outDir, outPackage.replace(".", "/"));
+      if (!out.exists() && !out.mkdirs()) { throw new IllegalStateException(out.getAbsolutePath()); }
+      for (Class<?> cl : schemaClasses) {
+        MtDescriptor<?> d = new MtDescriptor<>(cl, MtCaseFormat.KEEP_CASE);
+        String daoSrc = mapFrom(d, outPackage);
+        File daoFile = new File(out, String.format("%sDao.java", d.getName()));
+        Files.write(daoFile.toPath(), daoSrc.getBytes(StandardCharsets.UTF_8));
+      }
+    } catch (Exception e) {
+      throw new MtException.MtDaoMappingException(outDir, outPackage, schemaClasses, e);
     }
   }
 }

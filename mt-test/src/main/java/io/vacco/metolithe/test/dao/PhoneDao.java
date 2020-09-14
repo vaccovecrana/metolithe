@@ -12,7 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 public class PhoneDao extends MtWriteDao<io.vacco.metolithe.schema.Phone, java.lang.Integer> {
-
+  
+  public static final String pid = "pid";
+  
+  public static final String countryCode = "countryCode";
+  public static final String number = "number";
+  public static final String smsVerificationCode = "smsVerificationCode";
+  
   public PhoneDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.metolithe.schema.Phone.class, fmt), idFn);
   }
