@@ -1,17 +1,16 @@
+buildscript {
+  repositories { maven { name = "VaccoOss"; setUrl("https://dl.bintray.com/vaccovecrana/vacco-oss") } }
+  dependencies { classpath("io.vacco.common:common-build:0.1.0") }
+}
+
 allprojects {
+  apply(from = project.buildscript.classLoader.getResource("io/vacco/common/java-library.gradle.kts").toURI())
 
   group = "io.vacco.metolithe"
   version = "2.0.0"
 
-  buildscript { repositories { maven { url = uri("https://plugins.gradle.org/m2/") } } }
-  repositories { jcenter() }
-
-  apply(plugin = "java")
-
-  configure<JavaPluginConvention> {
+  configure<JavaPluginExtension> {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
   }
-
-  tasks.withType<Test> { this.testLogging { this.showStandardStreams = true } }
 }

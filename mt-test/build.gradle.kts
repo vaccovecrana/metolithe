@@ -1,11 +1,3 @@
-plugins { jacoco }
-
-tasks.withType<Test> {
-  this.testLogging {
-    this.showStandardStreams = true
-  }
-}
-
 tasks.withType<JacocoReport> {
   sourceSets(
       project(":mt-core").sourceSets.main.get(),
