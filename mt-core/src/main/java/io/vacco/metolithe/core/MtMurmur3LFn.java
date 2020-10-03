@@ -1,6 +1,6 @@
 package io.vacco.metolithe.core;
 
-import static io.vacco.metolithe.hashing.MtArrays.*;
+import static io.vacco.oruzka.core.OzArrays.*;
 import static io.vacco.metolithe.hashing.MtMurmur3.*;
 import static java.util.Objects.requireNonNull;
 

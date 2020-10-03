@@ -2,6 +2,7 @@ package io.vacco.metolithe.codegen.dao;
 
 import io.marioslab.basis.template.*;
 import io.vacco.metolithe.core.*;
+import io.vacco.oruzka.core.OzReflect;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -17,13 +18,13 @@ public class MtDaoMapper {
     Template template = loader.load("/io/vacco/metolithe/codegen/dao/MtDao.bt");
     TemplateContext context = new TemplateContext();
 
-    Class<?> mtPkClass = MtTypeMapper.toWrapperClass(d.getPkField().isPresent() ? d.getPkField().get().getType() : Void.class);
+    Class<?> mtPkClass = OzReflect.toWrapperClass(d.getPkField().isPresent() ? d.getPkField().get().getType() : Void.class);
     context.set("mtPackage", outPackage);
     context.set("mtPkClassName", mtPkClass.getCanonicalName());
     context.set("mtDsc", d);
     context.set("mtFields", d.getFields(false));
     context.set("toBeanCase", toBeanCase);
-    context.set("toWrapper", (Function<Class<?>, String>) MtTypeMapper::wrapperClassOf);
+    context.set("toWrapper", (Function<Class<?>, String>) clz -> OzReflect.toWrapperClass(clz).getCanonicalName());
 
     return template.render(context);
   }

@@ -1,6 +1,8 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.MtVarchar;
+import io.vacco.oruzka.core.OzReflect;
+
 import java.util.Optional;
 import static java.lang.String.*;
 
@@ -8,25 +10,8 @@ public class MtTypeMapper {
 
   public static final int ENUM_VARCHAR_LENGTH = 64;
 
-  public static Class<?> toWrapperClass(Class<?> type) {
-    if (!type.isPrimitive()) return type;
-    else if (int.class.equals(type)) return Integer.class;
-    else if (double.class.equals(type)) return Double.class;
-    else if (char.class.equals(type)) return Character.class;
-    else if (boolean.class.equals(type)) return Boolean.class;
-    else if (long.class.equals(type)) return Long.class;
-    else if (float.class.equals(type)) return Float.class;
-    else if (short.class.equals(type)) return Short.class;
-    else if (byte.class.equals(type)) return Byte.class;
-    else throw new MtException.MtPrimitiveMappingException(type);
-  }
-
-  public static String wrapperClassOf(Class<?> type) {
-    return toWrapperClass(type).getCanonicalName();
-  }
-
   public static String sqlTypeOf(MtFieldDescriptor fd) {
-    Class<?> wt0 = toWrapperClass(fd.getType());
+    Class<?> wt0 = OzReflect.toWrapperClass(fd.getType());
     if (wt0 == Boolean.class) { return "boolean"; }
     if (wt0 == String.class) {
       Optional<MtVarchar> maxSize = fd.get(MtVarchar.class);

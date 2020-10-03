@@ -11,26 +11,29 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**************************************************
+ * Generated source file. Do not modify directly. *
+ **************************************************/
 public class {{mtDsc.getName()}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mtPkClassName}}> {
   {{if mtDsc.getPkField().isPresent()}}
-  public static final String {{mtDsc.getPkField().get().getFieldName()}} = "{{mtDsc.getPkField().get().getFieldName()}}";
+  public static final String pk_{{mtDsc.getPkField().get().getFieldName()}} = "{{mtDsc.getPkField().get().getFieldName()}}";
   {{end}}
-  {{for mtField in mtFields}}public static final String {{mtField.getFieldName()}} = "{{mtField.getFieldName()}}";
+  {{for mtField in mtFields}}public static final String fld_{{mtField.getFieldName()}} = "{{mtField.getFieldName()}}";
   {{end}}
   public {{mtDsc.getName()}}Dao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
     super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
   }
   {{for mtField in mtFields}}
   public Collection<{{mtDsc.getClassName()}}> loadWhere{{toBeanCase(mtField.getFieldName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldName()}}) {
-    return loadWhereEq("{{mtField.getFieldName()}}", {{mtField.getFieldName()}});
+    return loadWhereEq(fld_{{mtField.getFieldName()}}, {{mtField.getFieldName()}});
   }
 
   public final Map<{{toWrapper(mtField.getType())}}, List<{{mtDsc.getClassName()}}>> loadWhere{{toBeanCase(mtField.getFieldName())}}In({{toWrapper(mtField.getType())}} ... values) {
-    return loadWhereIn("{{mtField.getFieldName()}}", values);
+    return loadWhereIn(fld_{{mtField.getFieldName()}}, values);
   }
 
   public long deleteWhere{{toBeanCase(mtField.getFieldName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldName()}}) {
-    return deleteWhereEq("{{mtField.getFieldName()}}", {{mtField.getFieldName()}});
+    return deleteWhereEq(fld_{{mtField.getFieldName()}}, {{mtField.getFieldName()}});
   }
   {{end}}
 }

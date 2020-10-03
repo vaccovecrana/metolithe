@@ -8,18 +8,9 @@ tasks.withType<JacocoReport> {
 dependencies {
   implementation(project(":mt-annotations"))
   implementation(project(":mt-core"))
-  implementation(Libs.fluentJdbc)
-
   implementation(project(":mt-codegen"))
-  implementation(Libs.joox)
-  implementation(Libs.liquibase) {
-    exclude("ch.qos.logback", "logback-classic")
-    exclude("org.slf4j", "slf4j-api")
-  }
 
-  implementation(Libs.j8Spec)
-  implementation(Libs.shax)
-  implementation(Libs.slf4jApi)
-  implementation(Libs.h2)
-  implementation(Libs.lang3)
+  implementation("io.vacco.shax:shax:1.7.30.0.0.6")
+  implementation("com.h2database:h2:1.4.197")
+  implementation("org.apache.commons:commons-lang3:3.11")
 }
