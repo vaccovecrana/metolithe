@@ -1,6 +1,6 @@
 plugins { id("io.vacco.common-build") version "0.5.3" }
 
-allprojects {
+subprojects {
   apply(plugin = "io.vacco.common-build")
 
   group = "io.vacco.metolithe"
@@ -11,7 +11,7 @@ allprojects {
     addPmd()
     addSpotBugs()
     addClasspathHell()
-    setPublishingUrlTransform { repo -> "${repo.url}/${project.name}" }
+    setPublishingUrlTransform { repo -> "${repo.url}/${rootProject.name}" }
     sharedLibrary()
   }
 
