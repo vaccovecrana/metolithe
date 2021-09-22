@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtDaoSpec extends MtSpec {
+public class Mt02DaoSpec extends MtSpec {
 
   private static final String schema = "public";
   private static final FluentJdbc jdbc = new FluentJdbcBuilder()

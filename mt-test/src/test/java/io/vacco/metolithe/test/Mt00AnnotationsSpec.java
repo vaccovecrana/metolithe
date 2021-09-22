@@ -16,7 +16,7 @@ import static io.vacco.metolithe.core.MtCaseFormat.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtAnnotationsSpec extends MtSpec {
+public class Mt00AnnotationsSpec extends MtSpec {
 
   private static <T> void logDescriptor(MtDescriptor<T> d, T data) {
     List<Class<Enum<?>>> enums0 = d.getEnumFields();

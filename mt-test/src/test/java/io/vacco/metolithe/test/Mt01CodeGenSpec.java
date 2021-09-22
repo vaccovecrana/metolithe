@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtCodeGenSpec extends MtSpec {
+public class Mt01CodeGenSpec extends MtSpec {
 
   static {
 
