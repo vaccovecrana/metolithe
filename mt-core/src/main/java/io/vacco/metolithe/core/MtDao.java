@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Objects.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class MtDao<T, K> {
 
   private final String schemaName;

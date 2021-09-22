@@ -13,6 +13,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     super(schemaName, jdbc, d, idFn);
   }
 
+  @SuppressWarnings("unchecked")
   private <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
     Optional<MtFieldDescriptor> opk = dsc.getPkField();
     Object[] pkVals = dsc.getPkValues(target);
@@ -55,7 +56,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public T merge(T rec) {
     return withId(rec, (fd, pk) -> {
-      if (!load(pk).isPresent()) { return save(rec); }
+      if (load(pk).isEmpty()) { return save(rec); }
       return update(rec);
     });
   }

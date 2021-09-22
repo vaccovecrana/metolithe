@@ -1,9 +1,9 @@
 package io.vacco.metolithe.hashing;
 
-
 /**
  * Sourced from https://github.com/apache/hive/blob/master/storage-api/src/java/org/apache/hive/common/util/Murmur3.java
  */
+@SuppressWarnings("fallthrough")
 public class MtMurmur3 {
 
   // Constants for 32 bit variant

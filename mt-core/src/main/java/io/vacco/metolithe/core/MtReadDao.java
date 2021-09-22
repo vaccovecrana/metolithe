@@ -55,20 +55,20 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   public T loadExisting(K id) {
     Optional<T> record = load(id);
-    if (!record.isPresent()) { throw new MtException.MtMissingIdException(id); }
+    if (record.isEmpty()) { throw new MtException.MtMissingIdException(id); }
     return record.get();
   }
 
-  public <V> MtKeysetPage<T, V> loadPage(V indexPage, String sortField, int pageSize) {
+  public <V> MtKeySetPage<T, V> loadPage(V indexPage, String sortField, int pageSize) {
     try {
       MtFieldDescriptor srt = dsc.getField(sortField);
-      MtKeysetPage<T, V> p = new MtKeysetPage<>();
+      MtKeySetPage<T, V> p = new MtKeySetPage<>();
       String countQuery = format("select count(*) from %s", getSchemaName());
       Optional<Long> count = sql().query().select(countQuery).firstResult(Mappers.singleLong());
       int rawSize = pageSize + 1;
       if (count.isPresent()) {
-        String whereClause = indexPage == null ? " " : format(" where %s >= :%s ", srt.getFieldName(), srt.getFieldName());
-        String query = format("select %s from %s%sorder by %s limit %s",
+        String whereClause = indexPage == null ? "" : format(" where %s >= :%s ", srt.getFieldName(), srt.getFieldName());
+        String query = format("select %s from %s%s order by %s limit %s",
             propNamesCsv(dsc, true), getSchemaName(),
             whereClause, srt.getFieldName(), rawSize
         );

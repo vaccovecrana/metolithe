@@ -3,6 +3,7 @@ package io.vacco.metolithe.core;
 import java.io.File;
 import java.util.List;
 
+@SuppressWarnings("serial")
 public class MtException {
 
   private static final String UNKNOWN = "unknown";
@@ -69,13 +70,6 @@ public class MtException {
       this.targetClass = targetClassName;
       this.pkFieldType = pkFieldType.getCanonicalName();
       this.idGenType = idGenType.getCanonicalName();
-    }
-  }
-
-  public static class MtPrimitiveMappingException extends RuntimeException {
-    public final String sourceType;
-    public MtPrimitiveMappingException(Class<?> type) {
-      this.sourceType = type != null ? type.getCanonicalName() : UNKNOWN;
     }
   }
 

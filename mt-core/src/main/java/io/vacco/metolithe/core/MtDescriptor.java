@@ -35,6 +35,7 @@ public class MtDescriptor<T> {
     this.pkField = pkds.isEmpty() ? null : pkds.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public <E extends Enum<?>> List<Class<E>> getEnumFields() {
     return fields.stream()
         .filter(fd -> Enum.class.isAssignableFrom(fd.getType()))

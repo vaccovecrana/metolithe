@@ -83,7 +83,7 @@ public class MtLbMapper {
     return $("changeSet").attr("author", "generated").attr("id", id);
   }
 
-  public List<Match> mapForeignKeys(List<OxVtx<MtDescriptor<?>>> classGroup) {
+  public List<Match> mapForeignKeys(List<OxVtx<String, MtDescriptor<?>>> classGroup) {
     return classGroup.stream().map(v -> v.data).flatMap(d -> d.get(MtFk.class)
         .map(fd -> {
           MtFk fk = fd.get(MtFk.class).get();
@@ -126,13 +126,13 @@ public class MtLbMapper {
   }
 
   public Match mapSchema(MtCaseFormat fmt, Class<?> ... schemaClasses) throws IOException, SAXException {
-    List<OxVtx<MtDescriptor<?>>> descriptors = Arrays.stream(schemaClasses)
+    List<OxVtx<String, MtDescriptor<?>>> descriptors = Arrays.stream(schemaClasses)
         .map(clazz -> new MtDescriptor<>(clazz, fmt))
-        .map(fd -> new OxVtx<MtDescriptor<?>>(fd.getName(), fd))
+        .map(fd -> new OxVtx<String, MtDescriptor<?>>(fd.getName(), fd))
         .collect(Collectors.toList());
 
-    OxGrph<MtDescriptor<?>> schema = new OxGrph<>();
-    for (OxVtx<MtDescriptor<?>> vd : descriptors) {
+    OxGrph<String, MtDescriptor<?>> schema = new OxGrph<>();
+    for (OxVtx<String, MtDescriptor<?>> vd : descriptors) {
       vd.data.getFields(true).stream()
           .map(fd -> fd.get(MtFk.class))
           .filter(Optional::isPresent).map(Optional::get)
@@ -143,7 +143,7 @@ public class MtLbMapper {
     }
 
     URL xmlTemplate = MtLbMapper.class.getClassLoader().getResource("io/vacco/metolithe/codegen/liquibase/changelog-template.xml");
-    Match lb = $(xmlTemplate);
+    Match lb = $(Objects.requireNonNull(xmlTemplate));
     OxKos.apply(schema).forEach((k, v) -> {
       v.stream().map(v0 -> mapFrom(v0.data)).forEach(lb::append);
       mapForeignKeys(v).forEach(lb::append);

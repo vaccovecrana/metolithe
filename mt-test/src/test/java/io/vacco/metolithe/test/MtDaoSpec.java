@@ -106,7 +106,7 @@ public class MtDaoSpec extends MtSpec {
         return p;
       }).collect(Collectors.toList());
       for (Phone p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
-      MtKeysetPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.fld_number, 16);
+      MtKeySetPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.fld_number, 16);
       while (page0.next != null) {
         log.info("{}", kv("page0", page0));
         page0 = pDao.loadPage(page0.next, PhoneDao.fld_number, 16);

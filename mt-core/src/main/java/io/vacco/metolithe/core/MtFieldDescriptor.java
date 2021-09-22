@@ -47,6 +47,7 @@ public class MtFieldDescriptor {
         .collect(Collectors.toList());
   }
 
+  @SuppressWarnings("unchecked")
   public <T extends Annotation> Optional<T> get(Class<T> annotation) {
     return annotations.stream()
         .filter(an0 -> match(annotation, an0.annotationType()))
@@ -60,6 +61,7 @@ public class MtFieldDescriptor {
   public String getFieldName() { return fmt.of(this.f.getName()); }
   public Class<?> getType() { return f.getType(); }
 
+  @SuppressWarnings("unchecked")
   public <V> V getValue(Object o) {
     try {
       return (V) f.get(o);

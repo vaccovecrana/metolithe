@@ -11,7 +11,7 @@ public class MtMurmur3LFn implements MtIdFn<Long> {
   public MtMurmur3LFn() { this.seed = DEFAULT_SEED; }
   public MtMurmur3LFn(int seed) { this.seed = seed; }
 
-  @Override public Long apply(Object... parts) {
+  @Override public Long apply(Object[] parts) {
     return toStringConcat(requireNonNull(parts))
         .map(ba -> hash64(ba, 0, ba.length, this.seed))
         .orElseThrow(IllegalStateException::new);
