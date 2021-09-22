@@ -13,7 +13,7 @@ public abstract class MtSpec {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
   }
 
-  protected static final Logger log = LoggerFactory.getLogger(Mt00AnnotationsSpec.class);
+  protected static final Logger log = LoggerFactory.getLogger(MtAnnotationsSpec.class);
 
   protected static final JdbcDataSource ds = new JdbcDataSource();
   protected static final MtCaseFormat fmt = MtCaseFormat.UPPER_CASE;
