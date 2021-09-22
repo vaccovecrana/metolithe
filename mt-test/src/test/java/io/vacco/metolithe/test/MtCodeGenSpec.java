@@ -35,7 +35,7 @@ public class MtCodeGenSpec extends MtSpec {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         MtLbWriter.writeTo(lbChangeLog, baos);
         MtLbWriter.writeTo(lbChangeLog, new FileOutputStream(xmlFile));
-        log.info(new String(baos.toByteArray()));
+        log.info(baos.toString());
       });
       it("Creates an in-memory database and applies the generated change logs.", () -> {
         JdbcConnection c = new JdbcConnection(ds.getConnection());
