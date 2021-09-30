@@ -56,8 +56,11 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public T merge(T rec) {
     return withId(rec, (fd, pk) -> {
-      if (load(pk).isEmpty()) { return save(rec); }
-      return update(rec);
+      T rec0 = load(pk).isEmpty() ? save(rec) : update(rec);
+      if (pk != null && fd != null) {
+        fd.setValue(rec0, pk);
+      }
+      return rec0;
     });
   }
 
