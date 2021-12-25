@@ -1,6 +1,5 @@
 package io.vacco.metolithe.core;
 
-import static io.vacco.oruzka.core.OzArrays.*;
 import static io.vacco.metolithe.hashing.MtMurmur3.*;
 import static java.util.Objects.requireNonNull;
 
@@ -12,7 +11,7 @@ public class MtMurmur3LFn implements MtIdFn<Long> {
   public MtMurmur3LFn(int seed) { this.seed = seed; }
 
   @Override public Long apply(Object[] parts) {
-    return toStringConcat(requireNonNull(parts))
+    return MtUtil.toStringConcat(requireNonNull(parts))
         .map(ba -> hash64(ba, 0, ba.length, this.seed))
         .orElseThrow(IllegalStateException::new);
   }

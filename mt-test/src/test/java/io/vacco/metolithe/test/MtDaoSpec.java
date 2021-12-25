@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -42,6 +43,15 @@ public class MtDaoSpec extends MtSpec {
   private static final PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
 
   static {
+    describe("Query parameter building", () -> {
+      it("Renders queries with placeholder field names", () -> {
+        MtQuery q = new MtQuery()
+            .as("select * from gopher.blog_entry where $0 = :$0 and $1 >= :$1 order by $1 limit 8")
+            .withSlotValue("category")
+            .withSlotValue("publishedUtcMs");
+        log.info("rendered: [{}]", q.render());
+      });
+    });
 
     File xmlFile = new File("/tmp", "mt-test.xml");
     ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
@@ -49,7 +59,7 @@ public class MtDaoSpec extends MtSpec {
     describe("Schema code generation", () -> {
       it("Generates typed field DAO definitions", () -> {
         File out = new File(".", "src/main/java");
-        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", Phone.class, User.class);
+        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, User.class);
       });
       it("Generates Liquibase changelogs", () -> {
         Match lbChangeLog = new MtLbMapper().mapSchema(fmt, testSchema);
@@ -134,20 +144,34 @@ public class MtDaoSpec extends MtSpec {
       });
 
       it("Can paginate over record collections", () -> {
+        Random r = new Random();
         List<Phone> phones = IntStream.range(0, 64).mapToObj(i -> {
           Phone p = new Phone();
           p.countryCode = 1;
           p.number = RandomStringUtils.randomNumeric(10);
-          p.smsVerificationCode = Integer.parseInt(RandomStringUtils.randomNumeric(6));
+          p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
         }).collect(Collectors.toList());
         for (Phone p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
-        MtKeySetPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.fld_number, 16);
+
+        // all phone pages
+        MtPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.fld_number, 16);
         while (page0.next != null) {
           log.info("{}", kv("page0", page0));
           page0 = pDao.loadPage(page0.next, PhoneDao.fld_number, 16);
         }
         log.info("{}", kv("page0", page0));
+
+        // unverified phone pages
+        MtQuery fq = MtQuery.of("$0 != :$0")
+            .withSlotValue(PhoneDao.fld_smsVerificationCode)
+            .withParam(PhoneDao.fld_smsVerificationCode, 0);
+        MtPage<Phone, String> page1 = pDao.loadPage(null, fq, PhoneDao.fld_number, 4);
+        while (page1.next != null) {
+          log.info("{}", kv("page1", page1));
+          page1 = pDao.loadPage(page1.next, fq, PhoneDao.fld_number, 4);
+        }
+        log.info("{}", kv("page1", page1));
       });
     });
   }

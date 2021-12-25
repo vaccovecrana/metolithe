@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.*;
 import static org.joox.JOOX.*;
+import static io.vacco.metolithe.core.MtUtil.*;
 import static io.vacco.metolithe.core.MtTypeMapper.*;
 import static io.vacco.metolithe.hashing.MtMurmur3.*;
-import static io.vacco.oruzka.core.OzArrays.*;
 import static java.util.Comparator.*;
 import static java.util.stream.Collectors.*;
 import static java.util.Arrays.*;

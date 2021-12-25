@@ -1,7 +1,6 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.MtPk;
-import io.vacco.oruzka.core.OzReflect;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
@@ -36,7 +35,7 @@ public abstract class MtDao<T, K> {
     Optional<MtFieldDescriptor> opk = d.get(MtPk.class).findFirst();
     if (opk.isPresent()) {
       Class<?> idFnClass = idFn.getIdType();
-      Class<?> entityPkClass = OzReflect.toWrapperClass(opk.get().getType());
+      Class<?> entityPkClass = MtUtil.toWrapperClass(opk.get().getType());
       if (!idFnClass.isAssignableFrom(entityPkClass)) {
         throw new MtException.MtIdGeneratorMismatchException(d.getClassName(), entityPkClass, idFnClass);
       }

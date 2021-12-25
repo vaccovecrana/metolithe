@@ -2,7 +2,7 @@ package io.vacco.metolithe.core;
 
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.Mappers;
-
+import org.codejargon.fluentjdbc.api.query.SelectQuery;
 import java.util.*;
 
 import static io.vacco.metolithe.core.MtCaseFormat.*;
@@ -42,6 +42,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   @SafeVarargs
+  @SuppressWarnings("varargs")
   public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
     if (values == null || values.length == 0) { return Collections.emptyMap(); }
     MtFieldDescriptor fd = dsc.getField(field);
@@ -59,29 +60,55 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return record.get();
   }
 
-  public <V> MtKeySetPage<T, V> loadPage(V indexPage, String sortField, int pageSize) {
+  public <V> MtPage<T, V> loadPage(V nextIdx, MtQuery filterQuery, String sortField, int pageSize) {
     try {
-      MtFieldDescriptor srt = dsc.getField(sortField);
-      MtKeySetPage<T, V> p = new MtKeySetPage<>();
-      String countQuery = format("select count(*) from %s", getSchemaName());
-      Optional<Long> count = sql().query().select(countQuery).firstResult(Mappers.singleLong());
+      MtFieldDescriptor sf = dsc.getField(sortField);
+      MtPage<T, V> p = new MtPage<>();
+      String countFilterQuery = filterQuery == null ? "" : format("where (%s)", filterQuery.render());
+      String countQuery = format("select count(*) from %s %s", getSchemaName(), countFilterQuery);
+
+      SelectQuery cq = sql().query().select(countQuery);
+      if (filterQuery != null) {
+        for (Map.Entry<String, Object> e : filterQuery.params.entrySet()) {
+          cq = cq.namedParam(e.getKey(), e.getValue());
+        }
+      }
+
+      Optional<Long> count = cq.firstResult(Mappers.singleLong());
       int rawSize = pageSize + 1;
+
       if (count.isPresent()) {
-        String whereClause = indexPage == null ? "" : format(" where %s >= :%s ", srt.getFieldName(), srt.getFieldName());
-        String query = format("select %s from %s%s order by %s limit %s",
+        String filterClause = filterQuery == null ? "" : format("and (%s)", filterQuery.render());
+        String sortClause = nextIdx == null ? "" : new MtQuery().as("and ($0 >= :$0)").withSlotValue(sf.getFieldName()).render();
+        String query = format("select %s from %s where 1=1 %s %s order by %s limit %s",
             propNamesCsv(dsc, true), getSchemaName(),
-            whereClause, srt.getFieldName(), rawSize
+            sortClause, filterClause, sf.getFieldName(), rawSize
         );
-        List<T> data = sql().query().select(query).namedParam(srt.getFieldName(), indexPage).listResult(mapToDefault());
-        V next = data.size() == rawSize ? srt.getValue(data.get(data.size() - 1)) : null;
+
+        SelectQuery q = sql().query().select(query);
+        if (nextIdx != null) {
+          q = q.namedParam(sf.getFieldName(), nextIdx);
+        }
+        if (filterQuery != null) {
+          for (Map.Entry<String, Object> e : filterQuery.params.entrySet()) {
+            q = q.namedParam(e.getKey(), e.getValue());
+          }
+        }
+
+        List<T> data = q.listResult(mapToDefault());
+        V next = data.size() == rawSize ? sf.getValue(data.get(data.size() - 1)) : null;
         p.data = data.subList(0, data.size() == rawSize ? rawSize - 1 : data.size());
         p.totalSize = count.get();
         p.next = next;
       }
       return p;
     } catch (Exception e) {
-      throw new MtException.MtPageAccessException(sortField, indexPage, dsc, e);
+      throw new MtException.MtPageAccessException(sortField, nextIdx, dsc, e);
     }
+  }
+
+  public <V> MtPage<T, V> loadPage(V nextIdx, String sortField, int pageSize) {
+    return loadPage(nextIdx, null, sortField, pageSize);
   }
 
   public Map<String, Object> toNamedParamMap(Collection<?> input, String paramLabel) {

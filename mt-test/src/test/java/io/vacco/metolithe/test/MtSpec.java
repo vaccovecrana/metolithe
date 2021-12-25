@@ -16,7 +16,7 @@ public abstract class MtSpec {
   protected static final Logger log = LoggerFactory.getLogger(MtAnnotationsSpec.class);
 
   protected static final JdbcDataSource ds = new JdbcDataSource();
-  protected static final MtCaseFormat fmt = MtCaseFormat.UPPER_CASE;
+  protected static final MtCaseFormat fmt = MtCaseFormat.KEEP_CASE;
 
   public static User u0 = new User();
   public static User u1 = new User();

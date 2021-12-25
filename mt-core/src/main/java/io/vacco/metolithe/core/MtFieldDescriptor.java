@@ -59,6 +59,7 @@ public class MtFieldDescriptor {
   public MtCaseFormat getFormat() { return fmt; }
   public String getFieldClassName() { return this.f.getType().getCanonicalName(); }
   public String getFieldName() { return fmt.of(this.f.getName()); }
+  public String getFieldRawName() { return this.f.getName(); }
   public Class<?> getType() { return f.getType(); }
 
   @SuppressWarnings("unchecked")
