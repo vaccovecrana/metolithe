@@ -1,4 +1,4 @@
-package io.vacco.metolithe.core;
+package io.vacco.metolithe.util;
 
 import java.util.List;
 

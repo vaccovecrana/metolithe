@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.util.MtPage;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.Mappers;
 import org.codejargon.fluentjdbc.api.query.SelectQuery;
