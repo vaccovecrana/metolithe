@@ -97,7 +97,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
         List<T> data = q.listResult(mapToDefault());
         V next = data.size() == rawSize ? sf.getValue(data.get(data.size() - 1)) : null;
-        p.data = data.subList(0, data.size() == rawSize ? rawSize - 1 : data.size());
+        p.items = data.subList(0, data.size() == rawSize ? rawSize - 1 : data.size());
         p.totalSize = count.get();
         p.next = next;
       }
