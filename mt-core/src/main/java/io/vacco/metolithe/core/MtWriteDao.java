@@ -14,7 +14,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   }
 
   @SuppressWarnings("unchecked")
-  private <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
+  public <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
     Optional<MtFieldDescriptor> opk = dsc.getPkField();
     Object[] pkVals = dsc.getPkValues(target);
     if (opk.isPresent()) {
@@ -23,6 +23,13 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     } else {
       return bfn.apply(null, null);
     }
+  }
+
+  public Optional<K> idOf(T test) {
+    return withId(test, (fd, id) -> id == null
+        ? Optional.empty()
+        : Optional.of(id)
+    );
   }
 
   public T save(T rec) {

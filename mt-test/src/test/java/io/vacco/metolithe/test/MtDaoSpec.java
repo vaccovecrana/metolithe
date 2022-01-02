@@ -121,12 +121,14 @@ public class MtDaoSpec extends MtSpec {
         dt1.pid = p1.pid;
         dt1.smsCodeSignature = "U29tZSBzaWduYXR1cmUgZm9yIHRoZSBudW1iZXIgNDU2Nw==";
 
+        log.info("{}", kv("dt0Id", dtDao.idOf(dt0).get()));
         log.info("{}", kv("dt0m", dtDao.merge(dt0)));
         log.info("{}", kv("dt1m", dtDao.merge(dt1)));
 
         u0.tid = dt0.tid;
         u1.tid = dt1.tid;
 
+        log.info("{}", kv("u0Id", uDao.idOf(u0).get()));
         log.info("{}", kv("u0m", uDao.merge(u0)));
         log.info("{}", kv("u1m", uDao.merge(u1)));
 
