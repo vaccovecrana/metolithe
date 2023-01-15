@@ -45,7 +45,7 @@ public class MtAnnotationsSpec extends MtSpec {
               .forEach(d -> log.info(d.toString()))
       );
       it("Can extract primary key components from entities", () -> {
-        logDescriptor(new MtDescriptor<>(User.class, UPPER_CASE), u0);
+        logDescriptor(new MtDescriptor<>(DbUser.class, UPPER_CASE), u0);
         logDescriptor(new MtDescriptor<>(Device.class, LOWER_CASE), d0);
         logDescriptor(new MtDescriptor<>(Phone.class, KEEP_CASE), p0);
       });

@@ -18,18 +18,21 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   protected String getSelectWhereEqQuery(String field) {
-    String fn = dsc.getFormat().of(field);
-    return getQueryCache().computeIfAbsent("selectWhereEq" + fn,
-        k -> format("select %s from %s where %s = :%s",
-            propNamesCsv(dsc, true), getSchemaName(), fn, fn)
-    );
+    var fn = dsc.getFormat().of(field);
+    var qk = "selectWhereEq" + fn;
+    return getQueryCache().computeIfAbsent(qk, k -> {
+      var pNames = propNamesCsv(dsc, true);
+      return format("select %s from %s where %s = :%s", pNames, getSchemaName(), fn, fn);
+    });
   }
 
   public Optional<T> load(K id) {
     Optional<MtFieldDescriptor> pkf = dsc.getPkField();
     if (pkf.isPresent()) {
-      return sql().query().select(getSelectWhereEqQuery(pkf.get().getFieldName()))
-          .namedParam(pkf.get().getFieldName(), id)
+      var q = getSelectWhereEqQuery(pkf.get().getFieldName());
+      var fn = pkf.get().getFieldName();
+      return sql().query().select(q)
+          .namedParam(fn, id)
           .firstResult(mapToDefault());
     }
     return Optional.empty();

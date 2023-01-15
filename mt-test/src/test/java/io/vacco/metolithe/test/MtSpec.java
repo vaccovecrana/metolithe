@@ -18,8 +18,8 @@ public abstract class MtSpec {
   protected static final JdbcDataSource ds = new JdbcDataSource();
   protected static final MtCaseFormat fmt = MtCaseFormat.KEEP_CASE;
 
-  public static User u0 = new User();
-  public static User u1 = new User();
+  public static DbUser u0 = new DbUser();
+  public static DbUser u1 = new DbUser();
 
   public static Phone p0 = new Phone();
   public static Phone p1 = new Phone();
@@ -55,6 +55,6 @@ public abstract class MtSpec {
 
   public static Class<?>[] testSchema = new Class<?>[] {
       Device.class, DeviceLocation.class, DeviceTag.class,
-      Phone.class, User.class, UserFollow.class
+      Phone.class, DbUser.class, UserFollow.class
   };
 }

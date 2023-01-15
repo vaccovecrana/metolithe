@@ -5,6 +5,7 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.PhoneDao;
+import io.vacco.metolithe.test.dao.DbUserDao;
 import io.vacco.metolithe.util.MtPage;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
@@ -19,8 +20,6 @@ import org.junit.runner.RunWith;
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
 import static io.vacco.shax.logging.ShArgument.*;
-
-import io.vacco.metolithe.test.dao.UserDao;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,7 +40,6 @@ public class MtDaoSpec extends MtSpec {
       .build();
 
   private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
-  private static final PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
 
   static {
     describe("Query parameter building", () -> {
@@ -54,13 +52,13 @@ public class MtDaoSpec extends MtSpec {
       });
     });
 
-    File xmlFile = new File("/tmp", "mt-test.xml");
+    File xmlFile = new File("./build", "mt-test.xml");
     ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
 
     describe("Schema code generation", () -> {
       it("Generates typed field DAO definitions", () -> {
         File out = new File(".", "src/main/java");
-        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, User.class);
+        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, DbUser.class);
       });
       it("Generates Liquibase changelogs", () -> {
         Match lbChangeLog = new MtLbMapper().mapSchema(fmt, testSchema);
@@ -71,21 +69,23 @@ public class MtDaoSpec extends MtSpec {
       });
       it("Creates an in-memory database and applies the generated change logs.", () -> {
         JdbcConnection c = new JdbcConnection(ds.getConnection());
-        ResourceAccessor ra = new FileSystemResourceAccessor(xmlFile.getParentFile());
-        Liquibase lb = new Liquibase(xmlFile.getAbsolutePath(), ra, c);
+        ResourceAccessor ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
+        Liquibase lb = new Liquibase(xmlFile.getName(), ra, c);
         lb.update(new Contexts(), new LabelExpression());
         assertNotNull(c);
         c.close();
       });
     });
 
+    PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
+
     describe("Type safe DAOs", () -> {
       it("Creates base DAOs for data access", () -> {
 
         MtWriteDao<Device, Long> dDao = new MtWriteDao<>(
             schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
-        MtWriteDao<User, Integer> uDao = new MtWriteDao<>(
-            schema, jdbc, new MtDescriptor<>(User.class, fmt), m3Ifn);
+        MtWriteDao<DbUser, Integer> uDao = new MtWriteDao<>(
+            schema, jdbc, new MtDescriptor<>(DbUser.class, fmt), m3Ifn);
         MtWriteDao<DeviceTag, Long> dtDao = new MtWriteDao<>(
             schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
         MtWriteDao<UserFollow, Void> ufDao = new MtWriteDao<>(
@@ -140,7 +140,7 @@ public class MtDaoSpec extends MtSpec {
       });
 
       it("Uses generated POJO DAOs for data access", () -> {
-        UserDao ud = new UserDao(schema, fmt, jdbc, new MtMurmur3IFn());
+        var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
         log.info("{}", kv("loadWhereEqJane", ud.loadWhereAliasEq("Jane")));
         log.info("{}", kv("loadWhereEmailEq", ud.loadWhereEmailIn("joe@me.com")));
         log.info("");
@@ -177,6 +177,6 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("page1", page1));
       });
     });
-  }
 
+  }
 }

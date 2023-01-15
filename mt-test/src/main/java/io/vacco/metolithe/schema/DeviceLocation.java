@@ -8,7 +8,7 @@ import io.vacco.metolithe.annotations.*;
 
   @MtFk(Device.class)
   @MtUnique(idx = 0, inPk = false) public long did;
-  @MtFk(User.class) public int uid;
+  @MtFk(DbUser.class) public int uid;
 
   // not the best composite index, but a good example anyway.
   @St16 @MtCompIndex(name = idxName, idx = 0) public String geoHash2;

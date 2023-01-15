@@ -2,7 +2,7 @@ package io.vacco.metolithe.schema;
 
 import io.vacco.metolithe.annotations.*;
 
-@MtEntity public class User {
+@MtEntity public class DbUser {
   @MtPk public int uid;
   @St32 public String pw;
   @St64 public String alias;

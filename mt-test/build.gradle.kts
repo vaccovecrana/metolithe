@@ -12,7 +12,7 @@ dependencies {
   implementation(project(":mt-core"))
   implementation(project(":mt-codegen"))
 
-  implementation("io.vacco.shax:shax:1.7.30.0.0.7")
-  implementation("com.h2database:h2:1.4.197")
-  implementation("org.apache.commons:commons-lang3:3.11")
+  implementation("io.vacco.shax:shax:2.0.6.0.1.0")
+  implementation("com.h2database:h2:2.1.214")
+  implementation("org.apache.commons:commons-lang3:3.12.0")
 }

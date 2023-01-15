@@ -16,8 +16,9 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 - [ ] Strategies for choosing primary key component fields (or not at all).
 - [ ] `int` vs `Integer`, when to use which?
 - [ ] How to handle schema migrations with Liquibase generated change sets.
+- [ ] Always make sure that your schema class names do not clash with database keywords.
 
-Entities which do not define a primary key field can only be saved, loaded or deleted using one of its
+Classes which do not define a primary key field can only be saved, loaded or deleted using one of its
 attributes. Therefore, calls to `update` or `merge` on a DAO instance will fail.
 
 This restriction is by design in this framework.

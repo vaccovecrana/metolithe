@@ -1,1 +1,3 @@
-configure<io.vacco.oss.gitflow.GsPluginProfileExtension> { sharedLibrary(true, false) }
+configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
+  sharedLibrary(true, false)
+}
