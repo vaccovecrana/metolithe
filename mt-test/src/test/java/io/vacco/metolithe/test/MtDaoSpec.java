@@ -1,7 +1,9 @@
 package io.vacco.metolithe.test;
 
 import io.vacco.metolithe.codegen.dao.MtDaoMapper;
-import io.vacco.metolithe.codegen.liquibase.*;
+import io.vacco.metolithe.codegen.liquibase.MtLb;
+import io.vacco.metolithe.codegen.liquibase.MtLbXml;
+import io.vacco.metolithe.codegen.liquibase.MtLbYaml;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.PhoneDao;
@@ -14,7 +16,6 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.codejargon.fluentjdbc.api.*;
-import org.joox.Match;
 import org.junit.runner.RunWith;
 
 import static j8spec.J8Spec.*;
@@ -24,6 +25,7 @@ import static io.vacco.shax.logging.ShArgument.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -52,7 +54,8 @@ public class MtDaoSpec extends MtSpec {
       });
     });
 
-    File xmlFile = new File("./build", "mt-test.xml");
+    var xmlFile = new File("./build", "mt-test.xml");
+    var ymlFile = new File("./build", "mt-test.yml");
     ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
 
     describe("Schema code generation", () -> {
@@ -61,11 +64,20 @@ public class MtDaoSpec extends MtSpec {
         new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, DbUser.class);
       });
       it("Generates Liquibase changelogs", () -> {
-        Match lbChangeLog = new MtLbMapper().mapSchema(fmt, testSchema);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MtLbWriter.writeTo(lbChangeLog, baos);
-        MtLbWriter.writeTo(lbChangeLog, new FileOutputStream(xmlFile));
-        log.info(baos.toString());
+        var root = new MtLb().build(fmt, testSchema);
+        var xmlGen = new MtLbXml();
+        var ymlGen = new MtLbYaml();
+
+        var xmlBaos = new ByteArrayOutputStream();
+        xmlGen.writeSchema(root, xmlBaos);
+        log.info(xmlBaos.toString());
+
+        var ymlBaos = new ByteArrayOutputStream();
+        ymlGen.writeSchema(root, new OutputStreamWriter(ymlBaos));
+        log.info(ymlBaos.toString());
+
+        xmlGen.writeSchema(root, new FileOutputStream(xmlFile));
+        ymlGen.writeSchema(root, new OutputStreamWriter(new FileOutputStream(ymlFile)));
       });
       it("Creates an in-memory database and applies the generated change logs.", () -> {
         JdbcConnection c = new JdbcConnection(ds.getConnection());

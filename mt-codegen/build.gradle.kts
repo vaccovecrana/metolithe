@@ -11,7 +11,6 @@ dependencies {
   api("org.liquibase:liquibase-core:4.18.0") {
     exclude("ch.qos.logback", "logback-classic")
     exclude("org.slf4j", "slf4j-api")
-    exclude("org.yaml", "snakeyaml")
     exclude("com.opencsv", "opencsv")
   }
 }
