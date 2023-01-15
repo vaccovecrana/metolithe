@@ -10,9 +10,4 @@ public class Column implements MtLbType {
     return this;
   }
 
-  public Column withType(String type) {
-    this.type = type;
-    return this;
-  }
-
 }

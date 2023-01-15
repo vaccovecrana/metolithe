@@ -6,8 +6,9 @@ import io.vacco.metolithe.annotations.*;
 
   private static final String idxName = "gloc";
 
-  @MtFk(Device.class)
-  @MtUnique(idx = 0, inPk = false) public long did;
+  @MtPk @MtFk(Device.class)
+  public long did;
+
   @MtFk(DbUser.class) public int uid;
 
   // not the best composite index, but a good example anyway.

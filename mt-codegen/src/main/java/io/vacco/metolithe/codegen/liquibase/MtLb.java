@@ -10,12 +10,12 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.vacco.metolithe.core.MtTypeMapper.sqlTypeOf;
 import static io.vacco.metolithe.core.MtUtil.toStringConcat;
 import static io.vacco.metolithe.hashing.MtMurmur3.*;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;
 
@@ -51,36 +51,43 @@ public class MtLb {
     return c;
   }
 
-  private CreateIndex mapIndex(MtDescriptor<?> d, MtFieldDescriptor fm) {
-    var idx = new CreateIndex();
-    idx.indexName = d.getFormat().of(format("idx_%s_%s", d.getName(), fm.getFieldName()));
-    idx.tableName = d.getName();
-    idx.columns.add(new Column().withName(fm.getFieldName()));
-    return idx;
+  private AddColumn mapNonPkAttribute(MtDescriptor<?> d, MtFieldDescriptor fd) {
+    var ac = new AddColumn();
+    ac.tableName = d.getName();
+    ac.columns.add(mapAttribute(fd));
+    return ac;
   }
 
-  private CreateIndex mapCompositeIndex(String indexName, MtDescriptor<?> d, List<MtFieldDescriptor> components) {
+  private ChangeSet mapIndex(MtDescriptor<?> d, MtFieldDescriptor fm) {
+    var idx = new CreateIndex();
+    idx.indexName = d.getFormat().of(format("idx-%s-%s", d.getName(), fm.getFieldName()));
+    idx.tableName = d.getName();
+    idx.columns.add(new Column().withName(fm.getFieldName()));
+    return new ChangeSet().withId(idx.indexName).add(idx);
+  }
+
+  private ChangeSet mapCompositeIndex(String indexName, MtDescriptor<?> d, List<MtFieldDescriptor> components) {
     var fields = components.stream()
       .sorted(comparingInt(fd -> fd.get(MtCompIndex.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).toArray();
-    var indexId = format("idx_%s_%s", indexName, Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED)));
+    var indexId = format("idx-%s-%s", indexName, Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED)));
     var idx = new CreateIndex()
       .withIndexName(d.getFormat().of(indexId))
       .withTableName(d.getName());
     for (var fd : components) {
       idx.columns.add(new Column().withName(fd.getFieldName()));
     }
-    return idx;
+    return new ChangeSet().withId(indexId).add(idx);
   }
 
-  private AddUniqueConstraint mapUniqueConstraints(MtDescriptor<?> d) {
+  private ChangeSet mapUniqueConstraint(MtDescriptor<?> d) {
     var uc = new AddUniqueConstraint();
     uc.tableName = d.getName();
-    uc.constraintName = d.getFormat().of(format("unq_%s", d.getName()));
+    uc.constraintName = d.getFormat().of(format("unq-%s", d.getName()));
     uc.columnNames = d.get(MtUnique.class)
       .sorted(comparingInt(fd -> fd.get(MtUnique.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).collect(joining(","));
-    return uc;
+    return new ChangeSet().withId(uc.constraintName).add(uc);
   }
 
   private AddForeignKeyConstraint mapForeignKey(MtDescriptor<?> d, MtFieldDescriptor fd) {
@@ -99,7 +106,7 @@ public class MtLb {
     var fromField = fd.getFieldName();
     var to = fkTarget.getName();
     var toField = targetPk.getFieldName();
-    var fkId = format("fk_%s", Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED)));
+    var fkId = format("fk-%s", Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED)));
 
     var fkc = new AddForeignKeyConstraint();
     fkc.baseColumnNames = fromField;
@@ -119,15 +126,18 @@ public class MtLb {
       .collect(toList());
   }
 
+  private ChangeSet mapTableColumn(MtDescriptor<?> d, MtFieldDescriptor fd) {
+    var cs = new ChangeSet().withId(String.format("tbl-col-%s-%s", d.getName(), fd.getFieldName()));
+    cs.add(mapNonPkAttribute(d, fd));
+    return cs;
+  }
+
   private ChangeSet mapTable(MtDescriptor<?> d) {
-    var cs = new ChangeSet().withId(d.getName());
+    var cs = new ChangeSet().withId(String.format("tbl-%s", d.getName()));
     var ct = new CreateTable().withTableName(d.getName());
     cs.changes.add(ct);
-    asList(MtPk.class, MtFk.class, MtField.class, MtVarchar.class)
-      .forEach(cl -> d.get(cl).map(this::mapAttribute).forEach(col -> ct.columns.add(col)));
-    d.get(MtUnique.class).findFirst().ifPresent(fd -> cs.changes.add(mapUniqueConstraints(d)));
-    d.get(MtIndex.class).map(fd -> mapIndex(d, fd)).forEach(idx -> cs.changes.add(idx));
-    d.getCompositeIndexes().forEach((k, v) -> cs.changes.add(mapCompositeIndex(k, d, v)));
+    d.get(MtPk.class).findFirst()
+      .ifPresent(fd -> ct.columns.add(mapAttribute(fd)));
     return cs;
   }
 
@@ -151,7 +161,21 @@ public class MtLb {
 
     var root = new Root();
     OxKos.apply(schema).forEach((k, v) -> {
-      v.stream().map(v0 -> mapTable(v0.data)).forEach(root::append);
+      v.stream()
+        .flatMap(v0 -> {
+          var d = v0.data;
+          return Stream.of(
+            Stream.of(mapTable(v0.data)),
+            Stream.of(MtFk.class, MtField.class, MtVarchar.class)
+              .flatMap(d::get)
+              .filter(fd -> !fd.isPk())
+              .map(fd -> mapTableColumn(d, fd)),
+            d.get(MtUnique.class).findFirst().stream().map(fd -> mapUniqueConstraint(d)),
+            d.get(MtIndex.class).map(fd -> mapIndex(d, fd)),
+            d.getCompositeIndexes().entrySet().stream()
+              .map(e -> mapCompositeIndex(e.getKey(), d, e.getValue()))
+          ).flatMap(Function.identity());
+        }).forEach(root::append);
       mapForeignKeys(v).forEach(root::append);
     });
 

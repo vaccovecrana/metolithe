@@ -5,10 +5,10 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 ## 2.0 Functionality
 
 - [x] No support for composite primary keys (explain why).
-- [x] Unique constraints.
+- [x] Unique constraints (only one supported).
 - [x] Composite index attributes.
 - [x] Static DAO code generation.
-- [ ] Pagination support.
+- [x] Pagination support.
 
 ## Documentation topics
 
@@ -17,6 +17,7 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 - [ ] `int` vs `Integer`, when to use which?
 - [ ] How to handle schema migrations with Liquibase generated change sets.
 - [ ] Always make sure that your schema class names do not clash with database keywords.
+- [ ] If you do not specify unique constraint tags on your classes, you are responsible for managing each object's primary key values.
 
 Classes which do not define a primary key field can only be saved, loaded or deleted using one of its
 attributes. Therefore, calls to `update` or `merge` on a DAO instance will fail.

@@ -93,15 +93,10 @@ public class MtDaoSpec extends MtSpec {
 
     describe("Type safe DAOs", () -> {
       it("Creates base DAOs for data access", () -> {
-
-        MtWriteDao<Device, Long> dDao = new MtWriteDao<>(
-            schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
-        MtWriteDao<DbUser, Integer> uDao = new MtWriteDao<>(
-            schema, jdbc, new MtDescriptor<>(DbUser.class, fmt), m3Ifn);
-        MtWriteDao<DeviceTag, Long> dtDao = new MtWriteDao<>(
-            schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
-        MtWriteDao<UserFollow, Void> ufDao = new MtWriteDao<>(
-            schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtNoopIdFn());
+        var dDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
+        var uDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DbUser.class, fmt), m3Ifn);
+        var dtDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
+        var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtMurmur3IFn());
 
         log.info("{}", kv("p0", pDao.save(p0)));
         Phone p01 = pDao.loadExisting(p0.pid);
