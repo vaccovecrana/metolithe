@@ -82,7 +82,7 @@ public class MtDaoSpec extends MtSpec {
       it("Creates an in-memory database and applies the generated change logs.", () -> {
         JdbcConnection c = new JdbcConnection(ds.getConnection());
         ResourceAccessor ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
-        Liquibase lb = new Liquibase(xmlFile.getName(), ra, c);
+        Liquibase lb = new Liquibase(ymlFile.getName(), ra, c);
         lb.update(new Contexts(), new LabelExpression());
         assertNotNull(c);
         c.close();
