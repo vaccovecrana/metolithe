@@ -32,27 +32,29 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       var q = getSelectWhereEqQuery(pkf.get().getFieldName());
       var fn = pkf.get().getFieldName();
       return sql().query().select(q)
-          .namedParam(fn, id)
-          .firstResult(mapToDefault());
+        .namedParam(fn, id)
+        .firstResult(mapToDefault());
     }
     return Optional.empty();
   }
 
   public Collection<T> loadWhereEq(String field, Object value) {
     return sql().query()
-        .select(getSelectWhereEqQuery(field))
-        .namedParam(dsc.getFormat().of(field), value)
-        .listResult(mapToDefault());
+      .select(getSelectWhereEqQuery(field))
+      .namedParam(dsc.getFormat().of(field), value)
+      .listResult(mapToDefault());
   }
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
-    if (values == null || values.length == 0) { return Collections.emptyMap(); }
+  public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
+    if (values == null || values.length == 0) {
+      return Collections.emptyMap();
+    }
     MtFieldDescriptor fd = dsc.getField(field);
     Map<String, Object> pids = toNamedParamMap(asList(values), fd.getFieldName());
     String query = format("select %s from %s where %s in (%s)",
-        propNamesCsv(dsc, true), getSchemaName(), fd.getFieldName(), toNamedParamLabels(pids)
+      propNamesCsv(dsc, true), getSchemaName(), fd.getFieldName(), toNamedParamLabels(pids)
     );
     List<T> raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
     return raw.stream().collect(groupingBy(fd::getValue));
@@ -60,7 +62,9 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   public T loadExisting(K id) {
     Optional<T> record = load(id);
-    if (record.isEmpty()) { throw new MtException.MtMissingIdException(id); }
+    if (record.isEmpty()) {
+      throw new MtException.MtMissingIdException(id);
+    }
     return record.get();
   }
 
@@ -85,8 +89,8 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
         String filterClause = filterQuery == null ? "" : format("and (%s)", filterQuery.render());
         String sortClause = nextIdx == null ? "" : new MtQuery().as("and ($0 >= :$0)").withSlotValue(sf.getFieldName()).render();
         String query = format("select %s from %s where 1=1 %s %s order by %s limit %s",
-            propNamesCsv(dsc, true), getSchemaName(),
-            sortClause, filterClause, sf.getFieldName(), rawSize
+          propNamesCsv(dsc, true), getSchemaName(),
+          sortClause, filterClause, sf.getFieldName(), rawSize
         );
 
         SelectQuery q = sql().query().select(query);
@@ -127,7 +131,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   public String toNamedParamLabels(Map<String, Object> targetParams) {
     return targetParams.keySet().stream()
-        .map(param -> format(":%s", param))
-        .collect(joining(", "));
+      .map(param -> format(":%s", param))
+      .collect(joining(", "));
   }
 }

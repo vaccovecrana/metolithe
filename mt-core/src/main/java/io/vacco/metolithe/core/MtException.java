@@ -11,6 +11,7 @@ public class MtException {
   public static class MtMissingFieldException extends RuntimeException {
     public String field;
     public MtDescriptor<?> descriptor;
+
     public MtMissingFieldException(String field, MtDescriptor<?> descriptor) {
       this.field = field;
       this.descriptor = descriptor;
@@ -21,6 +22,7 @@ public class MtException {
     public String sortField;
     public Object indexPage;
     public MtDescriptor<?> descriptor;
+
     public MtPageAccessException(String sortField, Object indexPage,
                                  MtDescriptor<?> descriptor, Exception e) {
       super(e);
@@ -33,6 +35,7 @@ public class MtException {
   public static class MtForeignKeyMismatchException extends RuntimeException {
     public final String src, srcField, srcFieldType;
     public final String dst, dstField, dstFieldType;
+
     public MtForeignKeyMismatchException(String src, String srcField, String srcFieldType,
                                          String dst, String dstField, String dstFieldType) {
       this.src = src;
@@ -46,6 +49,7 @@ public class MtException {
 
   public static class MtMultiplePkDefinitionsException extends RuntimeException {
     public final List<MtFieldDescriptor> keys;
+
     public MtMultiplePkDefinitionsException(List<MtFieldDescriptor> keys) {
       this.keys = keys;
     }
@@ -54,6 +58,7 @@ public class MtException {
   public static class MtMissingPkComponentException extends RuntimeException {
     public final Object src;
     public final MtFieldDescriptor componentField;
+
     public MtMissingPkComponentException(Object src, MtFieldDescriptor compField) {
       this.src = src;
       this.componentField = compField;
@@ -75,6 +80,7 @@ public class MtException {
 
   public static class MtSqlTypeMappingException extends RuntimeException {
     public final MtFieldDescriptor descriptor;
+
     public MtSqlTypeMappingException(MtFieldDescriptor fd) {
       this.descriptor = fd;
     }
@@ -82,6 +88,7 @@ public class MtException {
 
   public static class MtEnumExtractionException extends RuntimeException {
     public final String target;
+
     public MtEnumExtractionException(Class<?> target, Exception e) {
       super(e);
       this.target = target != null ? target.getCanonicalName() : UNKNOWN;
@@ -97,6 +104,7 @@ public class MtException {
   public static class MtFieldAccessException extends RuntimeException {
     public Object target;
     public Object value;
+
     public MtFieldAccessException(Object target, Object value, Exception e) {
       super(e);
       this.target = target;
@@ -108,6 +116,7 @@ public class MtException {
     public final File outDir;
     public final String outPackage;
     public final Class<?>[] schemaClasses;
+
     public MtDaoMappingException(File outDir, String outPackage, Class<?>[] schemaClasses, Exception e) {
       super(e);
       this.outDir = outDir;

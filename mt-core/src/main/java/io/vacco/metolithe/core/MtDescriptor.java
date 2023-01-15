@@ -12,7 +12,7 @@ import static java.lang.reflect.Modifier.*;
 
 public class MtDescriptor<T> {
 
-  private static final Object[] empty = new Object[] {};
+  private static final Object[] empty = new Object[]{};
 
   private final Class<T> cl;
   private final MtCaseFormat fmt;
@@ -25,8 +25,8 @@ public class MtDescriptor<T> {
     this.cl = Objects.requireNonNull(entity);
     this.fmt = Objects.requireNonNull(fmt);
     this.fields = Arrays.stream(entity.getFields())
-        .filter(f -> isPublic(f.getModifiers()) && !isStatic(f.getModifiers()))
-        .map(f -> new MtFieldDescriptor(f, fmt)).collect(toList());
+      .filter(f -> isPublic(f.getModifiers()) && !isStatic(f.getModifiers()))
+      .map(f -> new MtFieldDescriptor(f, fmt)).collect(toList());
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
     List<MtFieldDescriptor> pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {
@@ -38,9 +38,9 @@ public class MtDescriptor<T> {
   @SuppressWarnings("unchecked")
   public <E extends Enum<?>> List<Class<E>> getEnumFields() {
     return fields.stream()
-        .filter(fd -> Enum.class.isAssignableFrom(fd.getType()))
-        .map(fd -> (Class<E>) fd.getType())
-        .collect(toList());
+      .filter(fd -> Enum.class.isAssignableFrom(fd.getType()))
+      .map(fd -> (Class<E>) fd.getType())
+      .collect(toList());
   }
 
   public Stream<MtFieldDescriptor> get(Class<? extends Annotation> target) {
@@ -49,8 +49,8 @@ public class MtDescriptor<T> {
 
   public Map<String, List<MtFieldDescriptor>> getCompositeIndexes() {
     return fieldsNoPk.stream()
-        .filter(fd -> fd.get(MtCompIndex.class).isPresent())
-        .collect(groupingBy(fd -> fd.get(MtCompIndex.class).get().name()));
+      .filter(fd -> fd.get(MtCompIndex.class).isPresent())
+      .collect(groupingBy(fd -> fd.get(MtCompIndex.class).get().name()));
   }
 
   public Object[] getPkValues(T t) {
@@ -84,17 +84,32 @@ public class MtDescriptor<T> {
   public List<MtFieldDescriptor> getFields(boolean withPk) {
     return withPk ? fields : fieldsNoPk;
   }
-  public Optional<MtFieldDescriptor> getPkField() { return pkField != null ? Optional.of(pkField) : Optional.empty(); }
-  public MtFieldDescriptor getField(String name) {
-    return fields.stream()
-        .filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst()
-        .orElseThrow(() -> new MtException.MtMissingFieldException(name, this));
+
+  public Optional<MtFieldDescriptor> getPkField() {
+    return pkField != null ? Optional.of(pkField) : Optional.empty();
   }
 
-  public Class<T> getType() { return cl; }
-  public String getClassName() { return cl.getCanonicalName(); }
-  public String getName() { return fmt.of(cl.getSimpleName()); }
-  public MtCaseFormat getFormat() { return fmt; }
+  public MtFieldDescriptor getField(String name) {
+    return fields.stream()
+      .filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst()
+      .orElseThrow(() -> new MtException.MtMissingFieldException(name, this));
+  }
+
+  public Class<T> getType() {
+    return cl;
+  }
+
+  public String getClassName() {
+    return cl.getCanonicalName();
+  }
+
+  public String getName() {
+    return fmt.of(cl.getSimpleName());
+  }
+
+  public MtCaseFormat getFormat() {
+    return fmt;
+  }
 
   @Override
   public String toString() {

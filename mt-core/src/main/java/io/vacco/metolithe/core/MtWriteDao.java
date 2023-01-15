@@ -27,8 +27,8 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public Optional<K> idOf(T test) {
     return withId(test, (fd, id) -> id == null
-        ? Optional.empty()
-        : Optional.of(id)
+      ? Optional.empty()
+      : Optional.of(id)
     );
   }
 
@@ -38,9 +38,9 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
         fd.setValue(rec, pk);
       }
       String query = getQueryCache().computeIfAbsent("insert", k ->
-          format("insert into %s (%s) values (%s)", getSchemaName(),
-              propNamesCsv(dsc, true), placeholderCsv(dsc, true)
-          )
+        format("insert into %s (%s) values (%s)", getSchemaName(),
+          propNamesCsv(dsc, true), placeholderCsv(dsc, true)
+        )
       );
       Map<String, Object> namedParams = dsc.getAll(rec);
       sql().query().update(query).namedParams(namedParams).run();
@@ -52,8 +52,8 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return withId(rec, (fd, pk) -> {
       String queryAssignments = placeHolderAssignmentCsv(dsc, false);
       String query = getQueryCache().computeIfAbsent("update",
-          k -> format("update %s set %s where %s = :%s", getSchemaName(), queryAssignments,
-              fd.getFieldName(), fd.getFieldName())
+        k -> format("update %s set %s where %s = :%s", getSchemaName(), queryAssignments,
+          fd.getFieldName(), fd.getFieldName())
       );
       Map<String, Object> params = dsc.getAll(rec);
       sql().query().update(query).namedParams(params).run();
@@ -74,7 +74,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   public long delete(T record) {
     return withId(record, (fd, pk) -> {
       String query = getQueryCache().computeIfAbsent("delete",
-          k -> format("delete from %s where %s = :%s", getSchemaName(), fd.getFieldName(), fd.getFieldName()));
+        k -> format("delete from %s where %s = :%s", getSchemaName(), fd.getFieldName(), fd.getFieldName()));
       return sql().query().update(query).namedParam(fd.getFieldName(), pk).run().affectedRows();
     });
   }
@@ -82,7 +82,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   public long deleteWhereEq(String field, Object value) {
     String fn = dsc.getFormat().of(field);
     String query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
-        k -> format("delete from %s where %s = :%s", getSchemaName(), fn, fn));
+      k -> format("delete from %s where %s = :%s", getSchemaName(), fn, fn));
     return sql().query().update(query).namedParam(fn, value).run().affectedRows();
   }
 

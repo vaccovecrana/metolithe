@@ -42,10 +42,17 @@ public abstract class MtDao<T, K> {
     }
   }
 
-  public FluentJdbc sql() { return jdbc; }
+  public FluentJdbc sql() {
+    return jdbc;
+  }
 
-  public Mapper<T> mapToDefault() { return this.mappers.forClass(this.dsc.getType()); }
-  public ObjectMappers getMappers() { return mappers; }
+  public Mapper<T> mapToDefault() {
+    return this.mappers.forClass(this.dsc.getType());
+  }
+
+  public ObjectMappers getMappers() {
+    return mappers;
+  }
 
   public String getSchemaName() {
     return getSchemaName(this.dsc.getType());
@@ -56,6 +63,8 @@ public abstract class MtDao<T, K> {
     return dsc.getFormat().of(raw);
   }
 
-  protected Map<String, String> getQueryCache() { return queryCache; }
+  protected Map<String, String> getQueryCache() {
+    return queryCache;
+  }
 }
 

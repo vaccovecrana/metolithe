@@ -12,8 +12,10 @@ public enum MtCaseFormat {
   public String of(String in) {
     if (in == null) return null;
     switch (this) {
-      case LOWER_CASE: return in.toLowerCase();
-      case UPPER_CASE: return in.toUpperCase();
+      case LOWER_CASE:
+        return in.toLowerCase();
+      case UPPER_CASE:
+        return in.toUpperCase();
     }
     return in;
   }
@@ -22,8 +24,8 @@ public enum MtCaseFormat {
 
   public static List<String> propNames(MtDescriptor<?> d, boolean withPk) {
     return d.getFields(withPk).stream()
-        .map(MtFieldDescriptor::getFieldName)
-        .collect(toList());
+      .map(MtFieldDescriptor::getFieldName)
+      .collect(toList());
   }
 
   public static String propNamesCsv(MtDescriptor<?> d, boolean withPk) {

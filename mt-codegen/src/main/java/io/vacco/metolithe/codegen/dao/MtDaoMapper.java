@@ -29,10 +29,12 @@ public class MtDaoMapper {
     return template.render(context);
   }
 
-  public void mapSchema(File outDir, String outPackage, MtCaseFormat caseFormat, Class<?> ... schemaClasses) {
+  public void mapSchema(File outDir, String outPackage, MtCaseFormat caseFormat, Class<?>... schemaClasses) {
     try {
       File out = new File(outDir, outPackage.replace(".", "/"));
-      if (!out.exists() && !out.mkdirs()) { throw new IllegalStateException(out.getAbsolutePath()); }
+      if (!out.exists() && !out.mkdirs()) {
+        throw new IllegalStateException(out.getAbsolutePath());
+      }
       for (Class<?> cl : schemaClasses) {
         MtDescriptor<?> d = new MtDescriptor<>(cl, caseFormat);
         String daoSrc = mapFrom(d, outPackage);

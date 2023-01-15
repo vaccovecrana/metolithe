@@ -15,10 +15,10 @@ public class MtFieldDescriptor {
 
   private static final List<Class<? extends Annotation>> rt = asList(Retention.class, Target.class);
   private static final List<Class<? extends Annotation>> mta = asList(
-      MtEntity.class,
-      MtPk.class, MtFk.class,
-      MtField.class, MtVarchar.class, MtNotNull.class,
-      MtCompIndex.class, MtIndex.class, MtUnique.class
+    MtEntity.class,
+    MtPk.class, MtFk.class,
+    MtField.class, MtVarchar.class, MtNotNull.class,
+    MtCompIndex.class, MtIndex.class, MtUnique.class
   );
 
   private final Field f;
@@ -34,7 +34,9 @@ public class MtFieldDescriptor {
   }
 
   private Stream<Annotation> scan(Annotation a) {
-    if (inSet(a.annotationType(), rt)) { return empty(); }
+    if (inSet(a.annotationType(), rt)) {
+      return empty();
+    }
     return concat(of(a), stream(a.annotationType().getAnnotations()).flatMap(this::scan));
   }
 
@@ -42,25 +44,41 @@ public class MtFieldDescriptor {
     this.f = requireNonNull(f);
     this.fmt = requireNonNull(fmt);
     this.annotations = stream(f.getAnnotations())
-        .flatMap(this::scan)
-        .filter(a -> inSet(a.annotationType(), mta))
-        .collect(Collectors.toList());
+      .flatMap(this::scan)
+      .filter(a -> inSet(a.annotationType(), mta))
+      .collect(Collectors.toList());
   }
 
   @SuppressWarnings("unchecked")
   public <T extends Annotation> Optional<T> get(Class<T> annotation) {
     return annotations.stream()
-        .filter(an0 -> match(annotation, an0.annotationType()))
-        .map(an0 -> (T) an0).findFirst();
+      .filter(an0 -> match(annotation, an0.annotationType()))
+      .map(an0 -> (T) an0).findFirst();
   }
 
-  public boolean isPk() { return get(MtPk.class).isPresent(); }
+  public boolean isPk() {
+    return get(MtPk.class).isPresent();
+  }
 
-  public MtCaseFormat getFormat() { return fmt; }
-  public String getFieldClassName() { return this.f.getType().getCanonicalName(); }
-  public String getFieldName() { return fmt.of(this.f.getName()); }
-  public String getFieldRawName() { return this.f.getName(); }
-  public Class<?> getType() { return f.getType(); }
+  public MtCaseFormat getFormat() {
+    return fmt;
+  }
+
+  public String getFieldClassName() {
+    return this.f.getType().getCanonicalName();
+  }
+
+  public String getFieldName() {
+    return fmt.of(this.f.getName());
+  }
+
+  public String getFieldRawName() {
+    return this.f.getName();
+  }
+
+  public Class<?> getType() {
+    return f.getType();
+  }
 
   @SuppressWarnings("unchecked")
   public <V> V getValue(Object o) {
@@ -81,8 +99,8 @@ public class MtFieldDescriptor {
 
   @Override public String toString() {
     String ants = annotations.stream()
-        .map(a -> a.annotationType().getSimpleName())
-        .collect(Collectors.joining(", "));
+      .map(a -> a.annotationType().getSimpleName())
+      .collect(Collectors.joining(", "));
     return String.format("%s=[%s]", f.getName(), ants);
   }
 }
