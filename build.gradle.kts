@@ -4,7 +4,7 @@ subprojects {
   apply(plugin = "io.vacco.oss.gitflow")
 
   group = "io.vacco.metolithe"
-  version = "2.8.0"
+  version = "2.8.1"
 
   configure<io.vacco.oss.gitflow.GsPluginProfileExtension> { addClasspathHell() }
   configure<io.vacco.cphell.ChPluginExtension> { resourceExclusions.add("module-info.class") }

@@ -60,7 +60,7 @@ public class MtLb {
 
   private ChangeSet mapIndex(MtDescriptor<?> d, MtFieldDescriptor fm) {
     var idx = new CreateIndex();
-    idx.indexName = d.getFormat().of(format("idx-%s-%s", d.getName(), fm.getFieldName()));
+    idx.indexName = d.getFormat().of(format("idx_%s_%s", d.getName(), fm.getFieldName()));
     idx.tableName = d.getName();
     idx.columns.add(new Column().withName(fm.getFieldName()));
     return new ChangeSet().withId(idx.indexName).add(idx);
@@ -70,7 +70,8 @@ public class MtLb {
     var fields = components.stream()
       .sorted(comparingInt(fd -> fd.get(MtCompIndex.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).toArray();
-    var indexId = format("idx-%s-%s", indexName, Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED)));
+    var hash = Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED));
+    var indexId = format("idx_%s_%s", indexName, hash);
     var idx = new CreateIndex()
       .withIndexName(d.getFormat().of(indexId))
       .withTableName(d.getName());
@@ -83,7 +84,7 @@ public class MtLb {
   private ChangeSet mapUniqueConstraint(MtDescriptor<?> d) {
     var uc = new AddUniqueConstraint();
     uc.tableName = d.getName();
-    uc.constraintName = d.getFormat().of(format("unq-%s", d.getName()));
+    uc.constraintName = d.getFormat().of(format("unq_%s", d.getName()));
     uc.columnNames = d.get(MtUnique.class)
       .sorted(comparingInt(fd -> fd.get(MtUnique.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).collect(joining(","));
@@ -106,7 +107,8 @@ public class MtLb {
     var fromField = fd.getFieldName();
     var to = fkTarget.getName();
     var toField = targetPk.getFieldName();
-    var fkId = format("fk-%s", Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED)));
+    var hash = Integer.toHexString(hash32(toStringConcat(from, fromField, to, toField).get(), DEFAULT_SEED));
+    var fkId = format("fk_%s", hash);
 
     var fkc = new AddForeignKeyConstraint();
     fkc.baseColumnNames = fromField;
@@ -127,13 +129,13 @@ public class MtLb {
   }
 
   private ChangeSet mapTableColumn(MtDescriptor<?> d, MtFieldDescriptor fd) {
-    var cs = new ChangeSet().withId(String.format("tbl-col-%s-%s", d.getName(), fd.getFieldName()));
+    var cs = new ChangeSet().withId(String.format("tbl_col_%s_%s", d.getName(), fd.getFieldName()));
     cs.add(mapNonPkAttribute(d, fd));
     return cs;
   }
 
   private ChangeSet mapTable(MtDescriptor<?> d) {
-    var cs = new ChangeSet().withId(String.format("tbl-%s", d.getName()));
+    var cs = new ChangeSet().withId(String.format("tbl_%s", d.getName()));
     var ct = new CreateTable().withTableName(d.getName());
     cs.changes.add(ct);
     d.get(MtPk.class).findFirst()
