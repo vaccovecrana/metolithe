@@ -149,7 +149,7 @@ public class MtDaoSpec extends MtSpec {
         var r = new Random();
         var phones = IntStream.range(0, 64).mapToObj(i -> {
           var p = new Phone();
-          p.countryCode = 1;
+          p.countryCode = r.nextBoolean() ? 1 : r.nextBoolean() ? 2 : 3;
           p.number = RandomStringUtils.randomNumeric(10);
           p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
@@ -189,6 +189,22 @@ public class MtDaoSpec extends MtSpec {
         log.info("====> All phones: {}", phones.size());
         log.info("====> Verified phones: {}", vp.size());
         log.info("====> Unverified phones: {}", uvp.size());
+
+        log.info("======== Verified, country code sorted phone pages ========");
+        var page2 = pDao.loadPage2(
+          4, fq,
+          PhoneDao.fld_countryCode, null,
+          PhoneDao.fld_number, null
+        );
+        while (page2.nx1 != null) {
+          log.info("{}", kv("page2", page2));
+          page2 = pDao.loadPage2(
+            4, fq,
+            PhoneDao.fld_countryCode, page2.nx1,
+            PhoneDao.fld_number, page2.nx2
+          );
+        }
+        log.info("{}", kv("page2", page2));
       });
     });
 
