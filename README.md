@@ -24,6 +24,10 @@ attributes. Therefore, calls to `update` or `merge` on a DAO instance will fail.
 
 This restriction is by design in this framework.
 
+# Resources
+
+- https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method
+
 # Disclaimer
 
 > This project is not production ready, and still requires security and code correctness audits. You use this
