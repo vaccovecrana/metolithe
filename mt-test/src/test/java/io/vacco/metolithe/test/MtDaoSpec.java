@@ -1,14 +1,10 @@
 package io.vacco.metolithe.test;
 
 import io.vacco.metolithe.codegen.dao.MtDaoMapper;
-import io.vacco.metolithe.codegen.liquibase.MtLb;
-import io.vacco.metolithe.codegen.liquibase.MtLbXml;
-import io.vacco.metolithe.codegen.liquibase.MtLbYaml;
+import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
-import io.vacco.metolithe.test.dao.PhoneDao;
-import io.vacco.metolithe.test.dao.DbUserDao;
-import io.vacco.metolithe.util.MtPage;
+import io.vacco.metolithe.test.dao.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -22,14 +18,9 @@ import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
 import static io.vacco.shax.logging.ShArgument.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -46,7 +37,7 @@ public class MtDaoSpec extends MtSpec {
   static {
     describe("Query parameter building", () -> {
       it("Renders queries with placeholder field names", () -> {
-        MtQuery q = new MtQuery()
+        var q = new MtQuery()
             .as("select * from gopher.blog_entry where $0 = :$0 and $1 >= :$1 order by $1 limit 8")
             .withSlotValue("category")
             .withSlotValue("publishedUtcMs");
@@ -60,7 +51,7 @@ public class MtDaoSpec extends MtSpec {
 
     describe("Schema code generation", () -> {
       it("Generates typed field DAO definitions", () -> {
-        File out = new File(".", "src/main/java");
+        var out = new File(".", "src/main/java");
         new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, DbUser.class);
       });
       it("Generates Liquibase changelogs", () -> {
@@ -80,16 +71,16 @@ public class MtDaoSpec extends MtSpec {
         ymlGen.writeSchema(root, new OutputStreamWriter(new FileOutputStream(ymlFile)));
       });
       it("Creates an in-memory database and applies the generated change logs.", () -> {
-        JdbcConnection c = new JdbcConnection(ds.getConnection());
-        ResourceAccessor ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
-        Liquibase lb = new Liquibase(ymlFile.getName(), ra, c);
+        var c = new JdbcConnection(ds.getConnection());
+        var ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
+        var lb = new Liquibase(ymlFile.getName(), ra, c);
         lb.update(new Contexts(), new LabelExpression());
         assertNotNull(c);
         c.close();
       });
     });
 
-    PhoneDao pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
+    var pDao = new PhoneDao(schema, fmt, jdbc, m3Ifn);
 
     describe("Type safe DAOs", () -> {
       it("Creates base DAOs for data access", () -> {
@@ -99,7 +90,8 @@ public class MtDaoSpec extends MtSpec {
         var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtMurmur3IFn());
 
         log.info("{}", kv("p0", pDao.save(p0)));
-        Phone p01 = pDao.loadExisting(p0.pid);
+
+        var p01 = pDao.loadExisting(p0.pid);
         assertEquals(p0.pid, p01.pid);
         assertEquals(p0.countryCode, p01.countryCode);
         assertEquals(p0.number, p01.number);
@@ -116,13 +108,13 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("d0u", dDao.merge(d0)));
         log.info("{}", kv("d1s", dDao.merge(d1)));
 
-        DeviceTag dt0 = new DeviceTag();
+        var dt0 = new DeviceTag();
         dt0.claimTimeUtcMs = System.currentTimeMillis();
         dt0.did = d0.did;
         dt0.pid = p0.pid;
         dt0.smsCodeSignature = "U29tZSBzaWduYXR1cmUgZm9yIHRoZSBudW1iZXIgMTIzNA==";
 
-        DeviceTag dt1 = new DeviceTag();
+        var dt1 = new DeviceTag();
         dt1.claimTimeUtcMs = System.currentTimeMillis();
         dt1.did = d1.did;
         dt1.pid = p1.pid;
@@ -139,7 +131,7 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("u0m", uDao.merge(u0)));
         log.info("{}", kv("u1m", uDao.merge(u1)));
 
-        UserFollow uf0 = new UserFollow();
+        var uf0 = new UserFollow();
         uf0.fromUid = u0.uid;
         uf0.toUid = u1.uid;
 
@@ -154,34 +146,49 @@ public class MtDaoSpec extends MtSpec {
       });
 
       it("Can paginate over record collections", () -> {
-        Random r = new Random();
-        List<Phone> phones = IntStream.range(0, 64).mapToObj(i -> {
-          Phone p = new Phone();
+        var r = new Random();
+        var phones = IntStream.range(0, 64).mapToObj(i -> {
+          var p = new Phone();
           p.countryCode = 1;
           p.number = RandomStringUtils.randomNumeric(10);
           p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
         }).collect(Collectors.toList());
-        for (Phone p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
+        for (var p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
 
-        // all phone pages
-        MtPage<Phone, String> page0 = pDao.loadPage(null, PhoneDao.fld_number, 16);
-        while (page0.next != null) {
+        log.info("======== All phone pages ========");
+        phones.clear();
+        var page0 = pDao.loadPage1(16, null, PhoneDao.fld_number, null);
+        phones.addAll(page0.items);
+        while (page0.nx1 != null) {
           log.info("{}", kv("page0", page0));
-          page0 = pDao.loadPage(page0.next, PhoneDao.fld_number, 16);
+          page0 = pDao.loadPage1(16, null, PhoneDao.fld_number, page0.nx1);
+          phones.addAll(page0.items);
         }
         log.info("{}", kv("page0", page0));
 
-        // unverified phone pages
-        MtQuery fq = MtQuery.of("$0 != :$0")
+        log.info("======== Verified phone pages ========");
+        var pageSum = 0L;
+        var fq = MtQuery.of("$0 != :$0")
             .withSlotValue(PhoneDao.fld_smsVerificationCode)
             .withParam(PhoneDao.fld_smsVerificationCode, 0);
-        MtPage<Phone, String> page1 = pDao.loadPage(null, fq, PhoneDao.fld_number, 4);
-        while (page1.next != null) {
+        var page1 = pDao.loadPage1(4, fq, PhoneDao.fld_number, null);
+        pageSum = pageSum + page1.size;
+        while (page1.nx1 != null) {
           log.info("{}", kv("page1", page1));
-          page1 = pDao.loadPage(page1.next, fq, PhoneDao.fld_number, 4);
+          page1 = pDao.loadPage1(4, fq, PhoneDao.fld_number, page1.nx1);
+          pageSum = pageSum + page1.size;
         }
         log.info("{}", kv("page1", page1));
+
+        var vp = phones.stream().filter(p -> p.smsVerificationCode != 0).collect(Collectors.toList());
+        var uvp = phones.stream().filter(p -> p.smsVerificationCode == 0).collect(Collectors.toList());
+
+        assertEquals(pageSum, vp.size());
+
+        log.info("====> All phones: {}", phones.size());
+        log.info("====> Verified phones: {}", vp.size());
+        log.info("====> Unverified phones: {}", uvp.size());
       });
     });
 

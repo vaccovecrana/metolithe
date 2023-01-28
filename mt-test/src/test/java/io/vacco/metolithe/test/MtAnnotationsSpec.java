@@ -19,9 +19,9 @@ import static io.vacco.metolithe.core.MtCaseFormat.*;
 public class MtAnnotationsSpec extends MtSpec {
 
   private static <T> void logDescriptor(MtDescriptor<T> d, T data) {
-    List<Class<Enum<?>>> enums0 = d.getEnumFields();
-    Object[] comps0 = d.getPkValues(data);
-    Map<String, Object> allComps = d.getAll(data);
+    var enums0 = d.getEnumFields();
+    var comps0 = d.getPkValues(data);
+    var allComps = d.getAll(data);
 
     log.info("{}", kv("enums", enums0));
     log.info("{}", kv("comps", comps0));

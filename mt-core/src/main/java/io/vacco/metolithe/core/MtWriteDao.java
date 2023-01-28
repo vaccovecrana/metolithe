@@ -15,8 +15,8 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   @SuppressWarnings("unchecked")
   public <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
-    Optional<MtFieldDescriptor> opk = dsc.getPkField();
-    Object[] pkVals = dsc.getPkValues(target);
+    var opk = dsc.getPkField();
+    var pkVals = dsc.getPkValues(target);
     if (opk.isPresent()) {
       K id = pkVals.length == 0 ? (K) opk.get().getValue(target) : idFn.apply(pkVals);
       return bfn.apply(opk.get(), id);
@@ -37,12 +37,12 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       if (fd != null) {
         fd.setValue(rec, pk);
       }
-      String query = getQueryCache().computeIfAbsent("insert", k ->
+      var query = getQueryCache().computeIfAbsent("insert", k ->
         format("insert into %s (%s) values (%s)", getSchemaName(),
           propNamesCsv(dsc, true), placeholderCsv(dsc, true)
         )
       );
-      Map<String, Object> namedParams = dsc.getAll(rec);
+      var namedParams = dsc.getAll(rec);
       sql().query().update(query).namedParams(namedParams).run();
       return rec;
     });
@@ -50,12 +50,12 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public T update(T rec) {
     return withId(rec, (fd, pk) -> {
-      String queryAssignments = placeHolderAssignmentCsv(dsc, false);
-      String query = getQueryCache().computeIfAbsent("update",
+      var queryAssignments = placeHolderAssignmentCsv(dsc, false);
+      var query = getQueryCache().computeIfAbsent("update",
         k -> format("update %s set %s where %s = :%s", getSchemaName(), queryAssignments,
           fd.getFieldName(), fd.getFieldName())
       );
-      Map<String, Object> params = dsc.getAll(rec);
+      var params = dsc.getAll(rec);
       sql().query().update(query).namedParams(params).run();
       return rec;
     });
@@ -73,21 +73,21 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public long delete(T record) {
     return withId(record, (fd, pk) -> {
-      String query = getQueryCache().computeIfAbsent("delete",
+      var query = getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s", getSchemaName(), fd.getFieldName(), fd.getFieldName()));
       return sql().query().update(query).namedParam(fd.getFieldName(), pk).run().affectedRows();
     });
   }
 
   public long deleteWhereEq(String field, Object value) {
-    String fn = dsc.getFormat().of(field);
-    String query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
+    var fn = dsc.getFormat().of(field);
+    var query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
       k -> format("delete from %s where %s = :%s", getSchemaName(), fn, fn));
     return sql().query().update(query).namedParam(fn, value).run().affectedRows();
   }
 
   public long deleteWhereIdEq(K id) {
-    Optional<MtFieldDescriptor> opk = dsc.getPkField();
+    var opk = dsc.getPkField();
     return opk.map(mtFieldDescriptor -> deleteWhereEq(mtFieldDescriptor.getFieldName(), id)).orElse(-1L);
   }
 }

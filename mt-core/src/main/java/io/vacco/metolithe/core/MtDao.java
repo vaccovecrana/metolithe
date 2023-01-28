@@ -32,10 +32,10 @@ public abstract class MtDao<T, K> {
     d.getEnumFields().forEach(fld -> extractors.put(fld, new MtEnumExtractor(fld)));
     this.mappers = ObjectMappers.builder().extractors(extractors).build();
 
-    Optional<MtFieldDescriptor> opk = d.get(MtPk.class).findFirst();
+    var opk = d.get(MtPk.class).findFirst();
     if (opk.isPresent()) {
-      Class<?> idFnClass = idFn.getIdType();
-      Class<?> entityPkClass = MtUtil.toWrapperClass(opk.get().getType());
+      var idFnClass = idFn.getIdType();
+      var entityPkClass = MtUtil.toWrapperClass(opk.get().getType());
       if (!idFnClass.isAssignableFrom(entityPkClass)) {
         throw new MtException.MtIdGeneratorMismatchException(d.getClassName(), entityPkClass, idFnClass);
       }
@@ -59,7 +59,7 @@ public abstract class MtDao<T, K> {
   }
 
   protected String getSchemaName(Class<?> clazz) {
-    String raw = String.format("%s.%s", schemaName, dsc.getFormat().of(clazz.getSimpleName()));
+    var raw = String.format("%s.%s", schemaName, dsc.getFormat().of(clazz.getSimpleName()));
     return dsc.getFormat().of(raw);
   }
 

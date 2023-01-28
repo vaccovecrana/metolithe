@@ -1,10 +1,9 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.util.MtPage;
+import io.vacco.metolithe.util.*;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
-import org.codejargon.fluentjdbc.api.mapper.Mappers;
-import org.codejargon.fluentjdbc.api.query.SelectQuery;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static io.vacco.metolithe.core.MtCaseFormat.*;
 import static java.lang.String.*;
@@ -27,7 +26,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   public Optional<T> load(K id) {
-    Optional<MtFieldDescriptor> pkf = dsc.getPkField();
+    var pkf = dsc.getPkField();
     if (pkf.isPresent()) {
       var q = getSelectWhereEqQuery(pkf.get().getFieldName());
       var fn = pkf.get().getFieldName();
@@ -51,79 +50,109 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     if (values == null || values.length == 0) {
       return Collections.emptyMap();
     }
-    MtFieldDescriptor fd = dsc.getField(field);
-    Map<String, Object> pids = toNamedParamMap(asList(values), fd.getFieldName());
-    String query = format("select %s from %s where %s in (%s)",
+    var fd = dsc.getField(field);
+    var pids = toNamedParamMap(asList(values), fd.getFieldName());
+    var query = format("select %s from %s where %s in (%s)",
       propNamesCsv(dsc, true), getSchemaName(), fd.getFieldName(), toNamedParamLabels(pids)
     );
-    List<T> raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
+    var raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
     return raw.stream().collect(groupingBy(fd::getValue));
   }
 
   public T loadExisting(K id) {
-    Optional<T> record = load(id);
+    var record = load(id);
     if (record.isEmpty()) {
       throw new MtException.MtMissingIdException(id);
     }
     return record.get();
   }
 
-  public <V> MtPage<T, V> loadPage(V nextIdx, MtQuery filterQuery, String sortField, int pageSize) {
+  private boolean allNonNull(Object[] oa) {
+    for (Object o : oa) {
+      if (o == null) return false;
+    }
+    return true;
+  }
+
+  public List<T> loadPageItems(int pageSize, MtQuery filter, String[] nxf, Object[] nxv) {
     try {
-      MtFieldDescriptor sf = dsc.getField(sortField);
-      MtPage<T, V> p = new MtPage<>();
-      String countFilterQuery = filterQuery == null ? "" : format("where (%s)", filterQuery.render());
-      String countQuery = format("select count(*) from %s %s", getSchemaName(), countFilterQuery);
+      var qFmt = String.join("\n", "",
+        "select %s from %s where 1=1", // property names, schema name
+        "%s", // filter predicate
+        "%s", // seek predicate
+        "order by %s limit %s"
+      );
+      var filterP = filter == null ? "" : format("and (%s)", filter.render());
+      var nxNn = allNonNull(nxv);
+      var seekP = "";
+      var sk = stream(nxf).map(dsc::getField).toArray(MtFieldDescriptor[]::new);
+      var skCsv = stream(sk)
+        .map(MtFieldDescriptor::getFieldName)
+        .collect(joining(", "));
 
-      SelectQuery cq = sql().query().select(countQuery);
-      if (filterQuery != null) {
-        for (Map.Entry<String, Object> e : filterQuery.params.entrySet()) {
-          cq = cq.namedParam(e.getKey(), e.getValue());
-        }
+      if (nxNn) {
+        var skPar = IntStream.range(0, nxv.length)
+          .mapToObj(i -> format(":sk%d", i))
+          .collect(joining(", "));
+        seekP = format("and (%s) >= (%s)", skCsv, skPar);
       }
 
-      Optional<Long> count = cq.firstResult(Mappers.singleLong());
-      int rawSize = pageSize + 1;
+      var sql = format(qFmt,
+        propNamesCsv(dsc, true), getSchemaName(),
+        filterP, seekP, skCsv, pageSize + 1
+      );
+      var q = sql().query().select(sql);
 
-      if (count.isPresent()) {
-        String filterClause = filterQuery == null ? "" : format("and (%s)", filterQuery.render());
-        String sortClause = nextIdx == null ? "" : new MtQuery().as("and ($0 >= :$0)").withSlotValue(sf.getFieldName()).render();
-        String query = format("select %s from %s where 1=1 %s %s order by %s limit %s",
-          propNamesCsv(dsc, true), getSchemaName(),
-          sortClause, filterClause, sf.getFieldName(), rawSize
-        );
-
-        SelectQuery q = sql().query().select(query);
-        if (nextIdx != null) {
-          q = q.namedParam(sf.getFieldName(), nextIdx);
+      if (nxNn) {
+        for (int i = 0; i < nxv.length; i++) {
+          q = q.namedParam(format("sk%d", i), nxv[i]);
         }
-        if (filterQuery != null) {
-          for (Map.Entry<String, Object> e : filterQuery.params.entrySet()) {
-            q = q.namedParam(e.getKey(), e.getValue());
-          }
-        }
-
-        List<T> data = q.listResult(mapToDefault());
-        V next = data.size() == rawSize ? sf.getValue(data.get(data.size() - 1)) : null;
-        p.items = data.subList(0, data.size() == rawSize ? rawSize - 1 : data.size());
-        p.totalSize = count.get();
-        p.next = next;
       }
-      return p;
-    } catch (Exception e) {
-      throw new MtException.MtPageAccessException(sortField, nextIdx, dsc, e);
+      if (filter != null) {
+        for (var e : filter.params.entrySet()) {
+          q = q.namedParam(e.getKey(), e.getValue());
+        }
+      }
+      return new ArrayList<>(q.listResult(mapToDefault()));
+    }
+    catch (Exception e) {
+      throw new MtException.MtPageAccessException(nxf, nxv, dsc, e);
     }
   }
 
-  public <V> MtPage<T, V> loadPage(V nextIdx, String sortField, int pageSize) {
-    return loadPage(nextIdx, null, sortField, pageSize);
+  public <K1> MtPage1<T, K1> loadPage1(int pageSize, MtQuery filter,
+                                       String nx1Fld, K1 nx1) {
+    var page = new MtPage1<T, K1>();
+    var items = loadPageItems(pageSize, filter, new String[] {nx1Fld}, new Object[] {nx1});
+    page.items = items;
+    if (items.size() > pageSize) {
+      var next = items.remove(items.size() - 1);
+      page.nx1 = dsc.getField(nx1Fld).getValue(next);
+    }
+    page.size = items.size();
+    return page;
+  }
+
+  public <K1, K2> MtPage2<T, K1, K2> loadPage2(int pageSize, MtQuery filter,
+                                               String nx1Fld, K1 nx1,
+                                               String nx2Fld, K2 nx2) {
+    var page = new MtPage2<T, K1, K2>();
+    var items = loadPageItems(pageSize, filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2});
+    page.items = items;
+    if (items.size() > pageSize) {
+      var next = items.remove(items.size() - 1);
+      page.nx1 = dsc.getField(nx1Fld).getValue(next);
+      page.nx2 = dsc.getField(nx2Fld).getValue(next);
+    }
+    page.size = items.size();
+    return page;
   }
 
   public Map<String, Object> toNamedParamMap(Collection<?> input, String paramLabel) {
-    Map<String, Object> pMap = new LinkedHashMap<>();
-    List<?> paramList = new ArrayList<>(input);
+    var pMap = new LinkedHashMap<String, Object>();
+    var paramList = new ArrayList<>(input);
     for (int k = 0; k < input.size(); k++) {
-      String param = format("%s%s", paramLabel, k);
+      var param = format("%s%s", paramLabel, k);
       pMap.put(param, paramList.get(k));
     }
     return pMap;

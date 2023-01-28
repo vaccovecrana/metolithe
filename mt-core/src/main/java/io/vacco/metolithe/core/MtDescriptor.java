@@ -28,7 +28,7 @@ public class MtDescriptor<T> {
       .filter(f -> isPublic(f.getModifiers()) && !isStatic(f.getModifiers()))
       .map(f -> new MtFieldDescriptor(f, fmt)).collect(toList());
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
-    List<MtFieldDescriptor> pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
+    var pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {
       throw new MtException.MtMultiplePkDefinitionsException(pkds);
     }
@@ -57,11 +57,11 @@ public class MtDescriptor<T> {
     if (t == null || this.pkField == null) {
       return empty;
     }
-    Map<Integer, Object> pkValues = new TreeMap<>();
+    var pkValues = new TreeMap<>();
     for (MtFieldDescriptor fd : fields) {
-      Optional<MtUnique> ou = fd.get(MtUnique.class);
+      var ou = fd.get(MtUnique.class);
       if (ou.isPresent() && ou.get().inPk()) {
-        Object comp = fd.getValue(t);
+        var comp = fd.getValue(t);
         if (comp == null) throw new MtException.MtMissingPkComponentException(t, fd);
         pkValues.put(ou.get().idx(), comp);
       }
@@ -70,7 +70,7 @@ public class MtDescriptor<T> {
   }
 
   public Map<String, Object> getAll(T t) {
-    Map<String, Object> comps = new LinkedHashMap<>();
+    var comps = new LinkedHashMap<String, Object>();
     for (MtFieldDescriptor fd : fields) {
       comps.put(fd.getFieldName(), fd.getValue(t));
     }

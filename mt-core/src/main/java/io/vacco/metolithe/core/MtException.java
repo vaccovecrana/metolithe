@@ -9,8 +9,8 @@ public class MtException {
   private static final String UNKNOWN = "unknown";
 
   public static class MtMissingFieldException extends RuntimeException {
-    public String field;
-    public MtDescriptor<?> descriptor;
+    public String           field;
+    public MtDescriptor<?>  descriptor;
 
     public MtMissingFieldException(String field, MtDescriptor<?> descriptor) {
       this.field = field;
@@ -19,15 +19,15 @@ public class MtException {
   }
 
   public static class MtPageAccessException extends RuntimeException {
-    public String sortField;
-    public Object indexPage;
-    public MtDescriptor<?> descriptor;
+    public String[]         sortFields;
+    public Object[]         indexKeys;
+    public MtDescriptor<?>  descriptor;
 
-    public MtPageAccessException(String sortField, Object indexPage,
+    public MtPageAccessException(String[] sortFields, Object[] indexKeys,
                                  MtDescriptor<?> descriptor, Exception e) {
       super(e);
-      this.sortField = sortField;
-      this.indexPage = indexPage;
+      this.sortFields = sortFields;
+      this.indexKeys  = indexKeys;
       this.descriptor = descriptor;
     }
   }
@@ -66,7 +66,6 @@ public class MtException {
   }
 
   public static class MtIdGeneratorMismatchException extends RuntimeException {
-
     public final String targetClass;
     public final String pkFieldType;
     public final String idGenType;
@@ -113,8 +112,8 @@ public class MtException {
   }
 
   public static class MtDaoMappingException extends RuntimeException {
-    public final File outDir;
-    public final String outPackage;
+    public final File       outDir;
+    public final String     outPackage;
     public final Class<?>[] schemaClasses;
 
     public MtDaoMappingException(File outDir, String outPackage, Class<?>[] schemaClasses, Exception e) {

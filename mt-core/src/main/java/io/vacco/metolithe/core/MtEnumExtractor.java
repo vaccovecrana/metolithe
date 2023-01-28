@@ -15,7 +15,7 @@ public class MtEnumExtractor<T extends Enum<T>> implements ObjectMapperRsExtract
 
   @Override public T extract(ResultSet rs, Integer idx) {
     try {
-      String enumValue = rs.getString(idx);
+      var enumValue = rs.getString(idx);
       if (enumValue != null) {
         return Enum.valueOf(target, enumValue);
       }

@@ -15,7 +15,7 @@ public class MtTypeMapper {
       return "boolean";
     }
     if (wt0 == String.class) {
-      Optional<MtVarchar> maxSize = fd.get(MtVarchar.class);
+      var maxSize = fd.get(MtVarchar.class);
       return format("varchar(%s)", maxSize.get().value());
     }
     if (wt0 == Integer.class) {
