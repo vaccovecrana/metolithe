@@ -20,7 +20,7 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 - [ ] If you do not specify unique constraint tags on your classes, you are responsible for managing each object's primary key values.
 
 Classes which do not define a primary key field can only be saved, loaded or deleted using one of its
-attributes. Therefore, calls to `update` or `merge` on a DAO instance will fail.
+attributes. Therefore, calls to `update` or `upsert` on a DAO instance will fail.
 
 This restriction is by design in this framework.
 

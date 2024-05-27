@@ -101,12 +101,12 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("p1Del", pDao.deleteWhereIdEq(p1.pid)));
         log.info("{}", kv("p1s", pDao.save(p1)));
         log.info("{}", kv("p0Del", pDao.delete(p0)));
-        log.info("{}", kv("p0m", pDao.merge(p0)));
+        log.info("{}", kv("p0m", pDao.upsert(p0)));
 
-        log.info("{}", kv("d0m", dDao.merge(d0)));
+        log.info("{}", kv("d0m", dDao.upsert(d0)));
         d0.type = Device.DType.IOS;
-        log.info("{}", kv("d0u", dDao.merge(d0)));
-        log.info("{}", kv("d1s", dDao.merge(d1)));
+        log.info("{}", kv("d0u", dDao.upsert(d0)));
+        log.info("{}", kv("d1s", dDao.upsert(d1)));
 
         var dt0 = new DeviceTag();
         dt0.claimTimeUtcMs = System.currentTimeMillis();
@@ -121,21 +121,21 @@ public class MtDaoSpec extends MtSpec {
         dt1.smsCodeSignature = "U29tZSBzaWduYXR1cmUgZm9yIHRoZSBudW1iZXIgNDU2Nw==";
 
         log.info("{}", kv("dt0Id", dtDao.idOf(dt0).get()));
-        log.info("{}", kv("dt0m", dtDao.merge(dt0)));
-        log.info("{}", kv("dt1m", dtDao.merge(dt1)));
+        log.info("{}", kv("dt0m", dtDao.upsert(dt0)));
+        log.info("{}", kv("dt1m", dtDao.upsert(dt1)));
 
         u0.tid = dt0.tid;
         u1.tid = dt1.tid;
 
         log.info("{}", kv("u0Id", uDao.idOf(u0).get()));
-        log.info("{}", kv("u0m", uDao.merge(u0)));
-        log.info("{}", kv("u1m", uDao.merge(u1)));
+        log.info("{}", kv("u0m", uDao.upsert(u0)));
+        log.info("{}", kv("u1m", uDao.upsert(u1)));
 
         var uf0 = new UserFollow();
         uf0.fromUid = u0.uid;
         uf0.toUid = u1.uid;
 
-        log.info("{}", kv("uf0m", ufDao.merge(uf0)));
+        log.info("{}", kv("uf0m", ufDao.upsert(uf0)));
       });
 
       it("Uses generated POJO DAOs for data access", () -> {
@@ -154,7 +154,7 @@ public class MtDaoSpec extends MtSpec {
           p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
         }).collect(Collectors.toList());
-        for (var p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
+        for (var p : phones) { pDao.upsert(p); } // TODO implement/change to batch support.
 
         log.info("======== All phone pages ========");
         phones.clear();
