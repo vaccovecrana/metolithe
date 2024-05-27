@@ -99,6 +99,14 @@ public class MtFieldDescriptor {
     }
   }
 
+  @Override public boolean equals(Object obj) {
+    if (!(obj instanceof MtFieldDescriptor)) {
+      return false;
+    }
+    var fd0 = (MtFieldDescriptor) obj;
+    return fd0.f.equals(this.f);
+  }
+
   @Override public String toString() {
     String ants = annotations.stream()
       .map(a -> a.annotationType().getSimpleName())

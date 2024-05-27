@@ -171,6 +171,7 @@ public class MtLb {
             Stream.of(MtFk.class, MtField.class, MtVarchar.class)
               .flatMap(d::get)
               .filter(fd -> !fd.isPk())
+              .distinct()
               .sorted(Comparator.comparingInt(fd -> fd.ordinal))
               .map(fd -> mapTableColumn(d, fd)),
             d.get(MtUnique.class).findFirst().stream().map(fd -> mapUniqueConstraint(d)),

@@ -89,6 +89,12 @@ public class MtDaoSpec extends MtSpec {
         var dtDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
         var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtMurmur3IFn());
 
+        var stIdFn = new MtIdFn<String>() {
+          @Override public String apply(Object[] objects) { return objects[0].toString(); }
+          @Override public Class<String> getIdType() { return String.class; }
+        };
+        var urDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DbUserRole.class, fmt), stIdFn);
+
         log.info("{}", kv("p0", pDao.save(p0)));
 
         var p01 = pDao.loadExisting(p0.pid);
@@ -124,8 +130,17 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("dt0m", dtDao.upsert(dt0)));
         log.info("{}", kv("dt1m", dtDao.upsert(dt1)));
 
+        var ur0 = new DbUserRole();
+        ur0.rid = "guest";
+        ur0.createdUtcMs = System.currentTimeMillis();
+
+        log.info("{}", kv("ur0", urDao.upsert(ur0)));
+
         u0.tid = dt0.tid;
+        u0.rid = ur0.rid;
+
         u1.tid = dt1.tid;
+        u1.rid = ur0.rid;
 
         log.info("{}", kv("u0Id", uDao.idOf(u0).get()));
         log.info("{}", kv("u0m", uDao.upsert(u0)));
