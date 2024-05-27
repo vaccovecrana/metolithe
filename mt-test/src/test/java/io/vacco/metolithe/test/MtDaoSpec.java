@@ -155,9 +155,9 @@ public class MtDaoSpec extends MtSpec {
 
       it("Uses generated POJO DAOs for data access", () -> {
         var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
-        log.info("{}", kv("loadWhereEqJane", ud.loadWhereAliasEq("Jane")));
-        log.info("{}", kv("loadWhereEmailEq", ud.loadWhereEmailIn("joe@me.com")));
-        log.info("");
+        log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
+        log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
+        log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(new Long[] { u0.tid, u1.tid })));
       });
 
       it("Can paginate over record collections", () -> {

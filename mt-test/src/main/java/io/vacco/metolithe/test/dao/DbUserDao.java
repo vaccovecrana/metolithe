@@ -15,9 +15,8 @@ import java.util.Map;
  * Generated source file. Do not modify directly. *
  **************************************************/
 public class DbUserDao extends MtWriteDao<io.vacco.metolithe.schema.DbUser, java.lang.Integer> {
-  
-  public static final String pk_uid = "uid";
-  
+
+  public static final String fld_uid = "uid";
   public static final String fld_pw = "pw";
   public static final String fld_alias = "alias";
   public static final String fld_email = "email";
@@ -27,6 +26,18 @@ public class DbUserDao extends MtWriteDao<io.vacco.metolithe.schema.DbUser, java
   
   public DbUserDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.metolithe.schema.DbUser.class, fmt), idFn);
+  }
+  
+  public Collection<io.vacco.metolithe.schema.DbUser> loadWhereUidEq(java.lang.Integer uid) {
+    return loadWhereEq(fld_uid, uid);
+  }
+
+  public final Map<java.lang.Integer, List<io.vacco.metolithe.schema.DbUser>> loadWhereUidIn(java.lang.Integer ... values) {
+    return loadWhereIn(fld_uid, values);
+  }
+
+  public long deleteWhereUidEq(java.lang.Integer uid) {
+    return deleteWhereEq(fld_uid, uid);
   }
   
   public Collection<io.vacco.metolithe.schema.DbUser> loadWherePwEq(java.lang.String pw) {

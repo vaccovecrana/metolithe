@@ -46,7 +46,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
+  public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
     if (values == null || values.length == 0) {
       return Collections.emptyMap();
     }

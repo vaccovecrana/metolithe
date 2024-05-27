@@ -22,7 +22,7 @@ public class MtDaoMapper {
     context.set("mtPkClassName", mtPkClass.getCanonicalName());
     context.set("mtDaoClass", d.getType().getSimpleName());
     context.set("mtDsc", d);
-    context.set("mtFields", d.getFields(false));
+    context.set("mtFields", d.getFields(true));
     context.set("toBeanCase", toBeanCase);
     context.set("toWrapper", (Function<Class<?>, String>) clz -> MtUtil.toWrapperClass(clz).getCanonicalName());
 
