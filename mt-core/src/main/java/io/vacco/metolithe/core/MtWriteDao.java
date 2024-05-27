@@ -63,11 +63,10 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public T upsert(T rec) {
     return withId(rec, (fd, pk) -> {
-      T rec0 = load(pk).isEmpty() ? save(rec) : update(rec);
       if (pk != null && fd != null) {
-        fd.setValue(rec0, pk);
+        fd.setValue(rec, pk);
       }
-      return rec0;
+      return load(pk).isEmpty() ? save(rec) : update(rec);
     });
   }
 
