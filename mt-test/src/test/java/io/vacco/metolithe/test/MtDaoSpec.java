@@ -5,11 +5,12 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.*;
-import io.vacco.metolithe.util.MtPage1;
-import io.vacco.metolithe.util.MtPage2;
+import io.vacco.metolithe.util.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
+import liquibase.command.CommandScope;
+import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.*;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -75,9 +76,14 @@ public class MtDaoSpec extends MtSpec {
       it("Creates an in-memory database and applies the generated change logs.", () -> {
         var c = new JdbcConnection(ds.getConnection());
         var ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
-        var lb = new Liquibase(ymlFile.getName(), ra, c);
-        lb.update(new Contexts(), new LabelExpression());
-        assertNotNull(c);
+        var database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(c);
+        Scope.child(Scope.Attr.resourceAccessor, ra, () -> {
+          var commandScope = new CommandScope("update");
+          commandScope.addArgumentValue("changelogFile", xmlFile.getName());
+          commandScope.addArgumentValue("database", database);
+          var commandResults = commandScope.execute();
+          assertNotNull(commandResults);
+        });
         c.close();
       });
     });
