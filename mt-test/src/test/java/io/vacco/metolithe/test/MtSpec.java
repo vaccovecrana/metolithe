@@ -55,6 +55,6 @@ public abstract class MtSpec {
 
   public static Class<?>[] testSchema = new Class<?>[] {
       Device.class, DeviceLocation.class, DeviceTag.class,
-      Phone.class, DbUser.class, UserFollow.class
+      Phone.class, DbUser.class, DbUserRole.class, UserFollow.class
   };
 }

@@ -27,6 +27,9 @@ public class MtTypeMapper {
     if (wt0 == Double.class) {
       return "double";
     }
+    if (wt0 == Float.class) {
+      return "float";
+    }
     if (Enum.class.isAssignableFrom(fd.getType())) {
       return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
     }

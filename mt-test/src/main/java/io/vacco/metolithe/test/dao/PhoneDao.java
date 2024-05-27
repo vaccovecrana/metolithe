@@ -15,15 +15,26 @@ import java.util.Map;
  * Generated source file. Do not modify directly. *
  **************************************************/
 public class PhoneDao extends MtWriteDao<io.vacco.metolithe.schema.Phone, java.lang.Integer> {
-  
-  public static final String pk_pid = "pid";
-  
+
+  public static final String fld_pid = "pid";
   public static final String fld_countryCode = "countryCode";
   public static final String fld_number = "number";
   public static final String fld_smsVerificationCode = "smsVerificationCode";
   
   public PhoneDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.metolithe.schema.Phone.class, fmt), idFn);
+  }
+  
+  public Collection<io.vacco.metolithe.schema.Phone> loadWherePidEq(java.lang.Integer pid) {
+    return loadWhereEq(fld_pid, pid);
+  }
+
+  public final Map<java.lang.Integer, List<io.vacco.metolithe.schema.Phone>> loadWherePidIn(java.lang.Integer ... values) {
+    return loadWhereIn(fld_pid, values);
+  }
+
+  public long deleteWherePidEq(java.lang.Integer pid) {
+    return deleteWhereEq(fld_pid, pid);
   }
   
   public Collection<io.vacco.metolithe.schema.Phone> loadWhereCountryCodeEq(java.lang.Integer countryCode) {

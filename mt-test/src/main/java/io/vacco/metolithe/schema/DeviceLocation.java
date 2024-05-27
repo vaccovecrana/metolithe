@@ -19,4 +19,5 @@ import io.vacco.metolithe.annotations.*;
 
   @MtField public long logtimeUtcMs;
   @MtField public double fraudScore;
+  @MtField public float  fraudScoreDelta;
 }

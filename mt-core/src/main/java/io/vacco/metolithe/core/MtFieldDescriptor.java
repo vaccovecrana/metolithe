@@ -24,6 +24,17 @@ public class MtFieldDescriptor {
   private final Field f;
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
+  public  final int ordinal;
+
+  public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt) {
+    this.ordinal = ordinal;
+    this.f = requireNonNull(f);
+    this.fmt = requireNonNull(fmt);
+    this.annotations = stream(f.getAnnotations())
+      .flatMap(this::scan)
+      .filter(a -> inSet(a.annotationType(), mta))
+      .collect(Collectors.toList());
+  }
 
   private boolean match(Class<? extends Annotation> to, Class<? extends Annotation> from) {
     return to.isAssignableFrom(from);
@@ -38,15 +49,6 @@ public class MtFieldDescriptor {
       return empty();
     }
     return concat(of(a), stream(a.annotationType().getAnnotations()).flatMap(this::scan));
-  }
-
-  public MtFieldDescriptor(Field f, MtCaseFormat fmt) {
-    this.f = requireNonNull(f);
-    this.fmt = requireNonNull(fmt);
-    this.annotations = stream(f.getAnnotations())
-      .flatMap(this::scan)
-      .filter(a -> inSet(a.annotationType(), mta))
-      .collect(Collectors.toList());
   }
 
   @SuppressWarnings("unchecked")
@@ -101,6 +103,6 @@ public class MtFieldDescriptor {
     String ants = annotations.stream()
       .map(a -> a.annotationType().getSimpleName())
       .collect(Collectors.joining(", "));
-    return String.format("%s=[%s]", f.getName(), ants);
+    return String.format("(%s) %s=[%s]", ordinal, f.getName(), ants);
   }
 }

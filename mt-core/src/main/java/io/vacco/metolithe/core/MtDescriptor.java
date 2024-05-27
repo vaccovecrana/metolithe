@@ -1,7 +1,6 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Stream;
@@ -24,10 +23,17 @@ public class MtDescriptor<T> {
   public MtDescriptor(Class<T> entity, MtCaseFormat fmt) {
     this.cl = Objects.requireNonNull(entity);
     this.fmt = Objects.requireNonNull(fmt);
-    this.fields = Arrays.stream(entity.getFields())
-      .filter(f -> isPublic(f.getModifiers()) && !isStatic(f.getModifiers()))
-      .map(f -> new MtFieldDescriptor(f, fmt)).collect(toList());
+    this.fields = new ArrayList<>();
+
+    int k = 0;
+    for (var f : entity.getFields()) {
+      if (isPublic(f.getModifiers()) && !isStatic(f.getModifiers())) {
+        this.fields.add(new MtFieldDescriptor(k, f, fmt));
+        k++;
+      }
+    }
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
+
     var pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {
       throw new MtException.MtMultiplePkDefinitionsException(pkds);

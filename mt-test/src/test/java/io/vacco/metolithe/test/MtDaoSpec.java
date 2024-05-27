@@ -5,6 +5,8 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.*;
+import io.vacco.metolithe.util.MtPage1;
+import io.vacco.metolithe.util.MtPage2;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -89,6 +91,12 @@ public class MtDaoSpec extends MtSpec {
         var dtDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
         var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtMurmur3IFn());
 
+        var stIdFn = new MtIdFn<String>() {
+          @Override public String apply(Object[] objects) { return objects[0].toString(); }
+          @Override public Class<String> getIdType() { return String.class; }
+        };
+        var urDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DbUserRole.class, fmt), stIdFn);
+
         log.info("{}", kv("p0", pDao.save(p0)));
 
         var p01 = pDao.loadExisting(p0.pid);
@@ -101,12 +109,12 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("p1Del", pDao.deleteWhereIdEq(p1.pid)));
         log.info("{}", kv("p1s", pDao.save(p1)));
         log.info("{}", kv("p0Del", pDao.delete(p0)));
-        log.info("{}", kv("p0m", pDao.merge(p0)));
+        log.info("{}", kv("p0m", pDao.upsert(p0)));
 
-        log.info("{}", kv("d0m", dDao.merge(d0)));
+        log.info("{}", kv("d0m", dDao.upsert(d0)));
         d0.type = Device.DType.IOS;
-        log.info("{}", kv("d0u", dDao.merge(d0)));
-        log.info("{}", kv("d1s", dDao.merge(d1)));
+        log.info("{}", kv("d0u", dDao.upsert(d0)));
+        log.info("{}", kv("d1s", dDao.upsert(d1)));
 
         var dt0 = new DeviceTag();
         dt0.claimTimeUtcMs = System.currentTimeMillis();
@@ -121,28 +129,51 @@ public class MtDaoSpec extends MtSpec {
         dt1.smsCodeSignature = "U29tZSBzaWduYXR1cmUgZm9yIHRoZSBudW1iZXIgNDU2Nw==";
 
         log.info("{}", kv("dt0Id", dtDao.idOf(dt0).get()));
-        log.info("{}", kv("dt0m", dtDao.merge(dt0)));
-        log.info("{}", kv("dt1m", dtDao.merge(dt1)));
+        log.info("{}", kv("dt0m", dtDao.upsert(dt0)));
+        log.info("{}", kv("dt1m", dtDao.upsert(dt1)));
+
+        var ur0 = new DbUserRole();
+        ur0.rid = "guest";
+        ur0.createdUtcMs = System.currentTimeMillis();
+
+        log.info("{}", kv("ur0", urDao.upsert(ur0)));
 
         u0.tid = dt0.tid;
+        u0.rid = ur0.rid;
+
         u1.tid = dt1.tid;
+        u1.rid = ur0.rid;
 
         log.info("{}", kv("u0Id", uDao.idOf(u0).get()));
-        log.info("{}", kv("u0m", uDao.merge(u0)));
-        log.info("{}", kv("u1m", uDao.merge(u1)));
+        log.info("{}", kv("u0m", uDao.upsert(u0)));
+        log.info("{}", kv("u1m", uDao.upsert(u1)));
 
         var uf0 = new UserFollow();
         uf0.fromUid = u0.uid;
         uf0.toUid = u1.uid;
 
-        log.info("{}", kv("uf0m", ufDao.merge(uf0)));
+        log.info("{}", kv("uf0m", ufDao.upsert(uf0)));
       });
 
       it("Uses generated POJO DAOs for data access", () -> {
         var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
-        log.info("{}", kv("loadWhereEqJane", ud.loadWhereAliasEq("Jane")));
-        log.info("{}", kv("loadWhereEmailEq", ud.loadWhereEmailIn("joe@me.com")));
-        log.info("");
+        log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
+        log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
+        log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(new Long[] { u0.tid, u1.tid })));
+      });
+
+      it("Can create object pages", () -> {
+        var nx1 = "Some other user name";
+        var p1 = MtPage1.of(2, Arrays.asList(u0, u1), nx1);
+        assertEquals(2, p1.size);
+        assertEquals(2, p1.items.size());
+        assertEquals(nx1, p1.nx1);
+
+        var p2 = MtPage2.of(1, Collections.singletonList(u0), u1.alias, u1.email);
+        assertEquals(1, p2.size);
+        assertEquals(1, p2.items.size());
+        assertEquals(u1.alias, p2.nx1);
+        assertEquals(u1.email, p2.nx2);
       });
 
       it("Can paginate over record collections", () -> {
@@ -154,7 +185,7 @@ public class MtDaoSpec extends MtSpec {
           p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
         }).collect(Collectors.toList());
-        for (var p : phones) { pDao.merge(p); } // TODO implement/change to batch support.
+        for (var p : phones) { pDao.upsert(p); } // TODO implement/change to batch support.
 
         log.info("======== All phone pages ========");
         phones.clear();
