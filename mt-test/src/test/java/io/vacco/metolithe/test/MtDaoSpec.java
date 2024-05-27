@@ -5,6 +5,8 @@ import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.schema.*;
 import io.vacco.metolithe.test.dao.*;
+import io.vacco.metolithe.util.MtPage1;
+import io.vacco.metolithe.util.MtPage2;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -158,6 +160,20 @@ public class MtDaoSpec extends MtSpec {
         log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
         log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
         log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(new Long[] { u0.tid, u1.tid })));
+      });
+
+      it("Can create object pages", () -> {
+        var nx1 = "Some other user name";
+        var p1 = MtPage1.of(2, Arrays.asList(u0, u1), nx1);
+        assertEquals(2, p1.size);
+        assertEquals(2, p1.items.size());
+        assertEquals(nx1, p1.nx1);
+
+        var p2 = MtPage2.of(1, Collections.singletonList(u0), u1.alias, u1.email);
+        assertEquals(1, p2.size);
+        assertEquals(1, p2.items.size());
+        assertEquals(u1.alias, p2.nx1);
+        assertEquals(u1.email, p2.nx2);
       });
 
       it("Can paginate over record collections", () -> {
