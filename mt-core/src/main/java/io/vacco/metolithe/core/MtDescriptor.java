@@ -53,10 +53,29 @@ public class MtDescriptor<T> {
     return fields.stream().filter(fd -> fd.get(target).isPresent());
   }
 
+  public Stream<MtFieldDescriptor> getSingleIndexes() {
+    var out = new ArrayList<MtFieldDescriptor>();
+    for (var fd : fieldsNoPk) {
+      fd.get(MtIndex.class).ifPresent(mx -> {
+        if (mx.name().isEmpty() && mx.idx() == -1) {
+          out.add(fd);
+        }
+      });
+    }
+    return out.stream();
+  }
+
   public Map<String, List<MtFieldDescriptor>> getCompositeIndexes() {
-    return fieldsNoPk.stream()
-      .filter(fd -> fd.get(MtCompIndex.class).isPresent())
-      .collect(groupingBy(fd -> fd.get(MtCompIndex.class).get().name()));
+    var out = new LinkedHashMap<String, List<MtFieldDescriptor>>();
+    for (var fd : fieldsNoPk) {
+      fd.get(MtIndex.class).ifPresent(mx -> {
+        if (!mx.name().isEmpty() && mx.idx() != -1) {
+          var fl = out.computeIfAbsent(mx.name(), k -> new ArrayList<>());
+          fl.add(fd);
+        }
+      });
+    }
+    return out;
   }
 
   public Object[] getPkValues(T t) {

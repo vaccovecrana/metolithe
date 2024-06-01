@@ -12,12 +12,12 @@ import io.vacco.metolithe.annotations.*;
   @MtFk(DbUser.class) public int uid;
 
   // not the best composite index, but a good example anyway.
-  @St16 @MtCompIndex(name = idxName, idx = 0) public String geoHash2;
-  @St16 @MtCompIndex(name = idxName, idx = 1) public String geoHash4;
-  @St16 @MtCompIndex(name = idxName, idx = 2) public String geoHash12;
+  @St16 @MtIndex(name = idxName, idx = 0) public String geoHash2;
+  @St16 @MtIndex(name = idxName, idx = 1) public String geoHash4;
+  @St16 @MtIndex(name = idxName, idx = 2) public String geoHash12;
   @St16 public String geoHash12Ip;
 
-  @MtField public long logtimeUtcMs;
+  @MtField public long logTimeUtcMs;
   @MtField public double fraudScore;
   @MtField public float  fraudScoreDelta;
 }

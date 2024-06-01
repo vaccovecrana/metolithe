@@ -68,7 +68,7 @@ public class MtLb {
 
   private ChangeSet mapCompositeIndex(String indexName, MtDescriptor<?> d, List<MtFieldDescriptor> components) {
     var fields = components.stream()
-      .sorted(comparingInt(fd -> fd.get(MtCompIndex.class).get().idx()))
+      .sorted(comparingInt(fd -> fd.get(MtIndex.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).toArray();
     var hash = Integer.toHexString(hash32(toStringConcat(fields).get(), DEFAULT_SEED));
     var indexId = format("idx_%s_%s", indexName, hash);
@@ -81,13 +81,17 @@ public class MtLb {
     return new ChangeSet().withId(indexId).add(idx);
   }
 
-  private ChangeSet mapUniqueConstraint(MtDescriptor<?> d) {
+  private ChangeSet mapUniqueConstraint(MtDescriptor<?> d, boolean forPk) {
     var uc = new AddUniqueConstraint();
     uc.tableName = d.getName();
-    uc.constraintName = d.getFormat().of(format("unq_%s", d.getName()));
+    uc.constraintName = d.getFormat().of(format("unq_%s_%s", d.getName(), forPk ? "pk" : "npk"));
     uc.columnNames = d.get(MtUnique.class)
+      .filter(fd -> fd.get(MtUnique.class).get().inPk() == forPk)
       .sorted(comparingInt(fd -> fd.get(MtUnique.class).get().idx()))
       .map(MtFieldDescriptor::getFieldName).collect(joining(","));
+    if (uc.columnNames.isEmpty()) {
+      return null;
+    }
     return new ChangeSet().withId(uc.constraintName).add(uc);
   }
 
@@ -174,10 +178,10 @@ public class MtLb {
               .distinct()
               .sorted(Comparator.comparingInt(fd -> fd.ordinal))
               .map(fd -> mapTableColumn(d, fd)),
-            d.get(MtUnique.class).findFirst().stream().map(fd -> mapUniqueConstraint(d)),
-            d.get(MtIndex.class).map(fd -> mapIndex(d, fd)),
-            d.getCompositeIndexes().entrySet().stream()
-              .map(e -> mapCompositeIndex(e.getKey(), d, e.getValue()))
+            d.get(MtUnique.class).findFirst().stream().map(fd -> mapUniqueConstraint(d, true)).filter(Objects::nonNull),
+            d.get(MtUnique.class).findFirst().stream().map(fd -> mapUniqueConstraint(d, false)).filter(Objects::nonNull),
+            d.getSingleIndexes().map(fd -> mapIndex(d, fd)),
+            d.getCompositeIndexes().entrySet().stream().map(e -> mapCompositeIndex(e.getKey(), d, e.getValue()))
           ).flatMap(Function.identity());
         }).forEach(root::append);
       mapForeignKeys(v).forEach(root::append);

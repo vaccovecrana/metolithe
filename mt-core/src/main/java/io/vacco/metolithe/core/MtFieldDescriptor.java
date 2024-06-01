@@ -18,7 +18,7 @@ public class MtFieldDescriptor {
     MtEntity.class,
     MtPk.class, MtFk.class,
     MtField.class, MtVarchar.class, MtNotNull.class,
-    MtCompIndex.class, MtIndex.class, MtUnique.class
+    MtIndex.class, MtUnique.class
   );
 
   private final Field f;

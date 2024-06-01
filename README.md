@@ -5,7 +5,7 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 ## 2.0 Functionality
 
 - [x] No support for composite primary keys (explain why).
-- [x] Unique constraints (only one supported for now).
+- [x] Unique constraints (only two levels supported for now).
 - [x] Composite index attributes.
 - [x] Static DAO code generation.
 - [x] Pagination support.
