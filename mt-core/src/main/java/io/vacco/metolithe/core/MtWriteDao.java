@@ -14,11 +14,12 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   }
 
   @SuppressWarnings("unchecked")
-  public <V> V withId(T target, BiFunction<MtFieldDescriptor, K, V> bfn) {
+  public <V> V withId(T rec, BiFunction<MtFieldDescriptor, K, V> bfn) {
     var opk = dsc.getPkField();
-    var pkVals = dsc.getPkValues(target);
+    var pkVals = dsc.getPkValues(rec);
     if (opk.isPresent()) {
-      K id = pkVals.length == 0 ? (K) opk.get().getValue(target) : idFn.apply(pkVals);
+      K id = pkVals.length == 0 ? (K) opk.get().getValue(rec) : idFn.apply(pkVals);
+      opk.get().setValue(rec, id);
       return bfn.apply(opk.get(), id);
     } else {
       return bfn.apply(null, null);
@@ -34,9 +35,6 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
 
   public T save(T rec) {
     return withId(rec, (fd, pk) -> {
-      if (fd != null) {
-        fd.setValue(rec, pk);
-      }
       var query = getQueryCache().computeIfAbsent("insert", k ->
         format("insert into %s (%s) values (%s)", getSchemaName(),
           propNamesCsv(dsc, true), placeholderCsv(dsc, true)
@@ -62,16 +60,11 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   }
 
   public T upsert(T rec) {
-    return withId(rec, (fd, pk) -> {
-      if (pk != null && fd != null) {
-        fd.setValue(rec, pk);
-      }
-      return load(pk).isEmpty() ? save(rec) : update(rec);
-    });
+    return withId(rec, (fd, pk) -> load(pk).isEmpty() ? save(rec) : update(rec));
   }
 
-  public long delete(T record) {
-    return withId(record, (fd, pk) -> {
+  public long delete(T rec) {
+    return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s", getSchemaName(), fd.getFieldName(), fd.getFieldName()));
       return sql().query().update(query).namedParam(fd.getFieldName(), pk).run().affectedRows();
