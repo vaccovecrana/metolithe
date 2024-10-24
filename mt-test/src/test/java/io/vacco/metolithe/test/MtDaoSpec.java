@@ -195,11 +195,11 @@ public class MtDaoSpec extends MtSpec {
 
         log.info("======== All phone pages ========");
         phones.clear();
-        var page0 = pDao.loadPage1(16, null, PhoneDao.fld_number, null);
+        var page0 = pDao.loadPage1(16, true, null, PhoneDao.fld_number, null);
         phones.addAll(page0.items);
         while (page0.nx1 != null) {
           log.info("{}", kv("page0", page0));
-          page0 = pDao.loadPage1(16, null, PhoneDao.fld_number, page0.nx1);
+          page0 = pDao.loadPage1(16, true, null, PhoneDao.fld_number, page0.nx1);
           phones.addAll(page0.items);
         }
         log.info("{}", kv("page0", page0));
@@ -209,11 +209,11 @@ public class MtDaoSpec extends MtSpec {
         var fq = MtQuery.of("$0 != :$0")
             .withSlotValue(PhoneDao.fld_smsVerificationCode)
             .withParam(PhoneDao.fld_smsVerificationCode, 0);
-        var page1 = pDao.loadPage1(4, fq, PhoneDao.fld_number, null);
+        var page1 = pDao.loadPage1(4, false, fq, PhoneDao.fld_number, null);
         pageSum = pageSum + page1.size;
         while (page1.nx1 != null) {
           log.info("{}", kv("page1", page1));
-          page1 = pDao.loadPage1(4, fq, PhoneDao.fld_number, page1.nx1);
+          page1 = pDao.loadPage1(4, false, fq, PhoneDao.fld_number, page1.nx1);
           pageSum = pageSum + page1.size;
         }
         log.info("{}", kv("page1", page1));
@@ -229,14 +229,14 @@ public class MtDaoSpec extends MtSpec {
 
         log.info("======== Verified, country code sorted phone pages ========");
         var page2 = pDao.loadPage2(
-          4, fq,
+          4, true, fq,
           PhoneDao.fld_countryCode, null,
           PhoneDao.fld_number, null
         );
         while (page2.nx1 != null) {
           log.info("{}", kv("page2", page2));
           page2 = pDao.loadPage2(
-            4, fq,
+            4, true, fq,
             PhoneDao.fld_countryCode, page2.nx1,
             PhoneDao.fld_number, page2.nx2
           );

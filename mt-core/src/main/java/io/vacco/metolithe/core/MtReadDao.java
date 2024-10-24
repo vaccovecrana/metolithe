@@ -74,7 +74,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return true;
   }
 
-  public List<T> loadPageItems(int pageSize, MtQuery filter, String[] nxf, Object[] nxv) {
+  public List<T> loadPageItems(int pageSize, boolean reverse, MtQuery filter, String[] nxFld, Object[] nxVal) {
     try {
       var qFmt = String.join("\n", "",
         "select %s from %s where 1=1", // property names, schema name
@@ -82,30 +82,38 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
         "%s", // seek predicate
         "order by %s limit %s"
       );
+      var nxNn = allNonNull(nxVal);
       var filterP = filter == null ? "" : format("and (%s)", filter.render());
-      var nxNn = allNonNull(nxv);
       var seekP = "";
-      var sk = stream(nxf).map(dsc::getField).toArray(MtFieldDescriptor[]::new);
-      var skCsv = stream(sk)
-        .map(MtFieldDescriptor::getFieldName)
-        .collect(joining(", "));
+      var seekFld = stream(nxFld).map(dsc::getField).toArray(MtFieldDescriptor[]::new);
 
       if (nxNn) {
-        var skPar = IntStream.range(0, nxv.length)
+        var skParam = IntStream.range(0, nxVal.length)
           .mapToObj(i -> format(":sk%d", i))
           .collect(joining(", "));
-        seekP = format("and (%s) >= (%s)", skCsv, skPar);
+        var fldCsv = stream(seekFld)
+          .map(MtFieldDescriptor::getFieldName)
+          .collect(joining(", "));
+        seekP = format("and (%s) %s (%s)", fldCsv, reverse ? "<=" : ">=", skParam); // and (fld1, fld2, ...) >= (:sk0, :sk1) <- seek keys
+      }
+
+      var ordFld = new StringBuilder();
+      for (int i = 0; i < seekFld.length; i++) {
+        ordFld.append(format("%s %s", seekFld[i].getFieldName(), reverse ? "desc" : "asc"));
+        if (i != seekFld.length - 1) {
+          ordFld.append(", ");
+        }
       }
 
       var sql = format(qFmt,
         propNamesCsv(dsc, true), getSchemaName(),
-        filterP, seekP, skCsv, pageSize + 1
+        filterP, seekP, ordFld, pageSize + 1
       );
       var q = sql().query().select(sql);
 
       if (nxNn) {
-        for (int i = 0; i < nxv.length; i++) {
-          q = q.namedParam(format("sk%d", i), nxv[i]);
+        for (int i = 0; i < nxVal.length; i++) {
+          q = q.namedParam(format("sk%d", i), nxVal[i]);
         }
       }
       if (filter != null) {
@@ -116,14 +124,13 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       return new ArrayList<>(q.listResult(mapToDefault()));
     }
     catch (Exception e) {
-      throw new MtException.MtPageAccessException(nxf, nxv, dsc, e);
+      throw new MtException.MtPageAccessException(nxFld, nxVal, dsc, e);
     }
   }
 
-  public <K1> MtPage1<T, K1> loadPage1(int pageSize, MtQuery filter,
-                                       String nx1Fld, K1 nx1) {
+  public <K1> MtPage1<T, K1> loadPage1(int pageSize, boolean reverse, MtQuery filter, String nx1Fld, K1 nx1) {
     var page = new MtPage1<T, K1>();
-    var items = loadPageItems(pageSize, filter, new String[] {nx1Fld}, new Object[] {nx1});
+    var items = loadPageItems(pageSize, reverse, filter, new String[] {nx1Fld}, new Object[] {nx1});
     page.items = items;
     if (items.size() > pageSize) {
       var next = items.remove(items.size() - 1);
@@ -133,11 +140,12 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return page;
   }
 
-  public <K1, K2> MtPage2<T, K1, K2> loadPage2(int pageSize, MtQuery filter,
+  public <K1, K2> MtPage2<T, K1, K2> loadPage2(int pageSize, boolean reverse,
+                                               MtQuery filter,
                                                String nx1Fld, K1 nx1,
                                                String nx2Fld, K2 nx2) {
     var page = new MtPage2<T, K1, K2>();
-    var items = loadPageItems(pageSize, filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2});
+    var items = loadPageItems(pageSize, reverse, filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2});
     page.items = items;
     if (items.size() > pageSize) {
       var next = items.remove(items.size() - 1);
