@@ -124,7 +124,7 @@ public class MtDaoSpec extends MtSpec {
         dt1.pid = p1.pid;
         dt1.smsCodeSignature = "U29tZSBzaWduYXR1cmUgZm9yIHRoZSBudW1iZXIgNDU2Nw==";
 
-        log.info("{}", kv("dt0Id", dtDao.idOf(dt0).get()));
+        log.info("{}", kv("dt0Id", dtDao.idOf(dt0).orElseThrow()));
         log.info("{}", kv("dt0m", dtDao.upsert(dt0)));
         log.info("{}", kv("dt1m", dtDao.upsert(dt1)));
 
@@ -140,7 +140,7 @@ public class MtDaoSpec extends MtSpec {
         u1.tid = dt1.tid;
         u1.rid = ur0.rid;
 
-        log.info("{}", kv("u0Id", uDao.idOf(u0).get()));
+        log.info("{}", kv("u0Id", uDao.idOf(u0).orElseThrow()));
         log.info("{}", kv("u0m", uDao.upsert(u0)));
         log.info("{}", kv("u1m", uDao.upsert(u1)));
 
@@ -243,6 +243,34 @@ public class MtDaoSpec extends MtSpec {
         }
         log.info("{}", kv("page2", page2));
       });
+    });
+
+    it("Renders DAO queries", () -> {
+      var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
+
+      assertEquals("smsVerificationCode IS NOT NULL", MtQuery.create().isNotNull(smsField).renderFilter());
+      assertEquals("smsVerificationCode IS NULL", MtQuery.create().isNull(smsField).renderFilter());
+
+      assertEquals("smsVerificationCode = :p0", MtQuery.create().eq(smsField, 123).renderFilter());
+      assertEquals("smsVerificationCode < :p0", MtQuery.create().lt(smsField, 123).renderFilter());
+      assertEquals("smsVerificationCode <= :p0", MtQuery.create().lte(smsField, 123).renderFilter());
+      assertEquals("smsVerificationCode > :p0", MtQuery.create().gt(smsField, 123).renderFilter());
+      assertEquals("smsVerificationCode >= :p0", MtQuery.create().gte(smsField, 123).renderFilter());
+
+      assertEquals(
+        "smsVerificationCode IS NOT NULL AND smsVerificationCode = :p0 AND smsVerificationCode > :p1",
+        MtQuery.create()
+          .isNotNull(smsField)
+          .and().eq(smsField, 123)
+          .and().gt(smsField, 0).renderFilter()
+      );
+      assertEquals(
+        "smsVerificationCode IS NULL OR smsVerificationCode = :p0 AND smsVerificationCode > :p1",
+        MtQuery.create()
+          .isNull(smsField)
+          .or().eq(smsField, 123)
+          .and().gt(smsField, 0).renderFilter()
+      );
     });
 
   }
