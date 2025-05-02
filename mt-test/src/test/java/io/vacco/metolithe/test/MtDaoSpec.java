@@ -38,16 +38,6 @@ public class MtDaoSpec extends MtSpec {
   private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
 
   static {
-    describe("Query parameter building", () -> {
-      it("Renders queries with placeholder field names", () -> {
-        var q = new MtQuery()
-            .as("select * from gopher.blog_entry where $0 = :$0 and $1 >= :$1 order by $1 limit 8")
-            .withSlotValue("category")
-            .withSlotValue("publishedUtcMs");
-        log.info("rendered: [{}]", q.render());
-      });
-    });
-
     var xmlFile = new File("./build", "mt-test.xml");
     var ymlFile = new File("./build", "mt-test.yml");
     ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
@@ -165,7 +155,15 @@ public class MtDaoSpec extends MtSpec {
         var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
         log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
         log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
-        log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(new Long[] { u0.tid, u1.tid })));
+        log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(u0.tid, u1.tid)));
+      });
+
+      it("Uses filter predicates for basic search", () -> {
+        var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
+        var emailField = ud.dsc.getField(DbUserDao.fld_email);
+        var searchQuery = MtQuery.create().like(emailField, "joe%");
+        var searchPage = ud.loadPage1(4, false, searchQuery, DbUserDao.fld_email, null);
+        log.info("{}", kv("searchPage", searchPage));
       });
 
       it("Can create object pages", () -> {
@@ -191,7 +189,7 @@ public class MtDaoSpec extends MtSpec {
           p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
           return p;
         }).collect(Collectors.toList());
-        for (var p : phones) { pDao.upsert(p); } // TODO implement/change to batch support.
+        for (var p : phones) { pDao.upsert(p); } // TODO implement batch support
 
         log.info("======== All phone pages ========");
         phones.clear();
@@ -206,15 +204,14 @@ public class MtDaoSpec extends MtSpec {
 
         log.info("======== Verified phone pages ========");
         var pageSum = 0L;
-        var fq = MtQuery.of("$0 != :$0")
-            .withSlotValue(PhoneDao.fld_smsVerificationCode)
-            .withParam(PhoneDao.fld_smsVerificationCode, 0);
-        var page1 = pDao.loadPage1(4, false, fq, PhoneDao.fld_number, null);
-        pageSum = pageSum + page1.size;
+        var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
+        var fq0 = MtQuery.create().neq(smsField, 0);
+        var page1 = pDao.loadPage1(4, false, fq0, PhoneDao.fld_number, null);
+        pageSum += page1.size;
         while (page1.nx1 != null) {
           log.info("{}", kv("page1", page1));
-          page1 = pDao.loadPage1(4, false, fq, PhoneDao.fld_number, page1.nx1);
-          pageSum = pageSum + page1.size;
+          page1 = pDao.loadPage1(4, false, fq0, PhoneDao.fld_number, page1.nx1);
+          pageSum += page1.size;
         }
         log.info("{}", kv("page1", page1));
 
@@ -227,16 +224,19 @@ public class MtDaoSpec extends MtSpec {
         log.info("====> Verified phones: {}", vp.size());
         log.info("====> Unverified phones: {}", uvp.size());
 
+        assertEquals(phones.size(), vp.size() + uvp.size());
+
         log.info("======== Verified, country code sorted phone pages ========");
+        var fq1 = MtQuery.create().neq(smsField, 0);
         var page2 = pDao.loadPage2(
-          4, true, fq,
+          4, true, fq1,
           PhoneDao.fld_countryCode, null,
           PhoneDao.fld_number, null
         );
         while (page2.nx1 != null) {
           log.info("{}", kv("page2", page2));
           page2 = pDao.loadPage2(
-            4, true, fq,
+            4, true, fq1,
             PhoneDao.fld_countryCode, page2.nx1,
             PhoneDao.fld_number, page2.nx2
           );

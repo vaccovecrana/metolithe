@@ -17,7 +17,7 @@ public abstract class MtDao<T, K> {
   private final FluentJdbc jdbc;
   private final ObjectMappers mappers;
 
-  protected final MtDescriptor<T> dsc;
+  public final MtDescriptor<T> dsc;
   protected final MtIdFn<K> idFn;
 
   protected final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();

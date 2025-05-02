@@ -1,39 +1,144 @@
 package io.vacco.metolithe.core;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MtQuery {
 
-  public String preparedStatementQuery;
-  public final Map<String, Object> params = new LinkedHashMap<>();
-  public final List<String> slots = new ArrayList<>();
+  public enum LogicalOperator { AND, OR }
 
-  public MtQuery as(String preparedStatementQuery) {
-    this.preparedStatementQuery = preparedStatementQuery;
+  private final Set<MtPredicate> predicates = new LinkedHashSet<>();
+  private final List<LogicalOperator> operators = new ArrayList<>();
+  private final Map<String, Object> params = new LinkedHashMap<>();
+  private List<MtFieldDescriptor> orderByFields = new ArrayList<>();
+  private boolean orderByReverse;
+
+  private MtQuery() {}
+
+  public static MtQuery create() {
+    return new MtQuery();
+  }
+
+  private MtQuery addPredicate(MtPredicate predicate) {
+    predicates.add(predicate);
+    predicate.applyParams(params);
     return this;
   }
 
-  public MtQuery withParam(String name, Object value) {
-    params.put(name, value);
-    return this;
+  public MtQuery eq(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.EQ, value, nextParamName()));
   }
 
-  public MtQuery withSlotValue(String slotValue) {
-    this.slots.add(slotValue);
-    return this;
+  public MtQuery neq(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.NEQ, value, nextParamName()));
   }
 
-  public String render() {
-    String q = preparedStatementQuery;
-    for (int i = 0; i < slots.size(); i++) {
-      String fieldKey = String.format("$%d", i);
-      q = q.replace(fieldKey, slots.get(i));
+  public MtQuery isNull(MtFieldDescriptor field) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.IS_NULL));
+  }
+
+  public MtQuery isNotNull(MtFieldDescriptor field) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.IS_NOT_NULL));
+  }
+
+  public MtQuery lt(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.LT, value, nextParamName()));
+  }
+
+  public MtQuery lte(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.LTE, value, nextParamName()));
+  }
+
+  public MtQuery gt(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.GT, value, nextParamName()));
+  }
+
+  public MtQuery gte(MtFieldDescriptor field, Object value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.GTE, value, nextParamName()));
+  }
+
+  public MtQuery like(MtFieldDescriptor field, String value) {
+    return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.LIKE, value, nextParamName()));
+  }
+
+  public MtQuery seek(MtFieldDescriptor[] fields, Object[] values, boolean reverse) {
+    if (fields.length != values.length) {
+      throw new IllegalArgumentException("Fields and values must have the same length");
     }
-    return q;
+    orderByFields = Arrays.asList(fields);
+    orderByReverse = reverse;
+    for (int i = 0; i < fields.length; i++) {
+      if (values[i] != null) {
+        var op = reverse ? MtPredicate.Operator.LTE : MtPredicate.Operator.GTE;
+        addPredicate(MtPredicate.seek(fields[i], op, values[i], "sk" + i));
+      }
+    }
+    return this;
   }
 
-  public static MtQuery of(String preparedStatementQuery) {
-    return new MtQuery().as(preparedStatementQuery);
+  public MtQuery and() {
+    if (!predicates.isEmpty() && predicates.iterator().next().isSeek) {
+      throw new IllegalStateException("Cannot add logical operators after seek predicates");
+    }
+    operators.add(LogicalOperator.AND);
+    return this;
+  }
+
+  public MtQuery or() {
+    if (!predicates.isEmpty() && predicates.iterator().next().isSeek) {
+      throw new IllegalStateException("Cannot add logical operators after seek predicates");
+    }
+    operators.add(LogicalOperator.OR);
+    return this;
+  }
+
+  private String nextParamName() {
+    return "p" + params.size();
+  }
+
+  public String renderFilter() {
+    var filterPreds = predicates.stream()
+      .filter(p -> !p.isSeek)
+      .collect(Collectors.toList());
+    if (filterPreds.isEmpty()) {
+      return "";
+    }
+    var sb = new StringBuilder();
+    for (int i = 0; i < filterPreds.size(); i++) {
+      sb.append(filterPreds.get(i).render());
+      if (i < Math.min(operators.size(), filterPreds.size() - 1)) {
+        sb.append(" ").append(operators.get(i).name()).append(" ");
+      }
+    }
+    return sb.toString();
+  }
+
+  public String renderSeek() {
+    var seekPreds = predicates.stream()
+      .filter(p -> p.isSeek)
+      .collect(Collectors.toList());
+    if (seekPreds.isEmpty()) {
+      return "";
+    }
+    var fieldsCsv = seekPreds.stream()
+      .map(p -> p.field.getFieldName())
+      .collect(Collectors.joining(", "));
+    var paramsCsv = seekPreds.stream()
+      .map(p -> ":" + p.paramName) // Only use parameter placeholder, e.g., :sk0
+      .collect(Collectors.joining(", "));
+    var op = orderByReverse ? "<=" : ">=";
+    return String.format("and (%s) %s (%s)", fieldsCsv, op, paramsCsv);
+  }
+
+
+  public String renderOrderBy() {
+    return orderByFields.stream()
+      .map(fd -> String.format("%s %s", fd.getFieldName(), orderByReverse ? "desc" : "asc"))
+      .collect(Collectors.joining(", "));
+  }
+
+  public Map<String, Object> getParams() {
+    return params;
   }
 
 }
