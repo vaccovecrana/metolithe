@@ -1,13 +1,13 @@
-package io.vacco.metolithe.test;
+package io.vacco.mt.test;
 
 import io.vacco.metolithe.core.*;
-import io.vacco.metolithe.schema.*;
+import io.vacco.mt.test.schema.DbUser;
+import io.vacco.mt.test.schema.Device;
+import io.vacco.mt.test.schema.Phone;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static j8spec.J8Spec.*;
@@ -29,8 +29,8 @@ public class MtAnnotationsSpec extends MtSpec {
 
     log.info("{}", propNames(d, true));
     log.info("{}", propNames(d, false));
-    log.info("{}", propNamesCsv(d, true));
-    log.info("{}", propNamesCsv(d, false));
+    log.info("{}", propNamesCsv(d, true, "t0"));
+    log.info("{}", propNamesCsv(d, false, "t0"));
     log.info("{}", placeholderCsv(d, true));
     log.info("{}", placeholderCsv(d, false));
     log.info("{}", placeHolderAssignmentCsv(d, true));

@@ -2,59 +2,113 @@ package io.vacco.metolithe.core;
 
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+import static java.lang.String.format;
+
 public class MtPredicate {
 
   public enum Operator {
-    EQ(" = :%s"), NEQ(" != :%s"), IS_NULL(" IS NULL"), IS_NOT_NULL(" IS NOT NULL"),
-    LT(" < :%s"), LTE(" <= :%s"), GT(" > :%s"), GTE(" >= :%s"),
+    IS_NULL(" IS NULL"), IS_NOT_NULL(" IS NOT NULL"),
+    EQ_FIELD("%s = %s"),
+    EQ(" = :%s"), NEQ(" != :%s"),
+    LT(" < :%s"), LTE(" <= :%s"),
+    GT(" > :%s"), GTE(" >= :%s"),
     LIKE(" LIKE :%s");
 
-    private final String sqlTemplate;
-
+    public final String sqlTemplate;
     Operator(String sqlTemplate) { this.sqlTemplate = sqlTemplate; }
-    public String render(String paramName) {
-      return String.format(sqlTemplate, paramName);
-    }
   }
 
   private final Operator operator;
   private final Object value;
 
-  public  final MtFieldDescriptor field;
+  public  final MtFieldDescriptor field0, field1;
   public  final String paramName;
   public  final boolean isSeek;
 
-  private MtPredicate(MtFieldDescriptor field, Operator operator, Object value, String paramName, boolean isSeek) {
-    this.field = Objects.requireNonNull(field);
-    this.operator = Objects.requireNonNull(operator);
+  private static void oneOf(Operator test, Operator ... options) {
+    var ok = false;
+    for (var op : options) {
+      if (test == op) {
+        ok = true;
+        break;
+      }
+    }
+    if (!ok) {
+      throw new IllegalArgumentException(String.format(
+        "Operator [%s] is not one of %s", test, Arrays.toString(options)
+      ));
+    }
+  }
+
+  /** Constructor for single parameter operators */
+  private MtPredicate(MtFieldDescriptor field0, Operator operator, Object value, String paramName, boolean isSeek) {
+    this.field0 = requireNonNull(field0);
+    this.field1 = null;
+    this.operator = operator;
     this.value = value;
     this.paramName = paramName;
     this.isSeek = isSeek;
   }
 
+  /** Constructor for null/not null operators */
+  private MtPredicate(MtFieldDescriptor field0, Operator operator) {
+    this.field0 = requireNonNull(field0);
+    this.field1 = null;
+    this.operator = requireNonNull(operator);
+    this.value = null;
+    this.paramName = null;
+    this.isSeek = false;
+  }
+
+  /** Constructor for join field operator */
+  private MtPredicate(MtFieldDescriptor field0, MtFieldDescriptor field1) {
+    this.field0 = requireNonNull(field0);
+    this.field1 = requireNonNull(field1);
+    this.operator = Operator.EQ_FIELD;
+    this.value = null;
+    this.paramName = null;
+    this.isSeek = false;
+  }
+
   public static MtPredicate filter(MtFieldDescriptor field, Operator operator, Object value, String paramName) {
+    oneOf(
+      requireNonNull(operator),
+      Operator.EQ, Operator.NEQ,
+      Operator.LT, Operator.LTE,
+      Operator.GT, Operator.GTE, Operator.LIKE
+    );
     return new MtPredicate(field, operator, value, paramName, false);
   }
 
   public static MtPredicate filter(MtFieldDescriptor field, Operator operator) {
-    if (operator != Operator.IS_NULL && operator != Operator.IS_NOT_NULL) {
-      throw new IllegalArgumentException("Value required for operator: " + operator);
-    }
-    return new MtPredicate(field, operator, null, null, false);
+    oneOf(requireNonNull(operator), Operator.IS_NULL, Operator.IS_NOT_NULL);
+    return new MtPredicate(field, operator);
   }
 
   public static MtPredicate seek(MtFieldDescriptor field, Operator operator, Object value, String paramName) {
-    if (operator != Operator.GT && operator != Operator.GTE && operator != Operator.LT && operator != Operator.LTE) {
-      throw new IllegalArgumentException("Seek predicates only support GT, GTE, LT, LTE operators");
-    }
+    oneOf(requireNonNull(operator), Operator.GT, Operator.GTE, Operator.LT, Operator.LTE);
     return new MtPredicate(field, operator, value, paramName, true);
   }
 
+  public static MtPredicate join(MtFieldDescriptor leftField, MtFieldDescriptor rightField) {
+    return new MtPredicate(leftField, rightField);
+  }
+
   public String render() {
-    var fieldName = field.getFieldName();
-    return operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL
-      ? fieldName + operator.render("")
-      : fieldName + operator.render(paramName);
+    switch (this.operator) {
+      case IS_NULL:
+      case IS_NOT_NULL:
+        return field0.getFieldNameAliased() + operator.sqlTemplate;
+      case EQ_FIELD:
+        return format(
+          operator.sqlTemplate,
+          field0.getFieldNameAliased(),
+          requireNonNull(field1).getFieldNameAliased()
+        );
+      default:
+        return field0.getFieldNameAliased() + format(operator.sqlTemplate, paramName);
+    }
   }
 
   public void applyParams(Map<String, Object> params) {

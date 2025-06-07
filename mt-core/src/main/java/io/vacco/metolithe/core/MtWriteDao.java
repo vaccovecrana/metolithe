@@ -36,8 +36,9 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   public T save(T rec) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("insert", k ->
-        format("insert into %s (%s) values (%s)", getSchemaName(),
-          propNamesCsv(dsc, true), placeholderCsv(dsc, true)
+        format("insert into %s (%s) values (%s)", getTableName(),
+          propNamesCsv(dsc, true, ""),
+          placeholderCsv(dsc, true)
         )
       );
       var namedParams = dsc.getAll(rec);
@@ -50,7 +51,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return withId(rec, (fd, pk) -> {
       var queryAssignments = placeHolderAssignmentCsv(dsc, false);
       var query = getQueryCache().computeIfAbsent("update",
-        k -> format("update %s set %s where %s = :%s", getSchemaName(), queryAssignments,
+        k -> format("update %s set %s where %s = :%s", getTableName(), queryAssignments,
           fd.getFieldName(), fd.getFieldName())
       );
       var params = dsc.getAll(rec);
@@ -66,7 +67,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   public long delete(T rec) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("delete",
-        k -> format("delete from %s where %s = :%s", getSchemaName(), fd.getFieldName(), fd.getFieldName()));
+        k -> format("delete from %s where %s = :%s", getTableName(), fd.getFieldName(), fd.getFieldName()));
       return sql().query().update(query).namedParam(fd.getFieldName(), pk).run().affectedRows();
     });
   }
@@ -74,7 +75,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
   public long deleteWhereEq(String field, Object value) {
     var fn = dsc.getFormat().of(field);
     var query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
-      k -> format("delete from %s where %s = :%s", getSchemaName(), fn, fn));
+      k -> format("delete from %s where %s = :%s", getTableName(), fn, fn));
     return sql().query().update(query).namedParam(fn, value).run().affectedRows();
   }
 

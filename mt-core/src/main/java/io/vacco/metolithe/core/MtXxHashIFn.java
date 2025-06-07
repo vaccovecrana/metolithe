@@ -1,18 +1,18 @@
 package io.vacco.metolithe.core;
 
-import static io.vacco.metolithe.hashing.MtMurmur3.*;
+import static io.vacco.metolithe.hashing.MtXxHash.*;
 import static java.util.Objects.requireNonNull;
 
-public class MtMurmur3IFn implements MtIdFn<Integer> {
+public class MtXxHashIFn implements MtIdFn<Integer> {
 
   private final int seed;
 
-  public MtMurmur3IFn() {
-    this.seed = DEFAULT_SEED;
+  public MtXxHashIFn(int seed) {
+    this.seed = seed;
   }
 
-  public MtMurmur3IFn(int seed) {
-    this.seed = seed;
+  public MtXxHashIFn() {
+    this.seed = DEFAULT_SEED;
   }
 
   @Override public Integer apply(Object[] parts) {

@@ -24,12 +24,14 @@ public class MtFieldDescriptor {
   private final Field f;
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
+  private final MtDescriptor<?> parent;
   public  final int ordinal;
 
-  public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt) {
+  public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt, MtDescriptor<?> parent) {
     this.ordinal = ordinal;
     this.f = requireNonNull(f);
     this.fmt = requireNonNull(fmt);
+    this.parent = requireNonNull(parent);
     this.annotations = stream(f.getAnnotations())
       .flatMap(this::scan)
       .filter(a -> inSet(a.annotationType(), mta))
@@ -66,16 +68,20 @@ public class MtFieldDescriptor {
     return fmt;
   }
 
+  public String getFieldRawName() { // supports code generation
+    return this.f.getName();
+  }
+
   public String getFieldClassName() {
     return this.f.getType().getCanonicalName();
   }
 
   public String getFieldName() {
-    return fmt.of(this.f.getName());
+    return this.f.getName();
   }
 
-  public String getFieldRawName() {
-    return this.f.getName();
+  public String getFieldNameAliased() {
+    return String.format("%s.%s", parent.getAlias(), getFieldName());
   }
 
   public Class<?> getType() {

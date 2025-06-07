@@ -2,12 +2,12 @@ package {{mtPackage}};
 
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.core.MtIdFn;
 import io.vacco.metolithe.core.MtWriteDao;
 
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +22,11 @@ public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mt
     super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
   }
   {{for mtField in mtFields}}
-  public Collection<{{mtDsc.getClassName()}}> loadWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
+  public MtFieldDescriptor fld_{{mtField.getFieldRawName()}}() {
+    return this.dsc.getField(fld_{{mtField.getFieldRawName()}});
+  }
+
+  public List<{{mtDsc.getClassName()}}> loadWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
     return loadWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
   }
 

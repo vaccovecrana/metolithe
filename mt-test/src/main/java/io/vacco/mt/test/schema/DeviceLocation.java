@@ -1,6 +1,7 @@
-package io.vacco.metolithe.schema;
+package io.vacco.mt.test.schema;
 
 import io.vacco.metolithe.annotations.*;
+import io.vacco.mt.test.annotations.St16;
 
 @MtEntity public class DeviceLocation {
 
@@ -12,7 +13,8 @@ import io.vacco.metolithe.annotations.*;
   @MtFk(DbUser.class) public int uid;
 
   // not the best composite index, but a good example anyway.
-  @St16 @MtIndex(name = idxName, idx = 0) public String geoHash2;
+  @St16
+  @MtIndex(name = idxName, idx = 0) public String geoHash2;
   @St16 @MtIndex(name = idxName, idx = 1) public String geoHash4;
   @St16 @MtIndex(name = idxName, idx = 2) public String geoHash12;
   @St16 public String geoHash12Ip;

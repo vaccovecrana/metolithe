@@ -7,22 +7,30 @@ public class MtQuery {
 
   public enum LogicalOperator { AND, OR }
 
-  private final Set<MtPredicate> predicates = new LinkedHashSet<>();
-  private final List<LogicalOperator> operators = new ArrayList<>();
-  private final Map<String, Object> params = new LinkedHashMap<>();
-  private List<MtFieldDescriptor> orderByFields = new ArrayList<>();
+  private final Set<MtPredicate>        predicates = new LinkedHashSet<>();
+  private final List<LogicalOperator>   operators = new ArrayList<>();
+  private final Map<String, Object>     params = new LinkedHashMap<>();
+  private final List<MtFieldDescriptor> orderByFields = new ArrayList<>();
+  private final List<MtJoin>            joins = new ArrayList<>();
+  private final String                  schema;
   private boolean orderByReverse;
 
-  private MtQuery() {}
+  private MtQuery(String schema) {
+    this.schema = Objects.requireNonNull(schema);
+  }
 
-  public static MtQuery create() {
-    return new MtQuery();
+  public static MtQuery create(String schema) {
+    return new MtQuery(schema);
   }
 
   private MtQuery addPredicate(MtPredicate predicate) {
     predicates.add(predicate);
     predicate.applyParams(params);
     return this;
+  }
+
+  private String nextParamName() {
+    return "p" + params.size();
   }
 
   public MtQuery eq(MtFieldDescriptor field, Object value) {
@@ -61,11 +69,22 @@ public class MtQuery {
     return addPredicate(MtPredicate.filter(field, MtPredicate.Operator.LIKE, value, nextParamName()));
   }
 
+  public MtQuery innerJoin(MtDescriptor<?> source, MtDescriptor<?> target) {
+    joins.add(MtJoin.inner(this.schema, source, target));
+    return this;
+  }
+
+  public MtQuery leftJoin(MtDescriptor<?> source, MtDescriptor<?> target) {
+    joins.add(MtJoin.left(this.schema, source, target));
+    return this;
+  }
+
   public MtQuery seek(MtFieldDescriptor[] fields, Object[] values, boolean reverse) {
     if (fields.length != values.length) {
       throw new IllegalArgumentException("Fields and values must have the same length");
     }
-    orderByFields = Arrays.asList(fields);
+    orderByFields.clear();
+    orderByFields.addAll(Arrays.asList(fields));
     orderByReverse = reverse;
     for (int i = 0; i < fields.length; i++) {
       if (values[i] != null) {
@@ -90,10 +109,6 @@ public class MtQuery {
     }
     operators.add(LogicalOperator.OR);
     return this;
-  }
-
-  private String nextParamName() {
-    return "p" + params.size();
   }
 
   public String renderFilter() {
@@ -121,7 +136,7 @@ public class MtQuery {
       return "";
     }
     var fieldsCsv = seekPreds.stream()
-      .map(p -> p.field.getFieldName())
+      .map(p -> p.field0.getFieldNameAliased())
       .collect(Collectors.joining(", "));
     var paramsCsv = seekPreds.stream()
       .map(p -> ":" + p.paramName) // Only use parameter placeholder, e.g., :sk0
@@ -130,11 +145,16 @@ public class MtQuery {
     return String.format("and (%s) %s (%s)", fieldsCsv, op, paramsCsv);
   }
 
-
   public String renderOrderBy() {
     return orderByFields.stream()
-      .map(fd -> String.format("%s %s", fd.getFieldName(), orderByReverse ? "desc" : "asc"))
+      .map(fd -> String.format("%s %s", fd.getFieldNameAliased(), orderByReverse ? "desc" : "asc"))
       .collect(Collectors.joining(", "));
+  }
+
+  public String renderJoins() {
+    return joins.stream()
+      .map(MtJoin::render)
+      .collect(Collectors.joining(" "));
   }
 
   public Map<String, Object> getParams() {

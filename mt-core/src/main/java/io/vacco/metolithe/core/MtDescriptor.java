@@ -11,6 +11,10 @@ import static java.lang.reflect.Modifier.*;
 
 public class MtDescriptor<T> {
 
+  private static final String BASE36_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz";
+  private static final int MAX_VALUE_2 = 1296; // 36^2
+  private static final int Length = 2;
+
   private static final Object[] empty = new Object[]{};
 
   private final Class<T> cl;
@@ -28,7 +32,7 @@ public class MtDescriptor<T> {
     int k = 0;
     for (var f : entity.getFields()) {
       if (isPublic(f.getModifiers()) && !isStatic(f.getModifiers())) {
-        this.fields.add(new MtFieldDescriptor(k, f, fmt));
+        this.fields.add(new MtFieldDescriptor(k, f, fmt, this));
         k++;
       }
     }
@@ -41,12 +45,33 @@ public class MtDescriptor<T> {
     this.pkField = pkds.isEmpty() ? null : pkds.get(0);
   }
 
+  public String getAlias() {
+    int hash = Math.abs(Objects.requireNonNull(cl.getCanonicalName()).hashCode());
+    hash = hash % MAX_VALUE_2; // Reduce to fit within base-36^2 range
+    var result = new char[Length + 1];
+    for (int i = Length; i > 0; i--) {
+      result[i] = BASE36_CHARS.charAt(hash % 36);
+      hash /= 36;
+    }
+    result[0] = 't';
+    return new String(result);
+  }
+
   @SuppressWarnings("unchecked")
   public <E extends Enum<?>> List<Class<E>> getEnumFields() {
     return fields.stream()
       .filter(fd -> Enum.class.isAssignableFrom(fd.getType()))
       .map(fd -> (Class<E>) fd.getType())
       .collect(toList());
+  }
+
+  public Optional<MtFieldDescriptor> getForeignKeyTo(Class<?> target) {
+    return fields.stream()
+      .filter(fd ->
+        fd.get(MtFk.class)
+          .map(mtFk -> mtFk.value().equals(target))
+          .orElse(false)
+      ).findFirst();
   }
 
   public Stream<MtFieldDescriptor> get(Class<? extends Annotation> target) {
@@ -87,7 +112,9 @@ public class MtDescriptor<T> {
       var ou = fd.get(MtUnique.class);
       if (ou.isPresent() && ou.get().inPk()) {
         var comp = fd.getValue(t);
-        if (comp == null) throw new MtException.MtMissingPkComponentException(t, fd);
+        if (comp == null) {
+          throw new MtException.MtMissingPkComponentException(t, fd);
+        }
         pkValues.put(ou.get().idx(), comp);
       }
     }

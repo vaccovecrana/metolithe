@@ -1,11 +1,11 @@
-package io.vacco.metolithe.test;
+package io.vacco.mt.test;
 
 import io.vacco.metolithe.codegen.dao.MtDaoMapper;
 import io.vacco.metolithe.codegen.liquibase.*;
 import io.vacco.metolithe.core.*;
-import io.vacco.metolithe.schema.*;
-import io.vacco.metolithe.test.dao.*;
 import io.vacco.metolithe.util.*;
+import io.vacco.mt.test.dao.*;
+import io.vacco.mt.test.schema.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import liquibase.*;
@@ -13,7 +13,6 @@ import liquibase.command.CommandScope;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.*;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.codejargon.fluentjdbc.api.*;
 import org.junit.runner.RunWith;
 
@@ -35,7 +34,18 @@ public class MtDaoSpec extends MtSpec {
       .afterQueryListener(edt -> log.info("[{}], {}", edt.success(), edt.sql()))
       .build();
 
-  private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
+  private static final MtIdFn<Integer>  m3Ifn = new MtMurmur3IFn();
+  private static final MtIdFn<Long>     m3Lfn = new MtMurmur3LFn();
+  private static final MtIdFn<Integer>  xxIfn = new MtXxHashIFn();
+
+  public static String generateRandomDigits(int n) {
+    var random = new Random();
+    var result = new StringBuilder();
+    for (int i = 0; i < n; i++) {
+      result.append(random.nextInt(10));
+    }
+    return result.toString();
+  }
 
   static {
     var xmlFile = new File("./build", "mt-test.xml");
@@ -45,7 +55,7 @@ public class MtDaoSpec extends MtSpec {
     describe("Schema code generation", () -> {
       it("Generates typed field DAO definitions", () -> {
         var out = new File(".", "src/main/java");
-        new MtDaoMapper().mapSchema(out, "io.vacco.metolithe.test.dao", fmt, Phone.class, DbUser.class);
+        new MtDaoMapper().mapSchema(out, "io.vacco.mt.test.dao", fmt, testSchema);
       });
       it("Generates Liquibase changelogs", () -> {
         var root = new MtLb().build(fmt, testSchema);
@@ -82,10 +92,10 @@ public class MtDaoSpec extends MtSpec {
 
     describe("Type safe DAOs", () -> {
       it("Creates base DAOs for data access", () -> {
-        var dDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(Device.class, fmt), new MtMurmur3LFn());
+        var dDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(Device.class, fmt), m3Lfn);
         var uDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DbUser.class, fmt), m3Ifn);
-        var dtDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), new MtMurmur3LFn());
-        var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), new MtMurmur3IFn());
+        var dtDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DeviceTag.class, fmt), m3Lfn);
+        var ufDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(UserFollow.class, fmt), m3Ifn);
 
         var stIdFn = new MtIdFn<String>() {
           @Override public String apply(Object[] objects) { return objects[0].toString(); }
@@ -152,16 +162,16 @@ public class MtDaoSpec extends MtSpec {
       });
 
       it("Uses generated POJO DAOs for data access", () -> {
-        var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
+        var ud = new DbUserDao(schema, fmt, jdbc, m3Ifn);
         log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
         log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
         log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(u0.tid, u1.tid)));
       });
 
       it("Uses filter predicates for basic search", () -> {
-        var ud = new DbUserDao(schema, fmt, jdbc, new MtMurmur3IFn());
+        var ud = new DbUserDao(schema, fmt, jdbc, m3Ifn);
         var emailField = ud.dsc.getField(DbUserDao.fld_email);
-        var searchQuery = MtQuery.create().like(emailField, "joe%");
+        var searchQuery = MtQuery.create(schema).like(emailField, "joe%");
         var searchPage = ud.loadPage1(4, false, searchQuery, DbUserDao.fld_email, null);
         log.info("{}", kv("searchPage", searchPage));
       });
@@ -185,8 +195,8 @@ public class MtDaoSpec extends MtSpec {
         var phones = IntStream.range(0, 64).mapToObj(i -> {
           var p = new Phone();
           p.countryCode = r.nextBoolean() ? 1 : r.nextBoolean() ? 2 : 3;
-          p.number = RandomStringUtils.randomNumeric(10);
-          p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(RandomStringUtils.randomNumeric(6)) : 0;
+          p.number = generateRandomDigits(10);
+          p.smsVerificationCode = r.nextBoolean() ? Integer.parseInt(generateRandomDigits(6)) : 0;
           return p;
         }).collect(Collectors.toList());
         for (var p : phones) { pDao.upsert(p); } // TODO implement batch support
@@ -205,7 +215,7 @@ public class MtDaoSpec extends MtSpec {
         log.info("======== Verified phone pages ========");
         var pageSum = 0L;
         var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
-        var fq0 = MtQuery.create().neq(smsField, 0);
+        var fq0 = MtQuery.create(schema).neq(smsField, 0);
         var page1 = pDao.loadPage1(4, false, fq0, PhoneDao.fld_number, null);
         pageSum += page1.size;
         while (page1.nx1 != null) {
@@ -227,7 +237,7 @@ public class MtDaoSpec extends MtSpec {
         assertEquals(phones.size(), vp.size() + uvp.size());
 
         log.info("======== Verified, country code sorted phone pages ========");
-        var fq1 = MtQuery.create().neq(smsField, 0);
+        var fq1 = MtQuery.create(schema).neq(smsField, 0);
         var page2 = pDao.loadPage2(
           4, true, fq1,
           PhoneDao.fld_countryCode, null,
@@ -248,30 +258,73 @@ public class MtDaoSpec extends MtSpec {
     it("Renders DAO queries", () -> {
       var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
 
-      assertEquals("smsVerificationCode IS NOT NULL", MtQuery.create().isNotNull(smsField).renderFilter());
-      assertEquals("smsVerificationCode IS NULL", MtQuery.create().isNull(smsField).renderFilter());
-
-      assertEquals("smsVerificationCode = :p0", MtQuery.create().eq(smsField, 123).renderFilter());
-      assertEquals("smsVerificationCode < :p0", MtQuery.create().lt(smsField, 123).renderFilter());
-      assertEquals("smsVerificationCode <= :p0", MtQuery.create().lte(smsField, 123).renderFilter());
-      assertEquals("smsVerificationCode > :p0", MtQuery.create().gt(smsField, 123).renderFilter());
-      assertEquals("smsVerificationCode >= :p0", MtQuery.create().gte(smsField, 123).renderFilter());
+      assertEquals("t8o.smsVerificationCode IS NOT NULL", MtQuery.create(schema).isNotNull(smsField).renderFilter());
+      assertEquals("t8o.smsVerificationCode IS NULL", MtQuery.create(schema).isNull(smsField).renderFilter());
+      assertEquals("t8o.smsVerificationCode = :p0", MtQuery.create(schema).eq(smsField, 123).renderFilter());
+      assertEquals("t8o.smsVerificationCode < :p0", MtQuery.create(schema).lt(smsField, 123).renderFilter());
+      assertEquals("t8o.smsVerificationCode <= :p0", MtQuery.create(schema).lte(smsField, 123).renderFilter());
+      assertEquals("t8o.smsVerificationCode > :p0", MtQuery.create(schema).gt(smsField, 123).renderFilter());
+      assertEquals("t8o.smsVerificationCode >= :p0", MtQuery.create(schema).gte(smsField, 123).renderFilter());
 
       assertEquals(
-        "smsVerificationCode IS NOT NULL AND smsVerificationCode = :p0 AND smsVerificationCode > :p1",
-        MtQuery.create()
+        "t8o.smsVerificationCode IS NOT NULL AND t8o.smsVerificationCode = :p0 AND t8o.smsVerificationCode > :p1",
+        MtQuery.create(schema)
           .isNotNull(smsField)
           .and().eq(smsField, 123)
           .and().gt(smsField, 0).renderFilter()
       );
       assertEquals(
-        "smsVerificationCode IS NULL OR smsVerificationCode = :p0 AND smsVerificationCode > :p1",
-        MtQuery.create()
+        "t8o.smsVerificationCode IS NULL OR t8o.smsVerificationCode = :p0 AND t8o.smsVerificationCode > :p1",
+        MtQuery.create(schema)
           .isNull(smsField)
           .or().eq(smsField, 123)
           .and().gt(smsField, 0).renderFilter()
       );
     });
 
+    it("Renders DAO JOIN queries", () -> {
+      var apiKeyDao = new ApiKeyDao(schema, fmt, jdbc, xxIfn);
+      var nsDao = new NamespaceDao(schema, fmt, jdbc, xxIfn);
+      var knsDao = new KeyNamespaceDao(schema, fmt, jdbc, xxIfn);
+      var uDao = new DbUserDao(schema, fmt, jdbc, m3Ifn);
+
+      var jane = uDao.loadWhereEmailEq(u0.email).iterator().next();
+      var apiKey0 = apiKeyDao.upsert(ApiKey.of(jane.uid, null, "test-key", "DEADBEEF"));
+
+      var ns0 = nsDao.upsert(Namespace.of("namespace-00", "/ns00"));
+      var ns1 = nsDao.upsert(Namespace.of("namespace-01", "/ns01"));
+      var ns2 = nsDao.upsert(Namespace.of("namespace-02", "/ns02"));
+
+      knsDao.upsert(KeyNamespace.of(apiKey0.kid, ns0.nsId));
+      knsDao.upsert(KeyNamespace.of(apiKey0.kid, ns1.nsId));
+      knsDao.upsert(KeyNamespace.of(apiKey0.kid, ns2.nsId));
+
+      var ps = 2;
+      var flName = NamespaceDao.fld_name;
+      var flUtcMs = NamespaceDao.fld_createdAtUtcMs;
+
+      var ij = nsDao
+        .query()
+        .innerJoin(knsDao.dsc, nsDao.dsc)
+        .eq(knsDao.fld_kid(), apiKey0.kid);
+      var p1 = nsDao.loadPage1(ps, false, ij, flName, null);
+      while (p1.hasNext()) {
+        log.info("{}", kv("namespaces", p1.items));
+        p1 = nsDao.loadPage1(ps, false, ij, flName, p1.nx1);
+      }
+      log.info("{}", kv("namespaces", p1.items));
+
+      var lj = nsDao
+        .query()
+        .leftJoin(knsDao.dsc, nsDao.dsc)
+        .eq(knsDao.fld_kid(), apiKey0.kid);
+      var p2 = nsDao.loadPage2(ps, true, lj, flName, null, flUtcMs, null);
+      while (p2.hasNext()) {
+        log.info("{}", kv("namespaces", p2.items));
+        p2 = nsDao.loadPage2(ps, true, lj, flName, p2.nx1, flUtcMs, p2.nx2);
+      }
+      log.info("{}", kv("namespaces", p2.items));
+    });
   }
+
 }

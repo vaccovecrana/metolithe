@@ -13,18 +13,18 @@ import static java.util.Objects.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class MtDao<T, K> {
 
-  private final String schemaName;
-  private final FluentJdbc jdbc;
-  private final ObjectMappers mappers;
+  protected final String schema;
+  private   final FluentJdbc jdbc;
+  private   final ObjectMappers mappers;
 
-  public final MtDescriptor<T> dsc;
+  public    final MtDescriptor<T> dsc;
   protected final MtIdFn<K> idFn;
 
   protected final Map<Class, ObjectMapperRsExtractor> extractors = new ConcurrentHashMap<>();
   protected final Map<String, String> queryCache = new ConcurrentHashMap<>();
 
-  public MtDao(String schemaName, FluentJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
-    this.schemaName = requireNonNull(schemaName);
+  public MtDao(String schema, FluentJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
+    this.schema = requireNonNull(schema);
     this.jdbc = requireNonNull(jdbc);
     this.dsc = requireNonNull(d);
     this.idFn = requireNonNull(idFn);
@@ -54,13 +54,13 @@ public abstract class MtDao<T, K> {
     return mappers;
   }
 
-  public String getSchemaName() {
-    return getSchemaName(this.dsc.getType());
+  protected String getTableName(Class<?> clazz) {
+    var raw = String.format("%s.%s", schema, dsc.getFormat().of(clazz.getSimpleName()));
+    return dsc.getFormat().of(raw);
   }
 
-  protected String getSchemaName(Class<?> clazz) {
-    var raw = String.format("%s.%s", schemaName, dsc.getFormat().of(clazz.getSimpleName()));
-    return dsc.getFormat().of(raw);
+  public String getTableName() {
+    return getTableName(this.dsc.getType());
   }
 
   protected Map<String, String> getQueryCache() {

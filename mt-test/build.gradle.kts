@@ -2,9 +2,18 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> { addJ8Spec() }
 
 tasks.withType<JacocoReport> {
   sourceSets(
-      project(":mt-core").sourceSets.main.get(),
-      project(":mt-codegen").sourceSets.main.get()
+    project(":mt-core").sourceSets.main.get(),
+    project(":mt-codegen").sourceSets.main.get()
   )
+  afterEvaluate {
+    classDirectories.setFrom(
+      files(classDirectories.files.map {
+        fileTree(it) {
+          exclude("io/vacco/mt/test/**") // Replace with your package
+        }
+      })
+    )
+  }
 }
 
 dependencies {

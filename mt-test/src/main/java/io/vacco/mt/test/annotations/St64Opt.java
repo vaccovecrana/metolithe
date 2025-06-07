@@ -1,9 +1,9 @@
-package io.vacco.metolithe.annotations;
+package io.vacco.mt.test.annotations;
 
+import io.vacco.metolithe.annotations.MtVarchar;
 import java.lang.annotation.*;
 
-@MtNotNull
 @MtVarchar(64)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface St64 {}
+public @interface St64Opt {}

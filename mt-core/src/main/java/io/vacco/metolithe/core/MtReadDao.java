@@ -3,7 +3,6 @@ package io.vacco.metolithe.core;
 import io.vacco.metolithe.util.*;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static io.vacco.metolithe.core.MtCaseFormat.*;
 import static java.lang.String.*;
@@ -20,8 +19,12 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     var fn = dsc.getFormat().of(field);
     var qk = "selectWhereEq" + fn;
     return getQueryCache().computeIfAbsent(qk, k -> {
-      var pNames = propNamesCsv(dsc, true);
-      return format("select %s from %s where %s = :%s", pNames, getSchemaName(), fn, fn);
+      var alias = dsc.getAlias();
+      var pNames = propNamesCsv(dsc, true, alias);
+      return format(
+        "select %s from %s %s where %s.%s = :%s",
+        pNames, getTableName(), alias, alias, fn, fn
+      );
     });
   }
 
@@ -37,7 +40,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return Optional.empty();
   }
 
-  public Collection<T> loadWhereEq(String field, Object value) {
+  public List<T> loadWhereEq(String field, Object value) {
     return sql().query()
       .select(getSelectWhereEqQuery(field))
       .namedParam(dsc.getFormat().of(field), value)
@@ -52,8 +55,11 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     }
     var fd = dsc.getField(field);
     var pids = toNamedParamMap(asList(values), fd.getFieldName());
-    var query = format("select %s from %s where %s in (%s)",
-      propNamesCsv(dsc, true), getSchemaName(), fd.getFieldName(), toNamedParamLabels(pids)
+    var alias = dsc.getAlias();
+    var query = format(
+      "select %s from %s %s where %s in (%s)",
+      propNamesCsv(dsc, true, alias), getTableName(),
+      alias, fd.getFieldName(), toNamedParamLabels(pids)
     );
     var raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
     return raw.stream().collect(groupingBy(fd::getValue));
@@ -67,28 +73,25 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return record.get();
   }
 
-  private boolean allNonNull(Object[] oa) {
-    for (Object o : oa) {
-      if (o == null) return false;
-    }
-    return true;
-  }
-
   public List<T> loadPageItems(int pageSize, MtQuery query) {
     try {
-      String qFmt = String.join("\n",
-        "select %s from %s where 1=1", // property names, schema name
+      var qFmt = String.join("\n",
+        "select %s from %s %s", // props, table, alias
+        "%s", // join clause
+        "where 1 = 1",
         "%s", // filter predicate
         "%s", // seek predicate
-        "order by %s limit %s"
+        "order by %s limit %d"
       );
+      var joins = query.renderJoins();
       var filterP = query.renderFilter().isEmpty() ? "" : format("and (%s)", query.renderFilter());
       var seekP = query.renderSeek();
       var orderBy = query.renderOrderBy();
-
+      var alias = dsc.getAlias();
       var sql = format(qFmt,
-        propNamesCsv(dsc, true), getSchemaName(),
-        filterP, seekP, orderBy, pageSize + 1
+        propNamesCsv(dsc, true, alias),
+        getTableName(), alias,
+        joins, filterP, seekP, orderBy, pageSize + 1
       );
       var q = sql().query().select(sql);
       for (var e : query.getParams().entrySet()) {
@@ -100,13 +103,17 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     }
   }
 
+  public MtQuery query() {
+    return MtQuery.create(this.schema);
+  }
+
   private MtQuery setQuery(MtQuery filter, String[] nxFields, Object[] nxValues, boolean reverse) {
     var fields = new MtFieldDescriptor[nxFields.length];
     for (int i = 0; i < nxFields.length; i++) {
       fields[i] = dsc.getField(nxFields[i]);
     }
     if (filter == null) {
-      filter = MtQuery.create();
+      filter = query();
     }
     return filter.seek(fields, nxValues, reverse);
   }
@@ -156,4 +163,5 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       .map(param -> format(":%s", param))
       .collect(joining(", "));
   }
+
 }

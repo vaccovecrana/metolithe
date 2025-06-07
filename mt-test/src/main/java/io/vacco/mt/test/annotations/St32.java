@@ -1,5 +1,7 @@
-package io.vacco.metolithe.annotations;
+package io.vacco.mt.test.annotations;
 
+import io.vacco.metolithe.annotations.MtNotNull;
+import io.vacco.metolithe.annotations.MtVarchar;
 import java.lang.annotation.*;
 
 @MtNotNull

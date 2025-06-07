@@ -28,8 +28,11 @@ public enum MtCaseFormat {
       .collect(toList());
   }
 
-  public static String propNamesCsv(MtDescriptor<?> d, boolean withPk) {
-    return String.join(COMMA_SPC, propNames(d, withPk));
+  public static String propNamesCsv(MtDescriptor<?> dsc, boolean withPk, String tableAlias) {
+    var ta = tableAlias.isEmpty() ? tableAlias : format("%s.", tableAlias);
+    return dsc.getFields(withPk).stream()
+      .map(fd -> format("%s%s", ta, fd.getFieldName()))
+      .collect(joining(COMMA_SPC));
   }
 
   public static String placeholderCsv(MtDescriptor<?> d, boolean withPk) {
@@ -39,4 +42,5 @@ public enum MtCaseFormat {
   public static String placeHolderAssignmentCsv(MtDescriptor<?> d, boolean withPk) {
     return propNames(d, withPk).stream().map(k -> format("%s = :%s", k, k)).collect(joining(COMMA_SPC));
   }
+
 }

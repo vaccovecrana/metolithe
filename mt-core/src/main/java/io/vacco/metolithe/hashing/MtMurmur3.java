@@ -6,6 +6,8 @@ package io.vacco.metolithe.hashing;
 @SuppressWarnings("fallthrough")
 public class MtMurmur3 {
 
+  public static final int DEFAULT_SEED = 104729;
+
   // Constants for 32 bit variant
   private static final int C1_32 = 0xcc9e2d51;
   private static final int C2_32 = 0x1b873593;
@@ -21,8 +23,6 @@ public class MtMurmur3 {
   private static final int R2 = 27;
   private static final int M = 5;
   private static final int N1 = 0x52dce729;
-
-  public static final int DEFAULT_SEED = 104729;
 
   private static int fmix32(int length, int hash) {
     hash ^= length;

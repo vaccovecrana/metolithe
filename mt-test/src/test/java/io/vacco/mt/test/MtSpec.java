@@ -1,10 +1,14 @@
-package io.vacco.metolithe.test;
+package io.vacco.mt.test;
 
 import io.vacco.metolithe.core.MtCaseFormat;
-import io.vacco.metolithe.schema.*;
+import io.vacco.metolithe.hashing.MtXxHash;
+import io.vacco.mt.test.schema.*;
 import io.vacco.shax.logging.ShOption;
 import org.h2.jdbcx.JdbcDataSource;
 import org.slf4j.*;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.Assert.*;
 
 public abstract class MtSpec {
 
@@ -17,6 +21,12 @@ public abstract class MtSpec {
 
   protected static final JdbcDataSource ds = new JdbcDataSource();
   protected static final MtCaseFormat fmt = MtCaseFormat.KEEP_CASE;
+
+  public static Class<?>[] testSchema = new Class<?>[] {
+    Device.class, DeviceLocation.class, DeviceTag.class,
+    Phone.class, DbUser.class, DbUserRole.class, UserFollow.class,
+    ApiKey.class, Namespace.class, KeyNamespace.class
+  };
 
   public static DbUser u0 = new DbUser();
   public static DbUser u1 = new DbUser();
@@ -51,10 +61,15 @@ public abstract class MtSpec {
 
     d1.type = Device.DType.ANDROID;
     d1.signingKey = "c29tZSBwdWJsaWMga2V5IGRhdGEgZm9yIGRldmljZSAx";
+
+    var d0b = d0.signingKey.getBytes(StandardCharsets.UTF_8);
+    var h32 = MtXxHash.hash32(d0b, 0, d0b.length, 1234);
+    var h64 = MtXxHash.hash64(d0b, 0, d0b.length, 1234);
+
+    log.info("{}", h32);
+    log.info("{}", h64);
+    assertEquals(-2013497302, h32);
+    assertEquals(-3973416690927799706L, h64);
   }
 
-  public static Class<?>[] testSchema = new Class<?>[] {
-      Device.class, DeviceLocation.class, DeviceTag.class,
-      Phone.class, DbUser.class, DbUserRole.class, UserFollow.class
-  };
 }

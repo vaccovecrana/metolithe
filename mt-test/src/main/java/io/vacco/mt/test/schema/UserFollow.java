@@ -1,4 +1,4 @@
-package io.vacco.metolithe.schema;
+package io.vacco.mt.test.schema;
 
 import io.vacco.metolithe.annotations.*;
 
