@@ -60,7 +60,7 @@ public class MtApply {
             "context      VARCHAR(255)",
             "hash         VARCHAR(64) NOT NULL",
             "author       VARCHAR(255)",
-            "sql          TEXT NOT NULL",
+            "sql          VARCHAR NOT NULL",
             "description  VARCHAR(255)",
             "utcMs        BIGINT NOT NULL",
             "PRIMARY KEY  (id)"
