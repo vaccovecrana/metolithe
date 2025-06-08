@@ -79,7 +79,7 @@ public class MtDaoSpec extends MtSpec {
           chg.context = ctx;
         }
         try (var conn = ds.getConnection()) {
-          new MtApply(conn).applyChanges(changes, ctx);
+          new MtApply(conn, schema).applyChanges(changes, ctx);
         }
         var applied = changes.stream().filter(chg -> chg.state == MtState.Applied).count();
         var found = changes.stream().filter(chg -> chg.state == MtState.Found).count();

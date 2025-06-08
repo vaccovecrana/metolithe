@@ -17,7 +17,7 @@ public class MtLogMapper {
   private final String schema;
 
   public MtLogMapper(String schema) {
-    this.schema = Objects.requireNonNull(schema);
+    this.schema = schema;
   }
 
   private String removeBlankLines(String v) {
@@ -26,10 +26,14 @@ public class MtLogMapper {
       .collect(Collectors.joining("\n"));
   }
 
+  private String schemaPrefix() {
+    return schema == null ? "" : format("%s.", schema);
+  }
+
   private MtChange generateFullTable(MtTable table) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtFullTable.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("join", join);
     return new MtChange() {{
@@ -41,7 +45,7 @@ public class MtLogMapper {
   private MtChange generateEmptyTable(MtTable table) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtEmptyTable.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     return new MtChange() {{
       id = format("tbl_%s_init", table.name);
@@ -52,7 +56,7 @@ public class MtLogMapper {
   private MtChange generateTableWithColumnsAndFks(MtTable table) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtTableWithColumnsAndFks.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("join", join);
     return new MtChange() {{
@@ -64,7 +68,7 @@ public class MtLogMapper {
   private MtChange generateColumnChange(MtTable table, MtCol column) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtColumnChange.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("column", column);
     return new MtChange() {{
@@ -76,7 +80,7 @@ public class MtLogMapper {
   private MtChange generateForeignKeyChange(MtTable table, MtFkey fk) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtForeignKeyChange.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("fk", fk);
     return new MtChange() {{
@@ -88,7 +92,7 @@ public class MtLogMapper {
   private MtChange generateUniqueConstraintChange(MtTable table, MtUnq unq) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtUniqueConstraintChange.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("unq", unq);
     ctx.set("join", join);
@@ -101,7 +105,7 @@ public class MtLogMapper {
   private MtChange generateIndexChange(MtTable table, MtIdx idx) {
     var template = loader.load("/io/vacco/metolithe/codegen/MtIndexChange.bt");
     var ctx = new TemplateContext();
-    ctx.set("schema", schema);
+    ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("idx", idx);
     ctx.set("join", join);

@@ -1,1 +1,1 @@
-CREATE INDEX IF NOT EXISTS {{idx.name}} ON {{schema}}.{{table.name}} ({{join(", ", idx.columns)}})
+CREATE INDEX IF NOT EXISTS {{idx.name}} ON {{schemaPrefix}}{{table.name}} ({{join(", ", idx.columns)}})

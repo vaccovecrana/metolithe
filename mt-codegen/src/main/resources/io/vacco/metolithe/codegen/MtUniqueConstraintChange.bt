@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX IF NOT EXISTS {{unq.name}} ON {{schema}}.{{table.name}} ({{join(", ", unq.columns)}})
+CREATE UNIQUE INDEX IF NOT EXISTS {{unq.name}} ON {{schemaPrefix}}{{table.name}} ({{join(", ", unq.columns)}})

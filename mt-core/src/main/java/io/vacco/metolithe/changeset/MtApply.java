@@ -29,13 +29,9 @@ public class MtApply {
   private final String schema;
   private final Connection conn;
 
-  public MtApply(Connection conn) {
-    try {
-      this.conn = Objects.requireNonNull(conn);
-      this.schema = Objects.requireNonNull(conn.getSchema());
-    } catch (SQLException e) {
-      throw new IllegalStateException(e);
-    }
+  public MtApply(Connection conn, String schema) {
+    this.conn = Objects.requireNonNull(conn);
+    this.schema = schema;
   }
 
   private boolean tableMissing(String tableName) throws SQLException {
