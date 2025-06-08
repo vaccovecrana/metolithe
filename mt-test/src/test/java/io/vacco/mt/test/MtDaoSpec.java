@@ -60,7 +60,7 @@ public class MtDaoSpec extends MtSpec {
         new MtDaoMapper().mapSchema(out, "io.vacco.mt.test.dao", fmt, testSchema);
       });
       it("Generates changelogs", () -> {
-        tables = new MtcMapper().build(fmt, testSchema);
+        tables = new MtMapper().build(fmt, testSchema);
         log.info("Tables: {}", kv("tables", tables));
         for (var g : MtLevel.values()) {
           log.info("\n{} ================================ {}", g, g);

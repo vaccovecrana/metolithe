@@ -12,7 +12,7 @@ import static io.vacco.metolithe.id.MtMurmur3.*;
 import static java.lang.String.format;
 import static java.lang.Integer.toHexString;
 
-public class MtcMapper {
+public class MtMapper {
 
   private MtCol mapColumn(MtFieldDescriptor d) {
     var c = new MtCol();
