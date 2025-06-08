@@ -1,6 +1,7 @@
 package io.vacco.metolithe.changeset;
 
 import java.util.Date;
+import java.util.Objects;
 
 public class MtChange {
 
@@ -29,6 +30,13 @@ public class MtChange {
   public long utcMs = -1;
 
   public transient MtState state;
+
+  public static MtChange change(String id, String sql) {
+    var chg = new MtChange();
+    chg.id = Objects.requireNonNull(id);
+    chg.sql = Objects.requireNonNull(sql);
+    return chg;
+  }
 
   @Override public String toString() {
     return String.format(

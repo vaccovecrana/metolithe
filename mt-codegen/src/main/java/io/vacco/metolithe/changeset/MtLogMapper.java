@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static io.vacco.metolithe.changeset.MtChange.change;
 import static io.vacco.metolithe.id.MtMurmur3.DEFAULT_SEED;
 import static io.vacco.metolithe.id.MtMurmur3.hash32;
 import static java.lang.String.format;
@@ -36,10 +37,10 @@ public class MtLogMapper {
     ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("join", join);
-    return new MtChange() {{
-      id = format("tbl_%s", table.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s", table.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateEmptyTable(MtTable table) {
@@ -47,10 +48,10 @@ public class MtLogMapper {
     var ctx = new TemplateContext();
     ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
-    return new MtChange() {{
-      id = format("tbl_%s_init", table.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_init", table.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateTableWithColumnsAndFks(MtTable table) {
@@ -59,10 +60,10 @@ public class MtLogMapper {
     ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("join", join);
-    return new MtChange() {{
-      id = format("tbl_%s_cols_fks", table.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_cols_fks", table.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateColumnChange(MtTable table, MtCol column) {
@@ -71,10 +72,10 @@ public class MtLogMapper {
     ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("column", column);
-    return new MtChange() {{
-      id = format("tbl_%s_col_%s", table.name, column.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_col_%s", table.name, column.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateForeignKeyChange(MtTable table, MtFkey fk) {
@@ -83,10 +84,10 @@ public class MtLogMapper {
     ctx.set("schemaPrefix", schemaPrefix());
     ctx.set("table", table);
     ctx.set("fk", fk);
-    return new MtChange() {{
-      id = format("tbl_%s_%s", table.name, fk.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_%s", table.name, fk.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateUniqueConstraintChange(MtTable table, MtUnq unq) {
@@ -96,10 +97,10 @@ public class MtLogMapper {
     ctx.set("table", table);
     ctx.set("unq", unq);
     ctx.set("join", join);
-    return new MtChange() {{
-      id = format("tbl_%s_%s", table.name, unq.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_%s", table.name, unq.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private MtChange generateIndexChange(MtTable table, MtIdx idx) {
@@ -109,10 +110,10 @@ public class MtLogMapper {
     ctx.set("table", table);
     ctx.set("idx", idx);
     ctx.set("join", join);
-    return new MtChange() {{
-      id = format("tbl_%s_%s", table.name, idx.name);
-      sql = removeBlankLines(template.render(ctx));
-    }};
+    return change(
+      format("tbl_%s_%s", table.name, idx.name),
+      removeBlankLines(template.render(ctx))
+    );
   }
 
   private void validateTable(MtTable table) {
