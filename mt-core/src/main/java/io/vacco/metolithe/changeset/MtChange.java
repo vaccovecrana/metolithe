@@ -1,0 +1,42 @@
+package io.vacco.metolithe.changeset;
+
+import java.util.Date;
+
+public class MtChange {
+
+  /** Unique identifier for the changeset */
+  public String id;
+
+  /** What generated this change? (i.e. a file, dynamic, url) */
+  public String source;
+
+  /** An application context group (i.e. backwards-compatible, non-backwards-compatible changes.) */
+  public String context;
+
+  /** A hashcode of the SQL that was executed. */
+  public String hash;
+
+  /** Who authored the change (defaults to "system" for generated changes) */
+  public String author = "system";
+
+  /** SQL command(s) to execute */
+  public String sql;
+
+  /** Human-readable description of the change */
+  public String description;
+
+  /** When the change was applied, as a UNIX millisecond timestamp. */
+  public long utcMs = -1;
+
+  public transient MtState state;
+
+  @Override public String toString() {
+    return String.format(
+      "id=%s, source=%s, ctx=%s, hash=%s, author=%s, description=%s, utcMs=%s%n sql=%s",
+      id, source, context, hash, author, description,
+      utcMs != -1 ? new Date(utcMs) : null,
+      sql
+    );
+  }
+
+}

@@ -1,0 +1,1 @@
+ALTER TABLE {{schema}}.{{table.name}} ADD CONSTRAINT {{fk.name}} FOREIGN KEY ({{fk.fromCol}}) REFERENCES {{fk.to}}({{fk.toCol}})

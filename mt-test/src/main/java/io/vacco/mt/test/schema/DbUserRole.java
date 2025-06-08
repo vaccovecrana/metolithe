@@ -5,7 +5,11 @@ import io.vacco.mt.test.annotations.St16;
 
 @MtEntity
 public class DbUserRole {
+
   @MtPk @St16
   public String rid;
-  @MtField public long createdUtcMs;
+
+  @MtField
+  public long createdUtcMs;
+
 }

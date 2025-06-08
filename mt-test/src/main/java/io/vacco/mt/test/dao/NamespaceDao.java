@@ -3,8 +3,8 @@ package io.vacco.mt.test.dao;
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
-import io.vacco.metolithe.core.MtIdFn;
-import io.vacco.metolithe.core.MtWriteDao;
+import io.vacco.metolithe.id.MtIdFn;
+import io.vacco.metolithe.dao.MtWriteDao;
 
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 

@@ -13,10 +13,10 @@ import java.util.Objects;
   public String name;
 
   @St128
-  @MtUnique(idx = 0, inPk = true)
+  @MtPk(idx = 0) @MtUnique
   public String path;
 
-  @MtField
+  @MtField @MtNotNull
   public long createdAtUtcMs;
 
   public static Namespace of(String name, String path) {

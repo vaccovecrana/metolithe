@@ -61,7 +61,8 @@ public class MtFieldDescriptor {
   }
 
   public boolean isPk() {
-    return get(MtPk.class).isPresent();
+    var pkd = get(MtPk.class);
+    return pkd.isPresent() && pkd.get().idx() == -1;
   }
 
   public MtCaseFormat getFormat() {

@@ -7,12 +7,12 @@ import io.vacco.metolithe.annotations.*;
   @MtPk public int id;
 
   @MtFk(ApiKey.class)
-  @MtUnique(idx = 0, inPk = true)
   @MtNotNull
+  @MtPk(idx = 0) @MtUnique(idx = 0)
   public Integer kid;
 
   @MtFk(Namespace.class)
-  @MtUnique(idx = 1, inPk = true)
+  @MtPk(idx = 1) @MtUnique(idx = 0)
   public Integer nsId;
 
   public static KeyNamespace of(Integer kid, Integer nsId) {

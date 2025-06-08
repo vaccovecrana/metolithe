@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS {{schema}}.{{table.name}} (
+{{for i, col in table.columns}}
+  {{col.name}} {{col.type}}{{if col.nullable == false}} NOT NULL{{end}}{{if col.primaryKey}} PRIMARY KEY{{end}}{{if (i != table.columns.size() - 1) || (table.fKeys.size() > 0 || table.unique.size() > 0)}},{{end}}
+{{end}}
+{{for i, fk in table.fKeys}}
+  CONSTRAINT {{fk.name}} FOREIGN KEY ({{fk.fromCol}}) REFERENCES {{fk.to}}({{fk.toCol}}){{if (i != table.fKeys.size() -1) || (table.fKeys.size() > 0 && table.unique.size() > 0)}},{{end}}
+{{end}}
+{{for i, unq in table.unique}}
+  CONSTRAINT {{unq.name}} UNIQUE ({{join(", ", unq.columns)}}){{if i != table.unique.size() - 1}},{{end}}
+{{end}}
+){{if !table.indices.isEmpty()}};{{end}}
+{{for idx in table.indices}}
+CREATE INDEX IF NOT EXISTS {{idx.name}} ON {{table.name}} ({{join(", ", idx.columns)}});
+{{end}}

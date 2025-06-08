@@ -2,7 +2,7 @@
 
 A minimal, opinionated, flat key/value JDBC object storage framework.
 
-## 2.0 Functionality
+## 3.0 Functionality
 
 - [x] No support for composite primary keys (explain why).
 - [x] Unique constraints (only two levels supported for now).
@@ -15,7 +15,7 @@ A minimal, opinionated, flat key/value JDBC object storage framework.
 - [ ] How are primary key fields assigned and extracted.
 - [ ] Strategies for choosing primary key component fields (or not at all).
 - [ ] `int` vs `Integer`, when to use which?
-- [ ] How to handle schema migrations with Liquibase generated change sets.
+- [ ] How to handle schema migrations with generated change sets.
 - [ ] Always make sure that your schema class names do not clash with database keywords.
 - [ ] If you do not specify unique constraint tags on your classes, you are responsible for managing each object's primary key values.
 

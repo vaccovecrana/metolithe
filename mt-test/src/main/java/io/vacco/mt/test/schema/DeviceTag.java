@@ -4,10 +4,22 @@ import io.vacco.metolithe.annotations.*;
 import io.vacco.mt.test.annotations.St64;
 
 @MtEntity public class DeviceTag {
+
   @MtPk public long tid;
-  @MtFk(Phone.class) @MtUnique(idx = 0, inPk = true) public int pid;
-  @MtFk(Device.class) @MtUnique(idx = 1, inPk = true) public long did;
+
+  @MtFk(Phone.class)
+  @MtPk(idx = 0)
+  @MtUnique(idx = 0)
+  public int pid;
+
+  @MtFk(Device.class)
+  @MtPk(idx = 1)
+  @MtUnique(idx = 0)
+  public long did;
+
   @MtField public long claimTimeUtcMs;
+
   @St64
-  @MtUnique(idx = 1, inPk = true) public String smsCodeSignature;
+  public String smsCodeSignature;
+
 }

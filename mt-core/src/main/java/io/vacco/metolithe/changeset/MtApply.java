@@ -1,0 +1,220 @@
+package io.vacco.metolithe.changeset;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.*;
+import java.time.Instant;
+import java.util.*;
+
+import static io.vacco.metolithe.changeset.MtSummary.summarize;
+import static io.vacco.metolithe.core.MtLog.info;
+import static java.lang.String.*;
+
+public class MtApply {
+
+  private static final String MTLOG_TABLE  = "MTLOG";
+  private static final String MTLOCK_TABLE = "MTLOCK";
+  private static final String LOCK_ID;
+
+  static {
+    try {
+      var hostname = InetAddress.getLocalHost().getHostName();
+      var timestamp = Instant.now().getEpochSecond();
+      LOCK_ID = format("%s_%d", hostname, timestamp);
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException("Cannot determine hostname for lock ID", e);
+    }
+  }
+
+  private final String schema;
+  private final Connection conn;
+
+  public MtApply(Connection conn) {
+    try {
+      this.conn = Objects.requireNonNull(conn);
+      this.schema = Objects.requireNonNull(conn.getSchema());
+    } catch (SQLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private boolean tableMissing(String tableName) throws SQLException {
+    try (var rs = conn.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"})) {
+      return !rs.next();
+    }
+  }
+
+  private String lockTableName() {
+    return schema == null ? MTLOCK_TABLE : format("%s.%s", schema, MTLOCK_TABLE);
+  }
+
+  private String logTableName() {
+    return schema == null ? MTLOG_TABLE : format("%s.%s", schema, MTLOG_TABLE);
+  }
+
+  public void init() throws SQLException {
+    if (tableMissing(MTLOG_TABLE)) {
+      try (var stmt = conn.createStatement()) {
+        int state = stmt.executeUpdate(String.format(
+          "CREATE TABLE %s (%s)",
+          logTableName(),
+          String.join(", ",
+            "id           VARCHAR(255) NOT NULL",
+            "source       VARCHAR(255)",
+            "context      VARCHAR(255)",
+            "hash         VARCHAR(64) NOT NULL",
+            "author       VARCHAR(255)",
+            "sql          TEXT NOT NULL",
+            "description  VARCHAR(255)",
+            "utcMs        BIGINT NOT NULL",
+            "PRIMARY KEY  (id)"
+          )
+        ));
+        if (state == 0) {
+          info("Created table {}", logTableName());
+        }
+      }
+    }
+    if (tableMissing(MTLOCK_TABLE)) {
+      try (var stmt = conn.createStatement()) {
+        int state = stmt.executeUpdate(format(
+          "CREATE TABLE %s (%s)",
+          lockTableName(),
+          join(", ",
+            "id           INTEGER PRIMARY KEY",
+            "locked       BOOLEAN NOT NULL",
+            "lock_granted TIMESTAMP",
+            "locked_by    VARCHAR(255)"
+          )
+        ));
+        stmt.executeUpdate(format(
+          "INSERT INTO %s (id, locked, lock_granted, locked_by) VALUES (1, FALSE, NULL, NULL)",
+          lockTableName()
+        ));
+        if (state == 0) {
+          info("Created table {}", lockTableName());
+        }
+      }
+    }
+  }
+
+  public boolean claimLock() throws SQLException {
+    var originalAutoCommit = conn.getAutoCommit();
+    try {
+      conn.setAutoCommit(false);
+      try (var pstmt = conn.prepareStatement(format(
+        "UPDATE %s SET locked = ?, lock_granted = ?, locked_by = ? WHERE id = 1 AND (locked = FALSE OR lock_granted < ?)",
+        lockTableName()
+      ))) {
+        var staleThreshold = Timestamp.from(Instant.now().minusSeconds(300)); // 5mins, tweakable
+        pstmt.setBoolean(1, true);
+        pstmt.setTimestamp(2, Timestamp.from(Instant.now()));
+        pstmt.setString(3, LOCK_ID);
+        pstmt.setTimestamp(4, staleThreshold);
+        var rowsUpdated = pstmt.executeUpdate();
+        if (rowsUpdated == 1) {
+          conn.commit();
+          info("Acquired database lock");
+          return true; // Lock acquired
+        } else {
+          conn.rollback();
+          return false; // Lock already held
+        }
+      }
+    } finally {
+      conn.setAutoCommit(originalAutoCommit);
+    }
+  }
+
+  public void releaseLock() throws SQLException {
+    try (var pstmt = conn.prepareStatement(format(
+      "UPDATE %s SET locked = FALSE, lock_granted = NULL, locked_by = NULL WHERE id = 1 AND locked_by = ?",
+      lockTableName()
+    ))) {
+      pstmt.setString(1, LOCK_ID);
+      int state = pstmt.executeUpdate();
+      if (state > 0) {
+        info("Released database lock");
+      }
+    }
+  }
+
+  private MtState applyChange(MtChange chg) throws Exception {
+    try (var checkStmt = conn.prepareStatement(
+      format("SELECT id, hash FROM %s WHERE id = ?", logTableName())
+    )) {
+      checkStmt.setString(1, chg.id);
+      try (var rs = checkStmt.executeQuery()) {
+        if (rs.next()) {
+          var hash = rs.getString(2); // hash col
+          if (hash == null || !hash.equals(chg.hash)) {
+            throw new IllegalStateException(
+              format(
+                "Changeset [%s] hash mismatch. Was [%s] but is now [%s]",
+                chg.id, hash, chg.hash
+              )
+            );
+          }
+          return MtState.Found; // Skip if already applied
+        }
+      }
+    }
+    try (var stmt = conn.createStatement()) {
+      stmt.executeUpdate(chg.sql);
+    }
+    try (var logStmt = conn.prepareStatement(
+      format(
+        join("\n",
+          "INSERT INTO %s",
+          "(id, source, context, hash, author, sql, description, utcMs)",
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        ),
+        logTableName()
+      )
+    )) {
+      logStmt.setString(1, chg.id);
+      logStmt.setString(2, chg.source);
+      logStmt.setString(3, chg.context);
+      logStmt.setString(4, chg.hash);
+      logStmt.setString(5, chg.author);
+      logStmt.setString(6, chg.sql);
+      logStmt.setString(7, chg.description);
+      logStmt.setLong(8, System.currentTimeMillis()); // Set utcMs
+
+      int state = logStmt.executeUpdate();
+      if (state > 0) {
+        info("Executed changeset {}", chg);
+      }
+    }
+    chg.utcMs = System.currentTimeMillis();
+    return MtState.Applied;
+  }
+
+  public void applyChanges(List<MtChange> changes, String context) throws Exception {
+    init();
+    if (!claimLock()) {
+      throw new SQLException("Unable to acquire database lock");
+    }
+    var originalAutoCommit = conn.getAutoCommit();
+    try {
+      conn.setAutoCommit(false);
+      for (var chg : changes) {
+        var tryApply = context == null || context.equals(chg.context);
+        if (tryApply) {
+          chg.state = applyChange(chg);
+        } else {
+          chg.state = MtState.Skipped;
+        }
+      }
+      conn.commit();
+    } catch (Exception e) {
+      conn.rollback();
+      throw e;
+    } finally {
+      conn.setAutoCommit(originalAutoCommit);
+      releaseLock();
+      info(summarize(changes));
+    }
+  }
+
+}

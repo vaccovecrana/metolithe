@@ -15,12 +15,10 @@ import java.util.Objects;
   @MtFk(DbUser.class)
   public int uid;
 
-  @St64
-  @MtUnique(idx = 0, inPk = true)
+  @St64 @MtPk(idx = 0)
   public String name;
 
-  @St64
-  public String hash; // SHA256 hash of the key
+  @St64 public String hash; // SHA256 hash of the key
 
   public static ApiKey of(int uid, Integer pKid, String name, String hash) {
     var k = new ApiKey();

@@ -1,11 +1,16 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.annotations.MtVarchar;
+
 import java.util.*;
 import java.util.function.Function;
 
+import static java.lang.String.format;
 import static java.util.Arrays.*;
 
 public class MtUtil {
+
+  public static final int ENUM_VARCHAR_LENGTH = 64;
 
   public static Class<?> toWrapperClass(Class<?> type) {
     if (!type.isPrimitive()) return type;
@@ -27,6 +32,33 @@ public class MtUtil {
       return Byte.class;
     }
     return type;
+  }
+
+  public static String sqlTypeOf(MtFieldDescriptor fd) {
+    Class<?> wt0 = MtUtil.toWrapperClass(fd.getType());
+    if (wt0 == Boolean.class) {
+      return "boolean";
+    }
+    if (wt0 == String.class) {
+      var maxSize = fd.get(MtVarchar.class);
+      return format("varchar(%s)", maxSize.get().value());
+    }
+    if (wt0 == Integer.class) {
+      return "int";
+    }
+    if (wt0 == Long.class) {
+      return "bigint";
+    }
+    if (wt0 == Double.class) {
+      return "double";
+    }
+    if (wt0 == Float.class) {
+      return "float";
+    }
+    if (Enum.class.isAssignableFrom(fd.getType())) {
+      return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
+    }
+    throw new MtException.MtSqlTypeMappingException(fd);
   }
 
   public static byte[] concat(byte[] first, byte[] second) {

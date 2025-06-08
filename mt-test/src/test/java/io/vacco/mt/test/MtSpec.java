@@ -1,7 +1,7 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.core.MtCaseFormat;
-import io.vacco.metolithe.hashing.MtXxHash;
+import io.vacco.metolithe.id.MtXxHash;
 import io.vacco.mt.test.schema.*;
 import io.vacco.shax.logging.ShOption;
 import org.h2.jdbcx.JdbcDataSource;

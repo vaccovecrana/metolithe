@@ -7,13 +7,16 @@ import io.vacco.mt.test.annotations.St16;
 
   @MtPk public int pid;
 
-  @MtField @MtNotNull
-  @MtIndex @MtUnique(idx = 0, inPk = true)
+  @MtField @MtNotNull @MtIndex
+  @MtPk(idx = 0)
+  @MtUnique(idx = 0)
   public int countryCode;
 
   @St16
-  @MtIndex @MtUnique(idx = 1, inPk = true)
+  @MtPk(idx = 1)
+  @MtUnique(idx = 0)
   public String number;
 
   @MtField public int smsVerificationCode;
+
 }

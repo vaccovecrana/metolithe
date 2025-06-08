@@ -1,34 +1,35 @@
 package io.vacco.mt.test;
 
-import io.vacco.metolithe.codegen.dao.MtDaoMapper;
-import io.vacco.metolithe.codegen.liquibase.*;
-import io.vacco.metolithe.core.*;
-import io.vacco.metolithe.util.*;
+import io.vacco.metolithe.changeset.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtLog;
+import io.vacco.metolithe.dao.MtDaoMapper;
+import io.vacco.metolithe.dao.MtQuery;
+import io.vacco.metolithe.dao.MtWriteDao;
+import io.vacco.metolithe.id.*;
+import io.vacco.metolithe.util.MtPage1;
+import io.vacco.metolithe.util.MtPage2;
 import io.vacco.mt.test.dao.*;
 import io.vacco.mt.test.schema.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
-import liquibase.*;
-import liquibase.command.CommandScope;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.*;
 import org.codejargon.fluentjdbc.api.*;
 import org.junit.runner.RunWith;
 
+import static io.vacco.shax.logging.ShArgument.kv;
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
-import static io.vacco.shax.logging.ShArgument.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
 public class MtDaoSpec extends MtSpec {
 
-  private static final String schema = "public";
+  private static final String     schema = "public";
   private static final FluentJdbc jdbc = new FluentJdbcBuilder()
       .connectionProvider(ds)
       .afterQueryListener(edt -> log.info("[{}], {}", edt.success(), edt.sql()))
@@ -37,6 +38,9 @@ public class MtDaoSpec extends MtSpec {
   private static final MtIdFn<Integer>  m3Ifn = new MtMurmur3IFn();
   private static final MtIdFn<Long>     m3Lfn = new MtMurmur3LFn();
   private static final MtIdFn<Integer>  xxIfn = new MtXxHashIFn();
+
+  private static List<MtTable> tables;
+  private static List<MtChange> changes;
 
   public static String generateRandomDigits(int n) {
     var random = new Random();
@@ -48,43 +52,38 @@ public class MtDaoSpec extends MtSpec {
   }
 
   static {
-    var xmlFile = new File("./build", "mt-test.xml");
-    var ymlFile = new File("./build", "mt-test.yml");
-    ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
+    ds.setURL("jdbc:h2:file:./build/db-test;DB_CLOSE_DELAY=-1");
 
     describe("Schema code generation", () -> {
       it("Generates typed field DAO definitions", () -> {
         var out = new File(".", "src/main/java");
         new MtDaoMapper().mapSchema(out, "io.vacco.mt.test.dao", fmt, testSchema);
       });
-      it("Generates Liquibase changelogs", () -> {
-        var root = new MtLb().build(fmt, testSchema);
-        var xmlGen = new MtLbXml();
-        var ymlGen = new MtLbYaml();
-
-        var xmlBaos = new ByteArrayOutputStream();
-        xmlGen.writeSchema(root, xmlBaos);
-        log.info(xmlBaos.toString());
-
-        var ymlBaos = new ByteArrayOutputStream();
-        ymlGen.writeSchema(root, new OutputStreamWriter(ymlBaos));
-        log.info(ymlBaos.toString());
-
-        xmlGen.writeSchema(root, new FileOutputStream(xmlFile));
-        ymlGen.writeSchema(root, new OutputStreamWriter(new FileOutputStream(ymlFile)));
+      it("Generates changelogs", () -> {
+        tables = new MtcMapper().build(fmt, testSchema);
+        log.info("Tables: {}", kv("tables", tables));
+        for (var g : MtLevel.values()) {
+          log.info("\n{} ================================ {}", g, g);
+          changes = new MtLogMapper(schema).process(tables, g);
+          for (var chg : changes) {
+            log.info("\n{}", chg);
+          }
+        }
       });
-      it("Creates an in-memory database and applies the generated change logs.", () -> {
-        var c = new JdbcConnection(ds.getConnection());
-        var ra = new DirectoryResourceAccessor(xmlFile.getParentFile());
-        var database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(c);
-        Scope.child(Scope.Attr.resourceAccessor, ra, () -> {
-          var commandScope = new CommandScope("update");
-          commandScope.addArgumentValue("changelogFile", xmlFile.getName());
-          commandScope.addArgumentValue("database", database);
-          var commandResults = commandScope.execute();
-          assertNotNull(commandResults);
-        });
-        c.close();
+      it("Creates a database and applies the generated change logs.", () -> {
+        MtLog.setLogger(log::info);
+        var ctx = "integration-test";
+        changes = new MtLogMapper(schema).process(tables, MtLevel.TABLE_COMPACT);
+        for (var chg : changes) {
+          chg.source = MtDaoSpec.class.getCanonicalName();
+          chg.context = ctx;
+        }
+        try (var conn = ds.getConnection()) {
+          new MtApply(conn).applyChanges(changes, ctx);
+        }
+        var applied = changes.stream().filter(chg -> chg.state == MtState.Applied).count();
+        var found = changes.stream().filter(chg -> chg.state == MtState.Found).count();
+        assertTrue(applied == changes.size() || found == changes.size());
       });
     });
 
