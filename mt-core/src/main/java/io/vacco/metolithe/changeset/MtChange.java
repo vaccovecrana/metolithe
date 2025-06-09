@@ -27,7 +27,7 @@ public class MtChange {
   public String description;
 
   /** When the change was applied, as a UNIX millisecond timestamp. */
-  public long utcMs = -1;
+  public Long   utcMs;
 
   public transient MtState state;
 
@@ -42,7 +42,7 @@ public class MtChange {
     return String.format(
       "id=%s, source=%s, ctx=%s, hash=%s, author=%s, description=%s, utcMs=%s%n sql=%s",
       id, source, context, hash, author, description,
-      utcMs != -1 ? new Date(utcMs) : null,
+      utcMs != null ? new Date(utcMs) : null,
       sql
     );
   }

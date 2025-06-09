@@ -168,6 +168,7 @@ public class MtApply {
         logTableName()
       )
     )) {
+      var nowMs = System.currentTimeMillis();
       logStmt.setString(1, chg.id);
       logStmt.setString(2, chg.source);
       logStmt.setString(3, chg.context);
@@ -175,14 +176,14 @@ public class MtApply {
       logStmt.setString(5, chg.author);
       logStmt.setString(6, chg.sql);
       logStmt.setString(7, chg.description);
-      logStmt.setLong(8, System.currentTimeMillis()); // Set utcMs
+      logStmt.setLong(8, nowMs);
 
       int state = logStmt.executeUpdate();
       if (state > 0) {
+        chg.utcMs = nowMs;
         info("Executed changeset {}", chg);
       }
     }
-    chg.utcMs = System.currentTimeMillis();
     return MtState.Applied;
   }
 
