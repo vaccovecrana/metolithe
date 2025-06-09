@@ -180,7 +180,6 @@ public class MtLogMapper {
     var chs = generateSql(tables, level);
     for (var chg : chs) {
       chg.hash = Integer.toHexString(hash32(chg.sql.getBytes(StandardCharsets.UTF_8), DEFAULT_SEED));
-      chg.utcMs = System.currentTimeMillis();
     }
     return chs;
   }
