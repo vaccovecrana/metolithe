@@ -44,7 +44,7 @@ public class MtUtil {
       return format("varchar(%s)", maxSize.get().value());
     }
     if (wt0 == Integer.class) {
-      return "int";
+      return "integer";
     }
     if (wt0 == Long.class) {
       return "bigint";
