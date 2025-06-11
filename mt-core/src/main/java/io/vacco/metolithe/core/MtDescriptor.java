@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.util.stream.Collectors.*;
 import static java.lang.String.*;
 import static java.lang.reflect.Modifier.*;
@@ -40,7 +41,7 @@ public class MtDescriptor<T> {
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
     var pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {
-      throw new MtException.MtMultiplePkDefinitionsException(pkds);
+      throw badPkDefinitions(pkds);
     }
     this.pkField = pkds.isEmpty() ? null : pkds.get(0);
   }
@@ -115,7 +116,7 @@ public class MtDescriptor<T> {
       if (ou.isPresent() && ou.get().idx() != -1) {
         var comp = fd.getValue(t);
         if (comp == null) {
-          throw new MtException.MtMissingPkComponentException(t, fd);
+          throw badPkComponent(t, fd);
         }
         pkValues.put(ou.get().idx(), comp);
       }
@@ -146,7 +147,7 @@ public class MtDescriptor<T> {
   public MtFieldDescriptor getField(String name) {
     return fields.stream()
       .filter(fd -> fd.getFieldName().equalsIgnoreCase(name)).findFirst()
-      .orElseThrow(() -> new MtException.MtMissingFieldException(name, this));
+      .orElseThrow(() -> badField(name, this));
   }
 
   public Class<T> getType() {

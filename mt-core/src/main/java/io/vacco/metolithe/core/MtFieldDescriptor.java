@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.util.Objects.*;
 import static java.util.stream.Stream.*;
 import static java.util.Arrays.*;
@@ -94,7 +95,7 @@ public class MtFieldDescriptor {
     try {
       return (V) f.get(o);
     } catch (Exception e) {
-      throw new MtException.MtFieldAccessException(o, null, e);
+      throw badFieldAccess(o, null, e);
     }
   }
 
@@ -102,14 +103,15 @@ public class MtFieldDescriptor {
     try {
       f.set(o, val);
     } catch (IllegalAccessException e) {
-      throw new MtException.MtFieldAccessException(o, val, e);
+      throw badFieldAccess(o, val, e);
     }
   }
 
   @Override public String toString() {
-    String ants = annotations.stream()
+    var ants = annotations.stream()
       .map(a -> a.annotationType().getSimpleName())
       .collect(Collectors.joining(", "));
     return String.format("(%s) %s=[%s]", ordinal, f.getName(), ants);
   }
+
 }

@@ -2,11 +2,12 @@ package io.vacco.metolithe.dao;
 
 import io.marioslab.basis.template.*;
 import io.vacco.metolithe.core.*;
-
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.function.Function;
+
+import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtDaoMapper {
 
@@ -42,7 +43,7 @@ public class MtDaoMapper {
         Files.write(daoFile.toPath(), daoSrc.getBytes(StandardCharsets.UTF_8));
       }
     } catch (Exception e) {
-      throw new MtException.MtDaoMappingException(outDir, outPackage, schemaClasses, e);
+      throw badDaoMapping(outDir, outPackage, schemaClasses, e);
     }
   }
 

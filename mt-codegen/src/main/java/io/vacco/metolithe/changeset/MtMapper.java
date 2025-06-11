@@ -7,6 +7,7 @@ import io.vacco.oriax.core.*;
 import java.util.*;
 import java.util.stream.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.core.MtUtil.*;
 import static io.vacco.metolithe.id.MtMurmur3.*;
 import static java.lang.String.format;
@@ -57,7 +58,7 @@ public class MtMapper {
     var targetPk = fkTarget.get(MtPk.class).findFirst().orElseThrow();
 
     if (!fd.getType().equals(targetPk.getType())) {
-      throw new MtException.MtForeignKeyMismatchException(
+      throw badForeignKey(
         d.getName(), fd.getFieldName(), fd.getType().getTypeName(),
         fkTarget.getName(), targetPk.getFieldName(), targetPk.getType().getTypeName()
       );

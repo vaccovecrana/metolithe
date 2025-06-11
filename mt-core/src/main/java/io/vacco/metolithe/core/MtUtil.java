@@ -5,6 +5,7 @@ import io.vacco.metolithe.annotations.MtVarchar;
 import java.util.*;
 import java.util.function.Function;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.lang.String.format;
 import static java.util.Arrays.*;
 
@@ -58,7 +59,7 @@ public class MtUtil {
     if (Enum.class.isAssignableFrom(fd.getType())) {
       return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
     }
-    throw new MtException.MtSqlTypeMappingException(fd);
+    throw badSqlTypeMapping(fd);
   }
 
   public static byte[] concat(byte[] first, byte[] second) {

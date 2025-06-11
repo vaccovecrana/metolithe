@@ -135,6 +135,17 @@ public class MtApply {
     }
   }
 
+  public static void checkHash(String h0, String h1, String changeSetId) {
+    if (h0 == null || !h0.equals(h1)) {
+      throw new IllegalStateException(
+        format(
+          "Changeset [%s] hash mismatch. Was [%s] but is now [%s]",
+          changeSetId, h1, h0
+        )
+      );
+    }
+  }
+
   private MtState applyChange(MtChange chg) throws Exception {
     try (var checkStmt = conn.prepareStatement(
       format("SELECT id, hash FROM %s WHERE id = ?", logTableName())
@@ -143,14 +154,7 @@ public class MtApply {
       try (var rs = checkStmt.executeQuery()) {
         if (rs.next()) {
           var hash = rs.getString(2); // hash col
-          if (hash == null || !hash.equals(chg.hash)) {
-            throw new IllegalStateException(
-              format(
-                "Changeset [%s] hash mismatch. Was [%s] but is now [%s]",
-                chg.id, hash, chg.hash
-              )
-            );
-          }
+          checkHash(hash, chg.hash, chg.id);
           return MtState.Found; // Skip if already applied
         }
       }

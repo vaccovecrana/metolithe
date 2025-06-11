@@ -6,6 +6,7 @@ import io.vacco.metolithe.util.*;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import java.util.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.core.MtCaseFormat.*;
 import static java.lang.String.*;
 import static java.util.stream.Collectors.*;
@@ -70,7 +71,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   public T loadExisting(K id) {
     var record = load(id);
     if (record.isEmpty()) {
-      throw new MtException.MtMissingIdException(id);
+      throw badId(id);
     }
     return record.get();
   }
@@ -101,7 +102,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       }
       return new ArrayList<>(q.listResult(mapToDefault()));
     } catch (Exception e) {
-      throw new MtException.MtPageAccessException(null, null, dsc, e);
+      throw badPageAccess(null, null, dsc, e);
     }
   }
 

@@ -6,10 +6,10 @@ import io.vacco.metolithe.id.MtIdFn;
 import org.codejargon.fluentjdbc.api.FluentJdbc;
 import org.codejargon.fluentjdbc.api.mapper.*;
 import org.codejargon.fluentjdbc.api.query.Mapper;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.util.Objects.*;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -27,7 +27,7 @@ public abstract class MtDao<T, K> {
 
   public MtDao(String schema, FluentJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
     this.schema = requireNonNull(schema);
-    this.jdbc = requireNonNull(jdbc);
+    this.jdbc = jdbc;
     this.dsc = requireNonNull(d);
     this.idFn = requireNonNull(idFn);
 
@@ -39,7 +39,7 @@ public abstract class MtDao<T, K> {
       var idFnClass = idFn.getIdType();
       var entityPkClass = MtUtil.toWrapperClass(opk.get().getType());
       if (!idFnClass.isAssignableFrom(entityPkClass)) {
-        throw new MtException.MtIdGeneratorMismatchException(d.getClassName(), entityPkClass, idFnClass);
+        throw badIdGenerator(d.getClassName(), entityPkClass.getTypeName(), idFnClass.getTypeName());
       }
     }
   }

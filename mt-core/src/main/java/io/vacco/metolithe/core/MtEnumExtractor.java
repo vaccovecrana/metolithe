@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import org.codejargon.fluentjdbc.api.mapper.ObjectMapperRsExtractor;
 import java.sql.ResultSet;
 
@@ -21,7 +22,7 @@ public class MtEnumExtractor<T extends Enum<T>> implements ObjectMapperRsExtract
       }
       return null;
     } catch (Exception e) {
-      throw new MtException.MtEnumExtractionException(target, e);
+      throw badEnumExtraction(target.getCanonicalName(), e);
     }
   }
 }
