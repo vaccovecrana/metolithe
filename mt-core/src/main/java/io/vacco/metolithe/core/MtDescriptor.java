@@ -3,7 +3,7 @@ package io.vacco.metolithe.core;
 import io.vacco.metolithe.annotations.*;
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static io.vacco.metolithe.core.MtErr.*;
@@ -124,20 +124,18 @@ public class MtDescriptor<T> {
     return pkValues.values().toArray();
   }
 
-  public Map<String, Object> getAll(T t) {
-    var comps = new LinkedHashMap<String, Object>();
-    for (var fd : fields) {
-      comps.put(fd.getFieldName(), fd.getValue(t));
+  public List<MtFieldDescriptor> getFields(boolean withPk) {
+    return withPk ? fields : fieldsNoPk;
+  }
+
+  public void forEach(boolean withPk, Object t, BiConsumer<String, Object> entryFn) {
+    for (var fd : getFields(withPk)) {
+      entryFn.accept(fd.getFieldName(), fd.getValue(t));
     }
-    return comps;
   }
 
   public boolean matches(Class<?> other) {
     return cl == other;
-  }
-
-  public List<MtFieldDescriptor> getFields(boolean withPk) {
-    return withPk ? fields : fieldsNoPk;
   }
 
   public Optional<MtFieldDescriptor> getPkField() {

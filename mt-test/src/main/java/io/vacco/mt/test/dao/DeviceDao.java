@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class DeviceDao extends MtWriteDao<io.vacco.mt.test.schema.Device, java.l
   public static final String fld_type = "type";
   public static final String fld_signingKey = "signingKey";
   
-  public DeviceDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
+  public DeviceDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.Device.class, fmt), idFn);
   }
   
@@ -36,7 +36,7 @@ public class DeviceDao extends MtWriteDao<io.vacco.mt.test.schema.Device, java.l
     return loadWhereIn(fld_did, values);
   }
 
-  public long deleteWhereDidEq(java.lang.Long did) {
+  public MtResult<io.vacco.mt.test.schema.Device> deleteWhereDidEq(java.lang.Long did) {
     return deleteWhereEq(fld_did, did);
   }
   
@@ -52,7 +52,7 @@ public class DeviceDao extends MtWriteDao<io.vacco.mt.test.schema.Device, java.l
     return loadWhereIn(fld_type, values);
   }
 
-  public long deleteWhereTypeEq(io.vacco.mt.test.schema.Device.DType type) {
+  public MtResult<io.vacco.mt.test.schema.Device> deleteWhereTypeEq(io.vacco.mt.test.schema.Device.DType type) {
     return deleteWhereEq(fld_type, type);
   }
   
@@ -68,7 +68,7 @@ public class DeviceDao extends MtWriteDao<io.vacco.mt.test.schema.Device, java.l
     return loadWhereIn(fld_signingKey, values);
   }
 
-  public long deleteWhereSigningKeyEq(java.lang.String signingKey) {
+  public MtResult<io.vacco.mt.test.schema.Device> deleteWhereSigningKeyEq(java.lang.String signingKey) {
     return deleteWhereEq(fld_signingKey, signingKey);
   }
   

@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import io.vacco.metolithe.dao.MtPredicate;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -62,14 +63,6 @@ public class MtErr {
     );
   }
 
-  public static IllegalStateException badEnumExtraction(String target, Exception e) {
-    return new IllegalStateException(
-      format(
-        "Enum extraction failed for target [%s]",
-        target != null ? target : "unknown"
-      ), e);
-  }
-
   public static IllegalStateException badId(Object field) {
     return new IllegalStateException(format("Missing ID: [%s]", field));
   }
@@ -91,6 +84,51 @@ public class MtErr {
         outDir.getAbsolutePath(), outPackage, Arrays.toString(schemaClasses)
       ), e
     );
+  }
+
+  public static IllegalStateException badConstructor(MtDescriptor<?> d, Exception e) {
+    return new IllegalStateException(
+      format("No no-arg constructor found for [%s]", d.getType()), e
+    );
+
+  }
+
+  public static IllegalStateException badExtraction(MtDescriptor<?> d, Exception e) {
+    return new IllegalStateException(
+      format("Extraction failed for [%s]", d), e
+    );
+  }
+
+  public static IllegalStateException badSql(boolean queryOrUpdate, String sql, Exception e) {
+    return new IllegalStateException(
+      format("Bad %s: %s", queryOrUpdate ? "query" : "update", sql), e
+    );
+  }
+
+  public static IllegalArgumentException badOperator(MtPredicate.Operator test, MtPredicate.Operator[] options) {
+    return new IllegalArgumentException(
+      format("Operator [%s] is not one of %s", test, Arrays.toString(options))
+    );
+  }
+
+  public static IllegalArgumentException badSeek() {
+    return new IllegalArgumentException("Fields and values must have the same length");
+  }
+
+  public static IllegalStateException badLogic() {
+    return new IllegalStateException("Cannot add logical operators after seek predicates");
+  }
+
+  public static IllegalArgumentException badArg(String msg) {
+    return new IllegalArgumentException(msg);
+  }
+
+  public static IllegalStateException generalError(String msg, Exception e) {
+    return new IllegalStateException(msg, e);
+  }
+
+  public static IllegalStateException generalError(String msg) {
+    return new IllegalStateException(msg);
   }
 
 }

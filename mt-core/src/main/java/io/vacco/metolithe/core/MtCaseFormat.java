@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.*;
@@ -23,16 +24,20 @@ public enum MtCaseFormat {
   public static final String COMMA_SPC = ", ";
 
   public static List<String> propNames(MtDescriptor<?> d, boolean withPk) {
-    return d.getFields(withPk).stream()
-      .map(MtFieldDescriptor::getFieldName)
-      .collect(toList());
+    var out = new ArrayList<String>();
+    for (var fd : d.getFields(withPk)) {
+      out.add(fd.getFieldName());
+    }
+    return out;
   }
 
   public static String propNamesCsv(MtDescriptor<?> dsc, boolean withPk, String tableAlias) {
     var ta = tableAlias.isEmpty() ? tableAlias : format("%s.", tableAlias);
-    return dsc.getFields(withPk).stream()
-      .map(fd -> format("%s%s", ta, fd.getFieldName()))
-      .collect(joining(COMMA_SPC));
+    var out = new ArrayList<String>();
+    for (var fd : dsc.getFields(withPk)) {
+      out.add(format("%s%s", ta, fd.getFieldName()));
+    }
+    return String.join(COMMA_SPC, out);
   }
 
   public static String placeholderCsv(MtDescriptor<?> d, boolean withPk) {

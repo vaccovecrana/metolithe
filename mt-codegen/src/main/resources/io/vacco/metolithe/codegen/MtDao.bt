@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mt
 
   {{for mtField in mtFields}}public static final String fld_{{mtField.getFieldRawName()}} = "{{mtField.getFieldName()}}";
   {{end}}
-  public {{mtDaoClass}}Dao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
+  public {{mtDaoClass}}Dao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
     super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
   }
   {{for mtField in mtFields}}
@@ -34,7 +34,7 @@ public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mt
     return loadWhereIn(fld_{{mtField.getFieldRawName()}}, values);
   }
 
-  public long deleteWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
+  public MtResult<{{mtDsc.getClassName()}}> deleteWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
     return deleteWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
   }
   {{end}}

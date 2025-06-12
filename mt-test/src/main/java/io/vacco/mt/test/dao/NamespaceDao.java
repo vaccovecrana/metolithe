@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class NamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.Namespace, 
   public static final String fld_path = "path";
   public static final String fld_createdAtUtcMs = "createdAtUtcMs";
   
-  public NamespaceDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public NamespaceDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.Namespace.class, fmt), idFn);
   }
   
@@ -37,7 +37,7 @@ public class NamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.Namespace, 
     return loadWhereIn(fld_nsId, values);
   }
 
-  public long deleteWhereNsIdEq(java.lang.Integer nsId) {
+  public MtResult<io.vacco.mt.test.schema.Namespace> deleteWhereNsIdEq(java.lang.Integer nsId) {
     return deleteWhereEq(fld_nsId, nsId);
   }
   
@@ -53,7 +53,7 @@ public class NamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.Namespace, 
     return loadWhereIn(fld_name, values);
   }
 
-  public long deleteWhereNameEq(java.lang.String name) {
+  public MtResult<io.vacco.mt.test.schema.Namespace> deleteWhereNameEq(java.lang.String name) {
     return deleteWhereEq(fld_name, name);
   }
   
@@ -69,7 +69,7 @@ public class NamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.Namespace, 
     return loadWhereIn(fld_path, values);
   }
 
-  public long deleteWherePathEq(java.lang.String path) {
+  public MtResult<io.vacco.mt.test.schema.Namespace> deleteWherePathEq(java.lang.String path) {
     return deleteWhereEq(fld_path, path);
   }
   
@@ -85,7 +85,7 @@ public class NamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.Namespace, 
     return loadWhereIn(fld_createdAtUtcMs, values);
   }
 
-  public long deleteWhereCreatedAtUtcMsEq(java.lang.Long createdAtUtcMs) {
+  public MtResult<io.vacco.mt.test.schema.Namespace> deleteWhereCreatedAtUtcMsEq(java.lang.Long createdAtUtcMs) {
     return deleteWhereEq(fld_createdAtUtcMs, createdAtUtcMs);
   }
   

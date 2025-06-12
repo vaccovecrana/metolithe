@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtErrSpec {
+public class MtErrTest {
 
   private static final DbUserDao userDao = new DbUserDao("public", MtCaseFormat.LOWER_CASE, null, new MtMurmur3IFn());
   private static final File testDir = new File("./test");
@@ -110,16 +110,6 @@ public class MtErrSpec {
             String.format("Invalid SQL type mapping for field [email] in [%s]", String.class.getCanonicalName()),
             e.getMessage()
           );
-        }
-      });
-
-      it("Throws badEnumExtraction exception with correct message and cause", () -> {
-        Exception cause = new IllegalArgumentException("Enum error");
-        try {
-          throw MtErr.badEnumExtraction("TestEnum", cause);
-        } catch (IllegalStateException e) {
-          assertEquals("Enum extraction failed for target [TestEnum]", e.getMessage());
-          assertEquals(cause, e.getCause());
         }
       });
 

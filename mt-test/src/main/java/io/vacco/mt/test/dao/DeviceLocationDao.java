@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
   public static final String fld_fraudScore = "fraudScore";
   public static final String fld_fraudScoreDelta = "fraudScoreDelta";
   
-  public DeviceLocationDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
+  public DeviceLocationDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.DeviceLocation.class, fmt), idFn);
   }
   
@@ -42,7 +42,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_did, values);
   }
 
-  public long deleteWhereDidEq(java.lang.Long did) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereDidEq(java.lang.Long did) {
     return deleteWhereEq(fld_did, did);
   }
   
@@ -58,7 +58,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_uid, values);
   }
 
-  public long deleteWhereUidEq(java.lang.Integer uid) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereUidEq(java.lang.Integer uid) {
     return deleteWhereEq(fld_uid, uid);
   }
   
@@ -74,7 +74,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_geoHash2, values);
   }
 
-  public long deleteWhereGeoHash2Eq(java.lang.String geoHash2) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereGeoHash2Eq(java.lang.String geoHash2) {
     return deleteWhereEq(fld_geoHash2, geoHash2);
   }
   
@@ -90,7 +90,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_geoHash4, values);
   }
 
-  public long deleteWhereGeoHash4Eq(java.lang.String geoHash4) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereGeoHash4Eq(java.lang.String geoHash4) {
     return deleteWhereEq(fld_geoHash4, geoHash4);
   }
   
@@ -106,7 +106,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_geoHash12, values);
   }
 
-  public long deleteWhereGeoHash12Eq(java.lang.String geoHash12) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereGeoHash12Eq(java.lang.String geoHash12) {
     return deleteWhereEq(fld_geoHash12, geoHash12);
   }
   
@@ -122,7 +122,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_geoHash12Ip, values);
   }
 
-  public long deleteWhereGeoHash12IpEq(java.lang.String geoHash12Ip) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereGeoHash12IpEq(java.lang.String geoHash12Ip) {
     return deleteWhereEq(fld_geoHash12Ip, geoHash12Ip);
   }
   
@@ -138,7 +138,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_logTimeUtcMs, values);
   }
 
-  public long deleteWhereLogTimeUtcMsEq(java.lang.Long logTimeUtcMs) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereLogTimeUtcMsEq(java.lang.Long logTimeUtcMs) {
     return deleteWhereEq(fld_logTimeUtcMs, logTimeUtcMs);
   }
   
@@ -154,7 +154,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_fraudScore, values);
   }
 
-  public long deleteWhereFraudScoreEq(java.lang.Double fraudScore) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereFraudScoreEq(java.lang.Double fraudScore) {
     return deleteWhereEq(fld_fraudScore, fraudScore);
   }
   
@@ -170,7 +170,7 @@ public class DeviceLocationDao extends MtWriteDao<io.vacco.mt.test.schema.Device
     return loadWhereIn(fld_fraudScoreDelta, values);
   }
 
-  public long deleteWhereFraudScoreDeltaEq(java.lang.Float fraudScoreDelta) {
+  public MtResult<io.vacco.mt.test.schema.DeviceLocation> deleteWhereFraudScoreDeltaEq(java.lang.Float fraudScoreDelta) {
     return deleteWhereEq(fld_fraudScoreDelta, fraudScoreDelta);
   }
   

@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
   public static final String fld_number = "number";
   public static final String fld_smsVerificationCode = "smsVerificationCode";
   
-  public PhoneDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public PhoneDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.Phone.class, fmt), idFn);
   }
   
@@ -37,7 +37,7 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
     return loadWhereIn(fld_pid, values);
   }
 
-  public long deleteWherePidEq(java.lang.Integer pid) {
+  public MtResult<io.vacco.mt.test.schema.Phone> deleteWherePidEq(java.lang.Integer pid) {
     return deleteWhereEq(fld_pid, pid);
   }
   
@@ -53,7 +53,7 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
     return loadWhereIn(fld_countryCode, values);
   }
 
-  public long deleteWhereCountryCodeEq(java.lang.Integer countryCode) {
+  public MtResult<io.vacco.mt.test.schema.Phone> deleteWhereCountryCodeEq(java.lang.Integer countryCode) {
     return deleteWhereEq(fld_countryCode, countryCode);
   }
   
@@ -69,7 +69,7 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
     return loadWhereIn(fld_number, values);
   }
 
-  public long deleteWhereNumberEq(java.lang.String number) {
+  public MtResult<io.vacco.mt.test.schema.Phone> deleteWhereNumberEq(java.lang.String number) {
     return deleteWhereEq(fld_number, number);
   }
   
@@ -85,7 +85,7 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
     return loadWhereIn(fld_smsVerificationCode, values);
   }
 
-  public long deleteWhereSmsVerificationCodeEq(java.lang.Integer smsVerificationCode) {
+  public MtResult<io.vacco.mt.test.schema.Phone> deleteWhereSmsVerificationCodeEq(java.lang.Integer smsVerificationCode) {
     return deleteWhereEq(fld_smsVerificationCode, smsVerificationCode);
   }
   

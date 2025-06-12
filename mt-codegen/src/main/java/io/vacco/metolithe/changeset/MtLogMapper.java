@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.changeset.MtChange.change;
 import static io.vacco.metolithe.id.MtMurmur3.DEFAULT_SEED;
 import static io.vacco.metolithe.id.MtMurmur3.hash32;
@@ -118,26 +119,26 @@ public class MtLogMapper {
 
   private void validateTable(MtTable table) {
     if (table.columns == null) {
-      throw new IllegalArgumentException("Table " + table.name + " has null columns");
+      throw badArg("Table " + table.name + " has null columns");
     }
-    for (MtCol col : table.columns) {
+    for (var col : table.columns) {
       if (col == null || col.name == null || col.type == null) {
-        throw new IllegalArgumentException("Invalid column in table " + table.name + ": " + col);
+        throw badArg("Invalid column in table " + table.name + ": " + col);
       }
     }
-    for (MtFkey fk : table.fKeys) {
+    for (var fk : table.fKeys) {
       if (fk == null || fk.name == null || fk.fromCol == null || fk.to == null || fk.toCol == null) {
-        throw new IllegalArgumentException("Invalid foreign key in table " + table.name + ": " + fk);
+        throw badArg("Invalid foreign key in table " + table.name + ": " + fk);
       }
     }
-    for (MtUnq unq : table.unique) {
+    for (var unq : table.unique) {
       if (unq == null || unq.name == null || unq.columns.isEmpty()) {
-        throw new IllegalArgumentException("Invalid unique constraint in table " + table.name + ": " + unq);
+        throw badArg("Invalid unique constraint in table " + table.name + ": " + unq);
       }
     }
-    for (MtIdx idx : table.indices) {
+    for (var idx : table.indices) {
       if (idx == null || idx.name == null || idx.columns.isEmpty()) {
-        throw new IllegalArgumentException("Invalid index in table " + table.name + ": " + idx);
+        throw badArg("Invalid index in table " + table.name + ": " + idx);
       }
     }
   }
@@ -147,12 +148,12 @@ public class MtLogMapper {
       return Collections.emptyList();
     }
     if (level == null) {
-      throw new IllegalArgumentException("Granularity cannot be null");
+      throw badArg("Granularity cannot be null");
     }
     var changeSets = new ArrayList<MtChange>();
     for (var table : tables) {
       if (table == null || table.name == null) {
-        throw new IllegalArgumentException("Invalid table: " + table);
+        throw badArg("Invalid table: " + table);
       }
       validateTable(table);
       switch (level) {

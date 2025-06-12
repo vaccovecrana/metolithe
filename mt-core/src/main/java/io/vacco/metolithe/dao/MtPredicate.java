@@ -1,9 +1,9 @@
 package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtFieldDescriptor;
-
 import java.util.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.util.Objects.requireNonNull;
 import static java.lang.String.format;
 
@@ -37,9 +37,7 @@ public class MtPredicate {
       }
     }
     if (!ok) {
-      throw new IllegalArgumentException(String.format(
-        "Operator [%s] is not one of %s", test, Arrays.toString(options)
-      ));
+      throw badOperator(test, options);
     }
   }
 

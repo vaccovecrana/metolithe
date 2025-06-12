@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
   public static final String fld_name = "name";
   public static final String fld_hash = "hash";
   
-  public ApiKeyDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public ApiKeyDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.ApiKey.class, fmt), idFn);
   }
   
@@ -38,7 +38,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
     return loadWhereIn(fld_kid, values);
   }
 
-  public long deleteWhereKidEq(java.lang.Integer kid) {
+  public MtResult<io.vacco.mt.test.schema.ApiKey> deleteWhereKidEq(java.lang.Integer kid) {
     return deleteWhereEq(fld_kid, kid);
   }
   
@@ -54,7 +54,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
     return loadWhereIn(fld_pKid, values);
   }
 
-  public long deleteWherePKidEq(java.lang.Integer pKid) {
+  public MtResult<io.vacco.mt.test.schema.ApiKey> deleteWherePKidEq(java.lang.Integer pKid) {
     return deleteWhereEq(fld_pKid, pKid);
   }
   
@@ -70,7 +70,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
     return loadWhereIn(fld_uid, values);
   }
 
-  public long deleteWhereUidEq(java.lang.Integer uid) {
+  public MtResult<io.vacco.mt.test.schema.ApiKey> deleteWhereUidEq(java.lang.Integer uid) {
     return deleteWhereEq(fld_uid, uid);
   }
   
@@ -86,7 +86,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
     return loadWhereIn(fld_name, values);
   }
 
-  public long deleteWhereNameEq(java.lang.String name) {
+  public MtResult<io.vacco.mt.test.schema.ApiKey> deleteWhereNameEq(java.lang.String name) {
     return deleteWhereEq(fld_name, name);
   }
   
@@ -102,7 +102,7 @@ public class ApiKeyDao extends MtWriteDao<io.vacco.mt.test.schema.ApiKey, java.l
     return loadWhereIn(fld_hash, values);
   }
 
-  public long deleteWhereHashEq(java.lang.String hash) {
+  public MtResult<io.vacco.mt.test.schema.ApiKey> deleteWhereHashEq(java.lang.String hash) {
     return deleteWhereEq(fld_hash, hash);
   }
   

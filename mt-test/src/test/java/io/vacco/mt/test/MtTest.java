@@ -1,5 +1,7 @@
 package io.vacco.mt.test;
 
+import io.vacco.metolithe.changeset.MtChange;
+import io.vacco.metolithe.changeset.MtTable;
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.id.MtXxHash;
 import io.vacco.mt.test.schema.*;
@@ -7,20 +9,24 @@ import io.vacco.shax.logging.ShOption;
 import org.h2.jdbcx.JdbcDataSource;
 import org.slf4j.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
-public abstract class MtSpec {
+public abstract class MtTest {
 
   static {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
   }
 
-  protected static final Logger log = LoggerFactory.getLogger(MtSpec.class);
-
+  protected static final String schema = "public";
+  protected static final Logger log = LoggerFactory.getLogger(MtTest.class);
   protected static final JdbcDataSource ds = new JdbcDataSource();
   protected static final MtCaseFormat fmt = MtCaseFormat.KEEP_CASE;
+
+  protected static List<MtTable> tables;
+  protected static List<MtChange> changes;
 
   public static Class<?>[] testSchema = new Class<?>[] {
     Device.class, DeviceLocation.class, DeviceTag.class,
@@ -38,6 +44,10 @@ public abstract class MtSpec {
   public static Device d1 = new Device();
 
   static {
+    // uncomment to inspect data
+    // ds.setURL("jdbc:h2:file:./build/db-test;DB_CLOSE_DELAY=-1");
+    ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
+
     u0.alias = "Jane";
     u0.email = "jane@me.com";
     u0.pw = "0xAAABBBCCCDDDEEFFF";

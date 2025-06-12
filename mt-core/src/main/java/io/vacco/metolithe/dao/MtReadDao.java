@@ -3,18 +3,17 @@ package io.vacco.metolithe.dao;
 import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.util.*;
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
 import java.util.*;
 
 import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.core.MtCaseFormat.*;
 import static java.lang.String.*;
 import static java.util.stream.Collectors.*;
-import static java.util.Arrays.*;
 
 public class MtReadDao<T, K> extends MtDao<T, K> {
 
-  public MtReadDao(String schemaName, FluentJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
+  public MtReadDao(String schemaName, MtJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
     super(schemaName, jdbc, d, idFn);
   }
 
@@ -36,18 +35,33 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     if (pkf.isPresent()) {
       var q = getSelectWhereEqQuery(pkf.get().getFieldName());
       var fn = pkf.get().getFieldName();
-      return sql().query().select(q)
-        .namedParam(fn, id)
-        .firstResult(mapToDefault());
+      return sql()
+        .select(q)
+        .param(fn, id)
+        .one(mapToDefault(), jdbc);
     }
     return Optional.empty();
   }
 
   public List<T> loadWhereEq(String field, Object value) {
-    return sql().query()
+    return sql()
       .select(getSelectWhereEqQuery(field))
-      .namedParam(dsc.getFormat().of(field), value)
-      .listResult(mapToDefault());
+      .param(dsc.getFormat().of(field), value)
+      .list(mapToDefault(), jdbc);
+  }
+
+  private List<String> paramLabels(int valueCount, String label) {
+    var out = new ArrayList<String>();
+    for (int i = 0; i < valueCount; i++) {
+      out.add(format("%s%s", label, i));
+    }
+    return out;
+  }
+
+  public String toNamedParams(List<String> labels) {
+    return labels.stream()
+      .map(param -> format(":%s", param))
+      .collect(joining(", "));
   }
 
   @SafeVarargs
@@ -57,14 +71,18 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       return Collections.emptyMap();
     }
     var fd = dsc.getField(field);
-    var pids = toNamedParamMap(asList(values), fd.getFieldName());
     var alias = dsc.getAlias();
+    var labels = paramLabels(values.length, fd.getFieldName());
     var query = String.format(
       "select %s from %s %s where %s in (%s)",
       propNamesCsv(dsc, true, alias), getTableName(),
-      alias, fd.getFieldName(), toNamedParamLabels(pids)
+      alias, fd.getFieldName(), toNamedParams(labels)
     );
-    var raw = sql().query().select(query).namedParams(pids).listResult(mapToDefault());
+    var select = sql().select(query);
+    for (int i = 0; i < values.length; i++) {
+      select.param(labels.get(i), values[i]);
+    }
+    var raw = select.list(mapToDefault(), jdbc);
     return raw.stream().collect(groupingBy(fd::getValue));
   }
 
@@ -96,11 +114,11 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
         getTableName(), alias,
         joins, filterP, seekP, orderBy, pageSize + 1
       );
-      var q = sql().query().select(sql);
+      var q = sql().select(sql);
       for (var e : query.getParams().entrySet()) {
-        q = q.namedParam(e.getKey(), e.getValue());
+        q = q.param(e.getKey(), e.getValue());
       }
-      return new ArrayList<>(q.listResult(mapToDefault()));
+      return q.list(mapToDefault(), jdbc);
     } catch (Exception e) {
       throw badPageAccess(null, null, dsc, e);
     }
@@ -149,22 +167,6 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     }
     page.size = items.size();
     return page;
-  }
-
-  public Map<String, Object> toNamedParamMap(Collection<?> input, String paramLabel) {
-    var pMap = new LinkedHashMap<String, Object>();
-    var paramList = new ArrayList<>(input);
-    for (int k = 0; k < input.size(); k++) {
-      var param = format("%s%s", paramLabel, k);
-      pMap.put(param, paramList.get(k));
-    }
-    return pMap;
-  }
-
-  public String toNamedParamLabels(Map<String, Object> targetParams) {
-    return targetParams.keySet().stream()
-      .map(param -> format(":%s", param))
-      .collect(joining(", "));
   }
 
 }

@@ -1,11 +1,11 @@
 package io.vacco.metolithe.changeset;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.changeset.MtSummary.summarize;
 import static io.vacco.metolithe.core.MtLog.info;
 import static java.lang.String.*;
@@ -22,7 +22,7 @@ public class MtApply {
       var timestamp = Instant.now().getEpochSecond();
       LOCK_ID = format("%s_%d", hostname, timestamp);
     } catch (UnknownHostException e) {
-      throw new IllegalStateException("Cannot determine hostname for lock ID", e);
+      throw generalError("Cannot determine hostname for lock ID", e);
     }
   }
 
@@ -137,7 +137,7 @@ public class MtApply {
 
   public static void checkHash(String h0, String h1, String changeSetId) {
     if (h0 == null || !h0.equals(h1)) {
-      throw new IllegalStateException(
+      throw generalError(
         format(
           "Changeset [%s] hash mismatch. Was [%s] but is now [%s]",
           changeSetId, h1, h0
@@ -194,7 +194,7 @@ public class MtApply {
   public void applyChanges(List<MtChange> changes, String context) throws Exception {
     init();
     if (!claimLock()) {
-      throw new SQLException("Unable to acquire database lock");
+      throw generalError("Unable to acquire database lock");
     }
     var originalAutoCommit = conn.getAutoCommit();
     try {

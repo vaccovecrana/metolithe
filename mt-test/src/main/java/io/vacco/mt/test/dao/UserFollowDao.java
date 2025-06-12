@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class UserFollowDao extends MtWriteDao<io.vacco.mt.test.schema.UserFollow
   public static final String fld_fromUid = "fromUid";
   public static final String fld_toUid = "toUid";
   
-  public UserFollowDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public UserFollowDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.UserFollow.class, fmt), idFn);
   }
   
@@ -36,7 +36,7 @@ public class UserFollowDao extends MtWriteDao<io.vacco.mt.test.schema.UserFollow
     return loadWhereIn(fld_fid, values);
   }
 
-  public long deleteWhereFidEq(java.lang.Integer fid) {
+  public MtResult<io.vacco.mt.test.schema.UserFollow> deleteWhereFidEq(java.lang.Integer fid) {
     return deleteWhereEq(fld_fid, fid);
   }
   
@@ -52,7 +52,7 @@ public class UserFollowDao extends MtWriteDao<io.vacco.mt.test.schema.UserFollow
     return loadWhereIn(fld_fromUid, values);
   }
 
-  public long deleteWhereFromUidEq(java.lang.Integer fromUid) {
+  public MtResult<io.vacco.mt.test.schema.UserFollow> deleteWhereFromUidEq(java.lang.Integer fromUid) {
     return deleteWhereEq(fld_fromUid, fromUid);
   }
   
@@ -68,7 +68,7 @@ public class UserFollowDao extends MtWriteDao<io.vacco.mt.test.schema.UserFollow
     return loadWhereIn(fld_toUid, values);
   }
 
-  public long deleteWhereToUidEq(java.lang.Integer toUid) {
+  public MtResult<io.vacco.mt.test.schema.UserFollow> deleteWhereToUidEq(java.lang.Integer toUid) {
     return deleteWhereEq(fld_toUid, toUid);
   }
   

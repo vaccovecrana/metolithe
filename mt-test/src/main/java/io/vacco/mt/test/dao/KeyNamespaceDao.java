@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class KeyNamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.KeyNames
   public static final String fld_kid = "kid";
   public static final String fld_nsId = "nsId";
   
-  public KeyNamespaceDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public KeyNamespaceDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.KeyNamespace.class, fmt), idFn);
   }
   
@@ -36,7 +36,7 @@ public class KeyNamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.KeyNames
     return loadWhereIn(fld_id, values);
   }
 
-  public long deleteWhereIdEq(java.lang.Integer id) {
+  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereIdEq(java.lang.Integer id) {
     return deleteWhereEq(fld_id, id);
   }
   
@@ -52,7 +52,7 @@ public class KeyNamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.KeyNames
     return loadWhereIn(fld_kid, values);
   }
 
-  public long deleteWhereKidEq(java.lang.Integer kid) {
+  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereKidEq(java.lang.Integer kid) {
     return deleteWhereEq(fld_kid, kid);
   }
   
@@ -68,7 +68,7 @@ public class KeyNamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.KeyNames
     return loadWhereIn(fld_nsId, values);
   }
 
-  public long deleteWhereNsIdEq(java.lang.Integer nsId) {
+  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereNsIdEq(java.lang.Integer nsId) {
     return deleteWhereEq(fld_nsId, nsId);
   }
   

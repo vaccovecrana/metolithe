@@ -2,9 +2,10 @@ package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
-
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtQuery {
 
@@ -84,7 +85,7 @@ public class MtQuery {
 
   public MtQuery seek(MtFieldDescriptor[] fields, Object[] values, boolean reverse) {
     if (fields.length != values.length) {
-      throw new IllegalArgumentException("Fields and values must have the same length");
+      throw badSeek();
     }
     orderByFields.clear();
     orderByFields.addAll(Arrays.asList(fields));
@@ -100,7 +101,7 @@ public class MtQuery {
 
   public MtQuery and() {
     if (!predicates.isEmpty() && predicates.iterator().next().isSeek) {
-      throw new IllegalStateException("Cannot add logical operators after seek predicates");
+      throw badLogic();
     }
     operators.add(LogicalOperator.AND);
     return this;
@@ -108,7 +109,7 @@ public class MtQuery {
 
   public MtQuery or() {
     if (!predicates.isEmpty() && predicates.iterator().next().isSeek) {
-      throw new IllegalStateException("Cannot add logical operators after seek predicates");
+      throw badLogic();
     }
     operators.add(LogicalOperator.OR);
     return this;

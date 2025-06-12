@@ -1,7 +1,6 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-
 import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -26,8 +25,10 @@ public class MtFieldDescriptor {
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
   private final MtDescriptor<?> parent;
+  private final boolean isPk;
   public  final int ordinal;
 
+  @SuppressWarnings("this-escape")
   public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt, MtDescriptor<?> parent) {
     this.ordinal = ordinal;
     this.f = requireNonNull(f);
@@ -37,6 +38,8 @@ public class MtFieldDescriptor {
       .flatMap(this::scan)
       .filter(a -> inSet(a.annotationType(), mta))
       .collect(Collectors.toList());
+    var pkd = get(MtPk.class);
+    this.isPk = pkd.isPresent() && pkd.get().idx() == -1;
   }
 
   private boolean match(Class<? extends Annotation> to, Class<? extends Annotation> from) {
@@ -62,8 +65,11 @@ public class MtFieldDescriptor {
   }
 
   public boolean isPk() {
-    var pkd = get(MtPk.class);
-    return pkd.isPresent() && pkd.get().idx() == -1;
+    return isPk;
+  }
+
+  public boolean isEnum() {
+    return Enum.class.isAssignableFrom(getType());
   }
 
   public MtCaseFormat getFormat() {

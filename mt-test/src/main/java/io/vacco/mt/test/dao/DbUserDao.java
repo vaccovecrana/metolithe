@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
   public static final String fld_tagSignature = "tagSignature";
   public static final String fld_rid = "rid";
   
-  public DbUserDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
+  public DbUserDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.DbUser.class, fmt), idFn);
   }
   
@@ -40,7 +40,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_uid, values);
   }
 
-  public long deleteWhereUidEq(java.lang.Integer uid) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereUidEq(java.lang.Integer uid) {
     return deleteWhereEq(fld_uid, uid);
   }
   
@@ -56,7 +56,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_pw, values);
   }
 
-  public long deleteWherePwEq(java.lang.String pw) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWherePwEq(java.lang.String pw) {
     return deleteWhereEq(fld_pw, pw);
   }
   
@@ -72,7 +72,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_alias, values);
   }
 
-  public long deleteWhereAliasEq(java.lang.String alias) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereAliasEq(java.lang.String alias) {
     return deleteWhereEq(fld_alias, alias);
   }
   
@@ -88,7 +88,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_email, values);
   }
 
-  public long deleteWhereEmailEq(java.lang.String email) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereEmailEq(java.lang.String email) {
     return deleteWhereEq(fld_email, email);
   }
   
@@ -104,7 +104,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_tid, values);
   }
 
-  public long deleteWhereTidEq(java.lang.Long tid) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereTidEq(java.lang.Long tid) {
     return deleteWhereEq(fld_tid, tid);
   }
   
@@ -120,7 +120,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_tagSignature, values);
   }
 
-  public long deleteWhereTagSignatureEq(java.lang.String tagSignature) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereTagSignatureEq(java.lang.String tagSignature) {
     return deleteWhereEq(fld_tagSignature, tagSignature);
   }
   
@@ -136,7 +136,7 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
     return loadWhereIn(fld_rid, values);
   }
 
-  public long deleteWhereRidEq(java.lang.String rid) {
+  public MtResult<io.vacco.mt.test.schema.DbUser> deleteWhereRidEq(java.lang.String rid) {
     return deleteWhereEq(fld_rid, rid);
   }
   

@@ -34,7 +34,7 @@ public class MtDaoMapper {
     try {
       var out = new File(outDir, outPackage.replace(".", "/"));
       if (!out.exists() && !out.mkdirs()) {
-        throw new IllegalStateException(out.getAbsolutePath());
+        throw badArg("Output directory does not exist: " + out.getAbsolutePath());
       }
       for (Class<?> cl : schemaClasses) {
         var d = new MtDescriptor<>(cl, caseFormat);

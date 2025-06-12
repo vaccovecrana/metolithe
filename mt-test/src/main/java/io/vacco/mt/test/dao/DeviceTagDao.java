@@ -5,8 +5,8 @@ import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
 import io.vacco.metolithe.dao.MtWriteDao;
-
-import org.codejargon.fluentjdbc.api.FluentJdbc;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
   public static final String fld_claimTimeUtcMs = "claimTimeUtcMs";
   public static final String fld_smsCodeSignature = "smsCodeSignature";
   
-  public DeviceTagDao(String schema, MtCaseFormat fmt, FluentJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
+  public DeviceTagDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.DeviceTag.class, fmt), idFn);
   }
   
@@ -38,7 +38,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
     return loadWhereIn(fld_tid, values);
   }
 
-  public long deleteWhereTidEq(java.lang.Long tid) {
+  public MtResult<io.vacco.mt.test.schema.DeviceTag> deleteWhereTidEq(java.lang.Long tid) {
     return deleteWhereEq(fld_tid, tid);
   }
   
@@ -54,7 +54,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
     return loadWhereIn(fld_pid, values);
   }
 
-  public long deleteWherePidEq(java.lang.Integer pid) {
+  public MtResult<io.vacco.mt.test.schema.DeviceTag> deleteWherePidEq(java.lang.Integer pid) {
     return deleteWhereEq(fld_pid, pid);
   }
   
@@ -70,7 +70,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
     return loadWhereIn(fld_did, values);
   }
 
-  public long deleteWhereDidEq(java.lang.Long did) {
+  public MtResult<io.vacco.mt.test.schema.DeviceTag> deleteWhereDidEq(java.lang.Long did) {
     return deleteWhereEq(fld_did, did);
   }
   
@@ -86,7 +86,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
     return loadWhereIn(fld_claimTimeUtcMs, values);
   }
 
-  public long deleteWhereClaimTimeUtcMsEq(java.lang.Long claimTimeUtcMs) {
+  public MtResult<io.vacco.mt.test.schema.DeviceTag> deleteWhereClaimTimeUtcMsEq(java.lang.Long claimTimeUtcMs) {
     return deleteWhereEq(fld_claimTimeUtcMs, claimTimeUtcMs);
   }
   
@@ -102,7 +102,7 @@ public class DeviceTagDao extends MtWriteDao<io.vacco.mt.test.schema.DeviceTag, 
     return loadWhereIn(fld_smsCodeSignature, values);
   }
 
-  public long deleteWhereSmsCodeSignatureEq(java.lang.String smsCodeSignature) {
+  public MtResult<io.vacco.mt.test.schema.DeviceTag> deleteWhereSmsCodeSignatureEq(java.lang.String smsCodeSignature) {
     return deleteWhereEq(fld_smsCodeSignature, smsCodeSignature);
   }
   

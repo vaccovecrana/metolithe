@@ -16,17 +16,14 @@ import static io.vacco.metolithe.core.MtCaseFormat.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class MtAnnotationsSpec extends MtSpec {
+public class MtAnnotationsTest extends MtTest {
 
   private static <T> void logDescriptor(MtDescriptor<T> d, T data) {
     var enums0 = d.getEnumFields();
     var comps0 = d.getPkValues(data);
-    var allComps = d.getAll(data);
 
     log.info("{}", kv("enums", enums0));
     log.info("{}", kv("comps", comps0));
-    log.info("{}", kv("allComps", allComps));
-
     log.info("{}", propNames(d, true));
     log.info("{}", propNames(d, false));
     log.info("{}", propNamesCsv(d, true, "t0"));
