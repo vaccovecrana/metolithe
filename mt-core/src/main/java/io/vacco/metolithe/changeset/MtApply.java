@@ -29,9 +29,16 @@ public class MtApply {
   private final String schema;
   private final Connection conn;
 
+  private boolean autoCommit = false;
+
   public MtApply(Connection conn, String schema) {
     this.conn = Objects.requireNonNull(conn);
     this.schema = schema;
+  }
+
+  public MtApply withAutoCommit(boolean autoCommit) {
+    this.autoCommit = autoCommit;
+    return this;
   }
 
   private boolean tableMissing(String tableName) throws SQLException {
@@ -97,7 +104,7 @@ public class MtApply {
   public boolean claimLock() throws SQLException {
     var originalAutoCommit = conn.getAutoCommit();
     try {
-      conn.setAutoCommit(false);
+      conn.setAutoCommit(this.autoCommit);
       try (var pstmt = conn.prepareStatement(format(
         "UPDATE %s SET locked = ?, lock_granted = ?, locked_by = ? WHERE id = 1 AND (locked = FALSE OR lock_granted < ?)",
         lockTableName()
@@ -198,7 +205,7 @@ public class MtApply {
     }
     var originalAutoCommit = conn.getAutoCommit();
     try {
-      conn.setAutoCommit(false);
+      conn.setAutoCommit(this.autoCommit);
       for (var chg : changes) {
         var tryApply = context == null || context.equals(chg.context);
         if (tryApply) {
