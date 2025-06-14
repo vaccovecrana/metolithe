@@ -21,4 +21,12 @@ public class MtPage1<T, K1> {
     return p;
   }
 
+  public static <T, K1> MtPage1<T, K1> ofList(List<T> items, K1 nx1) {
+    return of(items.size(), items, nx1);
+  }
+
+  public static <T, K1> MtPage1<T, K1> ofSingle(T item) {
+    return of(1L, List.of(item), null);
+  }
+
 }
