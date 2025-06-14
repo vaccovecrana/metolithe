@@ -26,7 +26,7 @@ public class MtPage1<T, K1> {
   }
 
   public static <T, K1> MtPage1<T, K1> ofSingle(T item) {
-    return of(1L, List.of(item), null);
+    return ofList(List.of(item), null);
   }
 
 }
