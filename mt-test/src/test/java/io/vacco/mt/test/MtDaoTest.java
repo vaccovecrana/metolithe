@@ -67,6 +67,14 @@ public class MtDaoTest extends MtTest {
       var applied = changes.stream().filter(chg -> chg.state == MtState.Applied).count();
       var found = changes.stream().filter(chg -> chg.state == MtState.Found).count();
       assertTrue(applied == changes.size() || found == changes.size());
+      // round 2
+      try (var conn = ds.getConnection()) {
+        new MtApply(conn, schema)
+          .withAutoCommit(true)
+          .applyChanges(changes, ctx);
+      }
+      found = changes.stream().filter(chg -> chg.state == MtState.Found).count();
+      assertEquals(found, changes.size());
     });
 
     it("Uses base DAOs for data access", () -> {

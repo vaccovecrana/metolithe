@@ -36,6 +36,10 @@ public class MtApply {
     this.schema = schema;
   }
 
+  /**
+   * Some databases don't fully support transactions, so you have the option
+   * to disable this, with proper caution of course.
+   */
   public MtApply withAutoCommit(boolean autoCommit) {
     this.autoCommit = autoCommit;
     return this;
