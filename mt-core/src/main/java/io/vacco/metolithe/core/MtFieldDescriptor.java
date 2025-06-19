@@ -1,12 +1,12 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-
 import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.*;
 
+import static io.vacco.metolithe.core.MtErr.*;
 import static java.util.Objects.*;
 import static java.util.stream.Stream.*;
 import static java.util.Arrays.*;
@@ -24,16 +24,22 @@ public class MtFieldDescriptor {
   private final Field f;
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
+  private final MtDescriptor<?> parent;
+  private final boolean isPk;
   public  final int ordinal;
 
-  public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt) {
+  @SuppressWarnings("this-escape")
+  public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt, MtDescriptor<?> parent) {
     this.ordinal = ordinal;
     this.f = requireNonNull(f);
     this.fmt = requireNonNull(fmt);
+    this.parent = requireNonNull(parent);
     this.annotations = stream(f.getAnnotations())
       .flatMap(this::scan)
       .filter(a -> inSet(a.annotationType(), mta))
       .collect(Collectors.toList());
+    var pkd = get(MtPk.class);
+    this.isPk = pkd.isPresent() && pkd.get().idx() == -1;
   }
 
   private boolean match(Class<? extends Annotation> to, Class<? extends Annotation> from) {
@@ -59,11 +65,19 @@ public class MtFieldDescriptor {
   }
 
   public boolean isPk() {
-    return get(MtPk.class).isPresent();
+    return isPk;
+  }
+
+  public boolean isEnum() {
+    return Enum.class.isAssignableFrom(getType());
   }
 
   public MtCaseFormat getFormat() {
     return fmt;
+  }
+
+  public String getFieldRawName() { // supports code generation
+    return this.f.getName();
   }
 
   public String getFieldClassName() {
@@ -71,11 +85,11 @@ public class MtFieldDescriptor {
   }
 
   public String getFieldName() {
-    return fmt.of(this.f.getName());
+    return this.f.getName();
   }
 
-  public String getFieldRawName() {
-    return this.f.getName();
+  public String getFieldNameAliased() {
+    return String.format("%s.%s", parent.getAlias(), getFieldName());
   }
 
   public Class<?> getType() {
@@ -87,7 +101,7 @@ public class MtFieldDescriptor {
     try {
       return (V) f.get(o);
     } catch (Exception e) {
-      throw new MtException.MtFieldAccessException(o, null, e);
+      throw badFieldAccess(o, null, e);
     }
   }
 
@@ -95,14 +109,15 @@ public class MtFieldDescriptor {
     try {
       f.set(o, val);
     } catch (IllegalAccessException e) {
-      throw new MtException.MtFieldAccessException(o, val, e);
+      throw badFieldAccess(o, val, e);
     }
   }
 
   @Override public String toString() {
-    String ants = annotations.stream()
+    var ants = annotations.stream()
       .map(a -> a.annotationType().getSimpleName())
       .collect(Collectors.joining(", "));
     return String.format("(%s) %s=[%s]", ordinal, f.getName(), ants);
   }
+
 }

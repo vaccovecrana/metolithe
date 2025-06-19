@@ -1,0 +1,41 @@
+package {{mtPackage}};
+
+import io.vacco.metolithe.core.MtCaseFormat;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtFieldDescriptor;
+import io.vacco.metolithe.id.MtIdFn;
+import io.vacco.metolithe.dao.MtWriteDao;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
+
+import java.util.List;
+import java.util.Map;
+
+/**************************************************
+ * Generated source file. Do not modify directly. *
+ **************************************************/
+public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mtPkClassName}}> {
+
+  {{for mtField in mtFields}}public static final String fld_{{mtField.getFieldRawName()}} = "{{mtField.getFieldName()}}";
+  {{end}}
+  public {{mtDaoClass}}Dao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
+    super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
+  }
+  {{for mtField in mtFields}}
+  public MtFieldDescriptor fld_{{mtField.getFieldRawName()}}() {
+    return this.dsc.getField(fld_{{mtField.getFieldRawName()}});
+  }
+
+  public List<{{mtDsc.getClassName()}}> loadWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
+    return loadWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
+  }
+
+  public final Map<{{toWrapper(mtField.getType())}}, List<{{mtDsc.getClassName()}}>> loadWhere{{toBeanCase(mtField.getFieldRawName())}}In({{toWrapper(mtField.getType())}} ... values) {
+    return loadWhereIn(fld_{{mtField.getFieldRawName()}}, values);
+  }
+
+  public MtResult<{{mtDsc.getClassName()}}> deleteWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
+    return deleteWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
+  }
+  {{end}}
+}

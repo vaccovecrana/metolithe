@@ -1,5 +1,6 @@
 package io.vacco.metolithe.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.*;
@@ -23,13 +24,20 @@ public enum MtCaseFormat {
   public static final String COMMA_SPC = ", ";
 
   public static List<String> propNames(MtDescriptor<?> d, boolean withPk) {
-    return d.getFields(withPk).stream()
-      .map(MtFieldDescriptor::getFieldName)
-      .collect(toList());
+    var out = new ArrayList<String>();
+    for (var fd : d.getFields(withPk)) {
+      out.add(fd.getFieldName());
+    }
+    return out;
   }
 
-  public static String propNamesCsv(MtDescriptor<?> d, boolean withPk) {
-    return String.join(COMMA_SPC, propNames(d, withPk));
+  public static String propNamesCsv(MtDescriptor<?> dsc, boolean withPk, String tableAlias) {
+    var ta = tableAlias.isEmpty() ? tableAlias : format("%s.", tableAlias);
+    var out = new ArrayList<String>();
+    for (var fd : dsc.getFields(withPk)) {
+      out.add(format("%s%s", ta, fd.getFieldName()));
+    }
+    return String.join(COMMA_SPC, out);
   }
 
   public static String placeholderCsv(MtDescriptor<?> d, boolean withPk) {
@@ -39,4 +47,5 @@ public enum MtCaseFormat {
   public static String placeHolderAssignmentCsv(MtDescriptor<?> d, boolean withPk) {
     return propNames(d, withPk).stream().map(k -> format("%s = :%s", k, k)).collect(joining(COMMA_SPC));
   }
+
 }

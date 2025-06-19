@@ -1,0 +1,1 @@
+ALTER TABLE {{schemaPrefix}}{{table.name}} ADD COLUMN {{column.name}} {{column.type}}{{if column.nullable == false}} NOT NULL{{end}}{{if column.primaryKey}} PRIMARY KEY{{end}};

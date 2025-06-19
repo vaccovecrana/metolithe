@@ -10,6 +10,10 @@ public class MtPage2<T, K1, K2> {
   public K1       nx1;
   public K2       nx2;
 
+  public boolean hasNext() {
+    return nx1 != null && nx2 != null;
+  }
+
   public static <T, K1, K2> MtPage2<T, K1, K2> of(long size, List<T> items, K1 nx1, K2 nx2) {
     var p = new MtPage2<T, K1, K2>();
     p.size = size;
@@ -18,4 +22,5 @@ public class MtPage2<T, K1, K2> {
     p.nx2 = Objects.requireNonNull(nx2);
     return p;
   }
+
 }

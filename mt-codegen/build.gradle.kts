@@ -3,10 +3,7 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> { sharedLibrary(true, f
 val api by configurations
 
 dependencies {
-  api(project(":mt-annotations"))
   api(project(":mt-core"))
   api("io.vacco.oriax:oriax:0.1.1")
-  api("org.jooq:joox:[2,)")
   api("io.marioslab.basis:template:[1,)")
-  api("org.liquibase:liquibase-core:[4,)")
 }
