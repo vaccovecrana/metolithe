@@ -168,7 +168,7 @@ public class MtLogMapper {
         case TABLE_MAX:
           changeSets.add(generateEmptyTable(table));
           for (var col : table.columns) { changeSets.add(generateColumnChange(table, col)); }
-          for (var fk : table.fKeys)    { changeSets.add(generateForeignKeyChange(table, fk)); }
+          for (var fk  : table.fKeys)   { changeSets.add(generateForeignKeyChange(table, fk)); }
           for (var unq : table.unique)  { changeSets.add(generateUniqueConstraintChange(table, unq)); }
           for (var idx : table.indices) { changeSets.add(generateIndexChange(table, idx)); }
           break;

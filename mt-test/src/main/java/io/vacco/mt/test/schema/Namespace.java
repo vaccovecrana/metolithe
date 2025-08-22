@@ -9,14 +9,13 @@ import java.util.Objects;
 
   @MtPk public Integer nsId;
 
-  @St128
+  @St128 @MtDao
   public String name;
 
-  @St128
-  @MtPk(idx = 0) @MtUnique
+  @St128 @MtPk(idx = 0) @MtUnique
   public String path;
 
-  @MtField @MtNotNull
+  @MtCol @MtNotNull @MtDao
   public long createdAtUtcMs;
 
   public static Namespace of(String name, String path) {
@@ -25,10 +24,6 @@ import java.util.Objects;
     ns.path = Objects.requireNonNull(path);
     ns.createdAtUtcMs = System.currentTimeMillis();
     return ns;
-  }
-
-  @Override public String toString() {
-    return String.format("%d, %s, %s", nsId, name, path);
   }
 
 }

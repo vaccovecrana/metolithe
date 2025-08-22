@@ -37,7 +37,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     );
   }
 
-  private MtResult<T> save(T rec, boolean later) {
+  public MtResult<T> save(T rec, boolean later) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("insert", k ->
         format("insert into %s (%s) values (%s)",
@@ -48,7 +48,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       );
       var upd = sql().update(query);
       dsc.forEach(true, rec, upd::param);
-      return result(rec, later ? upd : upd.executeOn(jdbc));
+      return result(rec, later ? upd : upd.execute());
     });
   }
 
@@ -60,7 +60,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return save(rec, true);
   }
 
-  private MtResult<T> update(T rec, boolean later) {
+  public MtResult<T> update(T rec, boolean later) {
     return withId(rec, (fd, pk) -> {
       var queryAssignments = placeHolderAssignmentCsv(dsc, false);
       var query = getQueryCache().computeIfAbsent("update",
@@ -70,7 +70,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       var upd = sql().update(query);
       dsc.forEach(false, rec, upd::param);
       upd.param(fd.getFieldName(), pk);
-      return result(rec, later ? upd : upd.executeOn(jdbc));
+      return result(rec, later ? upd : upd.execute());
     });
   }
 
@@ -82,7 +82,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return update(rec, true);
   }
 
-  private MtResult<T> upsert(T rec, boolean later) {
+  public MtResult<T> upsert(T rec, boolean later) {
     return withId(rec, (fd, pk) -> load(pk).isEmpty()
       ? save(rec, later)
       : update(rec, later));
@@ -96,13 +96,13 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return upsert(rec, true);
   }
 
-  private MtResult<T> delete(T rec, boolean later) {
+  public MtResult<T> delete(T rec, boolean later) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s", getTableName(), fd.getFieldName(), fd.getFieldName())
       );
       var cmd = sql().update(query).param(fd.getFieldName(), pk);
-      return result(rec, later ? cmd : cmd.executeOn(jdbc));
+      return result(rec, later ? cmd : cmd.execute());
     });
   }
 
@@ -114,13 +114,13 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return delete(rec, true);
   }
 
-  private MtResult<T> deleteWhereEq(String field, Object value, boolean later) {
+  public MtResult<T> deleteWhereEq(String field, Object value, boolean later) {
     var fn = dsc.getFormat().of(field);
     var query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
       k -> format("delete from %s where %s = :%s", getTableName(), fn, fn)
     );
     var cmd = sql().update(query).param(fn, value);
-    return result(null, later ? cmd : cmd.executeOn(jdbc));
+    return result(null, later ? cmd : cmd.execute());
   }
 
   public MtResult<T> deleteWhereEq(String field, Object value) {
@@ -131,7 +131,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     return deleteWhereEq(field, value, true);
   }
 
-  private MtResult<T> deleteWhereIdEq(K id, boolean later) {
+  public MtResult<T> deleteWhereIdEq(K id, boolean later) {
     return dsc.getPkField()
       .map(mtFieldDescriptor -> deleteWhereEq(mtFieldDescriptor.getFieldName(), id, later))
       .orElseThrow(() -> generalError(format("Type [%s] has no primary key", dsc)));

@@ -9,7 +9,7 @@ public class DbUserRole {
   @MtPk @St16
   public String rid;
 
-  @MtField
+  @MtCol
   public long createdUtcMs;
 
 }

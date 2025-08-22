@@ -6,6 +6,7 @@ import io.vacco.metolithe.annotations.*;
 
   @MtPk public int id;
 
+  @MtDao
   @MtFk(ApiKey.class)
   @MtNotNull
   @MtPk(idx = 0) @MtUnique(idx = 0)
@@ -20,10 +21,6 @@ import io.vacco.metolithe.annotations.*;
     kn.kid = kid;
     kn.nsId = nsId;
     return kn;
-  }
-
-  @Override public String toString() {
-    return String.format("%d, %d, %d", id, kid, nsId);
   }
 
 }

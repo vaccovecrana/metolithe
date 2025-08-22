@@ -19,10 +19,6 @@ public class MtTransaction implements AutoCloseable, MtConn {
     return this;
   }
 
-  @Override public Connection get() {
-    return txConn;
-  }
-
   public void start(Consumer<Connection> txConnFn) {
     try {
       txConn = connFn.get();
@@ -64,6 +60,14 @@ public class MtTransaction implements AutoCloseable, MtConn {
         MtLog.warn("Failed to close connection", e);
       }
     }
+  }
+
+  @Override public Connection get() {
+    return txConn;
+  }
+
+  @Override public boolean inTx() {
+    return true;
   }
 
 }

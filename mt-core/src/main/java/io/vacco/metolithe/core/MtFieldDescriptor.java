@@ -17,8 +17,8 @@ public class MtFieldDescriptor {
   private static final List<Class<? extends Annotation>> mta = asList(
     MtEntity.class,
     MtPk.class, MtFk.class,
-    MtField.class, MtVarchar.class, MtNotNull.class,
-    MtIndex.class, MtUnique.class
+    MtCol.class, MtVarchar.class, MtNotNull.class,
+    MtIndex.class, MtUnique.class, MtDao.class
   );
 
   private final Field f;
@@ -62,6 +62,18 @@ public class MtFieldDescriptor {
     return annotations.stream()
       .filter(an0 -> match(annotation, an0.annotationType()))
       .map(an0 -> (T) an0).findFirst();
+  }
+
+  public boolean hasDaoLoadEq() {
+    return get(MtDao.class).map(MtDao::loadEq).orElse(false);
+  }
+
+  public boolean hasDaoLoadIn() {
+    return get(MtDao.class).map(MtDao::loadIn).orElse(false);
+  }
+
+  public boolean hasDaoDeleteEq() {
+    return get(MtDao.class).map(MtDao::deleteEq).orElse(false);
   }
 
   public boolean isPk() {

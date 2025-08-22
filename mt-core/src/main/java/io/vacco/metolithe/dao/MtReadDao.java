@@ -38,7 +38,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       return sql()
         .select(q)
         .param(fn, id)
-        .one(mapToDefault(), jdbc);
+        .one(mapToDefault());
     }
     return Optional.empty();
   }
@@ -47,7 +47,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return sql()
       .select(getSelectWhereEqQuery(field))
       .param(dsc.getFormat().of(field), value)
-      .list(mapToDefault(), jdbc);
+      .list(mapToDefault());
   }
 
   private List<String> paramLabels(int valueCount, String label) {
@@ -82,7 +82,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     for (int i = 0; i < values.length; i++) {
       select.param(labels.get(i), values[i]);
     }
-    var raw = select.list(mapToDefault(), jdbc);
+    var raw = select.list(mapToDefault());
     return raw.stream().collect(groupingBy(fd::getValue));
   }
 
@@ -118,7 +118,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
       for (var e : query.getParams().entrySet()) {
         q = q.param(e.getKey(), e.getValue());
       }
-      return q.list(mapToDefault(), jdbc);
+      return q.list(mapToDefault());
     } catch (Exception e) {
       throw badPageAccess(null, null, dsc, e);
     }

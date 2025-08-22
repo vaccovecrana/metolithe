@@ -9,7 +9,7 @@ import io.vacco.mt.test.annotations.St512;
 
   @MtPk public long did;
 
-  @MtField @MtNotNull
+  @MtCol @MtNotNull
   public DType type;
 
   @St512 @MtPk(idx = 0)

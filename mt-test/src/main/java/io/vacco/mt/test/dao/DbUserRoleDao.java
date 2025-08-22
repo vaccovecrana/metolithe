@@ -16,43 +16,8 @@ import java.util.Map;
  **************************************************/
 public class DbUserRoleDao extends MtWriteDao<io.vacco.mt.test.schema.DbUserRole, java.lang.String> {
 
-  public static final String fld_rid = "rid";
-  public static final String fld_createdUtcMs = "createdUtcMs";
-  
   public DbUserRoleDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.String> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.DbUserRole.class, fmt), idFn);
   }
-  
-  public MtFieldDescriptor fld_rid() {
-    return this.dsc.getField(fld_rid);
-  }
 
-  public List<io.vacco.mt.test.schema.DbUserRole> loadWhereRidEq(java.lang.String rid) {
-    return loadWhereEq(fld_rid, rid);
-  }
-
-  public final Map<java.lang.String, List<io.vacco.mt.test.schema.DbUserRole>> loadWhereRidIn(java.lang.String ... values) {
-    return loadWhereIn(fld_rid, values);
-  }
-
-  public MtResult<io.vacco.mt.test.schema.DbUserRole> deleteWhereRidEq(java.lang.String rid) {
-    return deleteWhereEq(fld_rid, rid);
-  }
-  
-  public MtFieldDescriptor fld_createdUtcMs() {
-    return this.dsc.getField(fld_createdUtcMs);
-  }
-
-  public List<io.vacco.mt.test.schema.DbUserRole> loadWhereCreatedUtcMsEq(java.lang.Long createdUtcMs) {
-    return loadWhereEq(fld_createdUtcMs, createdUtcMs);
-  }
-
-  public final Map<java.lang.Long, List<io.vacco.mt.test.schema.DbUserRole>> loadWhereCreatedUtcMsIn(java.lang.Long ... values) {
-    return loadWhereIn(fld_createdUtcMs, values);
-  }
-
-  public MtResult<io.vacco.mt.test.schema.DbUserRole> deleteWhereCreatedUtcMsEq(java.lang.Long createdUtcMs) {
-    return deleteWhereEq(fld_createdUtcMs, createdUtcMs);
-  }
-  
 }

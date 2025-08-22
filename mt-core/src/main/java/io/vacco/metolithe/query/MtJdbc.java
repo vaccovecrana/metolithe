@@ -10,17 +10,22 @@ import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtJdbc implements MtConn {
 
-  private MtConn connFn;
+  private final DataSource ds;
+  private MtConn txFn;
+
+  public MtJdbc(DataSource ds) {
+    this.ds = Objects.requireNonNull(ds);
+  }
 
   public MtCmd select(String sql) {
-    return new MtCmd(sql);
+    return new MtCmd(sql, this);
   }
 
   public MtCmd update(String sql) {
-    return new MtCmd(sql);
+    return new MtCmd(sql, this);
   }
 
-  public void transaction(BiConsumer<MtConn, Connection> txFn) {
+  public void tx(BiConsumer<MtConn, Connection> txFn) {
     try (var tx = new MtTransaction().withSupplier(this)) {
       tx.start(conn -> txFn.accept(tx, conn));
     } catch (Exception e) {
@@ -28,19 +33,29 @@ public class MtJdbc implements MtConn {
     }
   }
 
-  public void batch(MtConn connFn, Consumer<List<MtResult<?>>> batchFn) throws SQLException {
+  public void txJoin(MtConn txFn, Runnable block) {
+    try {
+      this.txFn = Objects.requireNonNull(txFn);
+      block.run();
+    } catch (Exception e) {
+      throw generalError("Transaction join failed", e);
+    } finally {
+      this.txFn = null;
+    }
+  }
+
+  public List<MtResult<?>> batch(Consumer<List<MtResult<?>>> batchFn) throws SQLException {
     var results = new ArrayList<MtResult<?>>();
     batchFn.accept(results);
     var idx = new LinkedHashMap<String, List<MtResult<?>>>();
     for (var res : results) {
-      idx.computeIfAbsent(
-        res.cmd.prepareSql().sqlP, k -> new ArrayList<>()
-      ).add(res);
+      var sql = res.cmd.prepareSql().sqlP;
+      idx.computeIfAbsent(sql, k -> new ArrayList<>()).add(res);
     }
     for (var e : idx.entrySet()) {
       var sql = e.getValue().get(0).cmd.sqlP;
       debug("Executing batch [{}]", sql);
-      try (var ps = connFn.get().prepareStatement(sql)) {
+      try (var ps = get().prepareStatement(sql)) {
         for (var res : e.getValue()) {
           res.cmd.fill(ps);
           ps.addBatch();
@@ -51,29 +66,22 @@ public class MtJdbc implements MtConn {
         }
       }
     }
-  }
-
-  public void batch(Consumer<List<MtResult<?>>> batchFn) throws SQLException {
-    batch(this, batchFn);
-  }
-
-  public MtJdbc withSupplier(MtConn connFn) {
-    this.connFn = Objects.requireNonNull(connFn);
-    return this;
-  }
-
-  public MtJdbc withSupplier(DataSource ds) {
-    return withSupplier(() -> {
-      try {
-        return ds.getConnection();
-      } catch (SQLException e) {
-        throw generalError("Error getting database connection", e);
-      }
-    });
+    return results;
   }
 
   @Override public Connection get() {
-    return connFn.get();
+    if (txFn != null) {
+      return txFn.get();
+    }
+    try {
+      return ds.getConnection();
+    } catch (SQLException e) {
+      throw generalError("Error getting database connection", e);
+    }
+  }
+
+  @Override public boolean inTx() {
+    return txFn != null;
   }
 
 }

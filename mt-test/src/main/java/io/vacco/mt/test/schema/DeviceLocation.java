@@ -18,8 +18,8 @@ import io.vacco.mt.test.annotations.St16;
 
   @St16 public String geoHash12Ip;
 
-  @MtField public long   logTimeUtcMs;
-  @MtField public double fraudScore;
-  @MtField public float  fraudScoreDelta;
+  @MtCol public long   logTimeUtcMs;
+  @MtCol public double fraudScore;
+  @MtCol public float  fraudScoreDelta;
 
 }

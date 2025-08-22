@@ -17,7 +17,7 @@ import io.vacco.mt.test.annotations.St64;
   @MtUnique(idx = 0)
   public long did;
 
-  @MtField public long claimTimeUtcMs;
+  @MtCol public long claimTimeUtcMs;
 
   @St64
   public String smsCodeSignature;

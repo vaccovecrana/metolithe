@@ -29,8 +29,4 @@ import java.util.Objects;
     return k;
   }
 
-  @Override public String toString() {
-    return String.format("%d, %d, %s, %s", kid, pKid, name, hash);
-  }
-
 }

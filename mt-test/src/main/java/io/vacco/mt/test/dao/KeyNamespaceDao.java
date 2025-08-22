@@ -16,60 +16,14 @@ import java.util.Map;
  **************************************************/
 public class KeyNamespaceDao extends MtWriteDao<io.vacco.mt.test.schema.KeyNamespace, java.lang.Integer> {
 
-  public static final String fld_id = "id";
   public static final String fld_kid = "kid";
-  public static final String fld_nsId = "nsId";
-  
+
   public KeyNamespaceDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Integer> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.KeyNamespace.class, fmt), idFn);
   }
-  
-  public MtFieldDescriptor fld_id() {
-    return this.dsc.getField(fld_id);
-  }
 
-  public List<io.vacco.mt.test.schema.KeyNamespace> loadWhereIdEq(java.lang.Integer id) {
-    return loadWhereEq(fld_id, id);
-  }
-
-  public final Map<java.lang.Integer, List<io.vacco.mt.test.schema.KeyNamespace>> loadWhereIdIn(java.lang.Integer ... values) {
-    return loadWhereIn(fld_id, values);
-  }
-
-  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereIdEq(java.lang.Integer id) {
-    return deleteWhereEq(fld_id, id);
-  }
-  
   public MtFieldDescriptor fld_kid() {
     return this.dsc.getField(fld_kid);
   }
 
-  public List<io.vacco.mt.test.schema.KeyNamespace> loadWhereKidEq(java.lang.Integer kid) {
-    return loadWhereEq(fld_kid, kid);
-  }
-
-  public final Map<java.lang.Integer, List<io.vacco.mt.test.schema.KeyNamespace>> loadWhereKidIn(java.lang.Integer ... values) {
-    return loadWhereIn(fld_kid, values);
-  }
-
-  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereKidEq(java.lang.Integer kid) {
-    return deleteWhereEq(fld_kid, kid);
-  }
-  
-  public MtFieldDescriptor fld_nsId() {
-    return this.dsc.getField(fld_nsId);
-  }
-
-  public List<io.vacco.mt.test.schema.KeyNamespace> loadWhereNsIdEq(java.lang.Integer nsId) {
-    return loadWhereEq(fld_nsId, nsId);
-  }
-
-  public final Map<java.lang.Integer, List<io.vacco.mt.test.schema.KeyNamespace>> loadWhereNsIdIn(java.lang.Integer ... values) {
-    return loadWhereIn(fld_nsId, values);
-  }
-
-  public MtResult<io.vacco.mt.test.schema.KeyNamespace> deleteWhereNsIdEq(java.lang.Integer nsId) {
-    return deleteWhereEq(fld_nsId, nsId);
-  }
-  
 }

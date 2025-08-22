@@ -16,26 +16,35 @@ import java.util.Map;
  **************************************************/
 public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mtPkClassName}}> {
 
-  {{for mtField in mtFields}}public static final String fld_{{mtField.getFieldRawName()}} = "{{mtField.getFieldName()}}";
+  {{for mtField in mtFields}}
+  public static final String fld_{{mtField.getFieldRawName()}} = "{{mtField.getFieldName()}}";
   {{end}}
+
   public {{mtDaoClass}}Dao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<{{mtPkClassName}}> idFn) {
     super(schema, jdbc, new MtDescriptor<>({{mtDsc.getClassName()}}.class, fmt), idFn);
   }
+
   {{for mtField in mtFields}}
   public MtFieldDescriptor fld_{{mtField.getFieldRawName()}}() {
     return this.dsc.getField(fld_{{mtField.getFieldRawName()}});
   }
 
+  {{if mtField.hasDaoLoadEq()}}
   public List<{{mtDsc.getClassName()}}> loadWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
     return loadWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
   }
+  {{end}}
 
+  {{if mtField.hasDaoLoadIn()}}
   public final Map<{{toWrapper(mtField.getType())}}, List<{{mtDsc.getClassName()}}>> loadWhere{{toBeanCase(mtField.getFieldRawName())}}In({{toWrapper(mtField.getType())}} ... values) {
     return loadWhereIn(fld_{{mtField.getFieldRawName()}}, values);
   }
+  {{end}}
 
+  {{if mtField.hasDaoDeleteEq()}}
   public MtResult<{{mtDsc.getClassName()}}> deleteWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
     return deleteWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});
   }
+  {{end}}
   {{end}}
 }

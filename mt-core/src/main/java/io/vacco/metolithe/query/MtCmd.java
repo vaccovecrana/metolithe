@@ -1,5 +1,6 @@
 package io.vacco.metolithe.query;
 
+import io.vacco.metolithe.core.MtLog;
 import java.sql.*;
 import java.util.*;
 
@@ -9,18 +10,20 @@ public class MtCmd {
 
   private final Map<String, Object> params = new LinkedHashMap<>();
   private final List<Object>        values = new ArrayList<>();
+  private final MtConn              connFn;
 
   public        String sqlP;
   private final String sql;
   public  int   rowCount = -1;
 
-  MtCmd(String sql) {
-    this.sql = sql;
+  MtCmd(String sql, MtConn connFn) {
+    this.sql = Objects.requireNonNull(sql);
+    this.connFn = Objects.requireNonNull(connFn);
   }
 
   public MtCmd param(String name, Object value) {
     if (value instanceof Enum) {
-       params.put(name, value.toString());
+      params.put(name, value.toString());
     } else {
       params.put(name, value);
     }
@@ -42,27 +45,32 @@ public class MtCmd {
     }
   }
 
-  public MtCmd executeOn(Connection conn) {
+  private void close(Connection conn) {
+    try {
+      conn.close();
+    } catch (SQLException e) {
+      MtLog.warn("Failed to close connection", e);
+    }
+  }
+
+  public MtCmd execute() {
+    var conn = connFn.get();
     try (var ps = conn.prepareStatement(prepareSql().sqlP)) {
       this.fill(ps);
       this.rowCount = ps.executeUpdate();
       return this;
     } catch (SQLException e) {
       throw badSql(false, sql, e);
+    } finally {
+      if (!connFn.inTx()) {
+        close(conn);
+      }
     }
   }
 
-  public MtCmd executeOn(MtConn connFn) {
-    try (var conn = connFn.get()) {
-      return executeOn(conn);
-    } catch (SQLException e) {
-      throw badSql(false, sql, e);
-    }
-  }
-
-  public <T> List<T> list(MtMapper<T> mapper, MtConn connFn) {
-    try (var conn = connFn.get();
-         var ps   = conn.prepareStatement(prepareSql().sqlP)) {
+  public <T> List<T> list(MtMapper<T> mapper) {
+    var conn = connFn.get();
+    try (var ps = conn.prepareStatement(prepareSql().sqlP)) {
       this.fill(ps);
       var rs = ps.executeQuery();
       var results = new ArrayList<T>();
@@ -72,11 +80,15 @@ public class MtCmd {
       return results;
     } catch (SQLException e) {
       throw badSql(true, sql, e);
+    } finally {
+      if (!connFn.inTx()) {
+        close(conn);
+      }
     }
   }
 
-  public <T> Optional<T> one(MtMapper<T> mapper, MtConn connFn) {
-    return list(mapper, connFn).stream().findFirst();
+  public <T> Optional<T> one(MtMapper<T> mapper) {
+    return list(mapper).stream().findFirst();
   }
 
 }

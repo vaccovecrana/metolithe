@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 @RunWith(J8SpecRunner.class)
 public class MtDaoTest extends MtTest {
 
-  private static final MtJdbc           jdbc = new MtJdbc().withSupplier(ds);
+  private static final MtJdbc           jdbc  = new MtJdbc(ds);
   private static final MtIdFn<Integer>  m3Ifn = new MtMurmur3IFn();
   private static final MtIdFn<Long>     m3Lfn = new MtMurmur3LFn();
   private static final MtIdFn<Integer>  xxIfn = new MtXxHashIFn();
@@ -89,20 +89,20 @@ public class MtDaoTest extends MtTest {
       };
       var urDao = new MtWriteDao<>(schema, jdbc, new MtDescriptor<>(DbUserRole.class, fmt), stIdFn);
 
-      MtLog.warn("{}", kv("p0", pDao.upsertLater(p0).on(jdbc.get())));
+      MtLog.warn("{}", kv("p0", pDao.upsert(p0)));
 
       var p01 = pDao.loadExisting(p0.pid);
       assertEquals(p0.pid, p01.pid);
       assertEquals(p0.countryCode, p01.countryCode);
       assertEquals(p0.number, p01.number);
 
-      pDao.sql().transaction((tx, conn) -> {
-        log.info("{}", kv("p1s", pDao.saveLater(p1).on(conn)));
-        log.info("{}", kv("p1Del", pDao.deleteWhereIdEqLater(p1.pid).on(conn)));
-        log.info("{}", kv("p1s", pDao.saveLater(p1).on(conn)));
-        log.info("{}", kv("p0Del", pDao.deleteLater(p0).on(conn)));
-        log.info("{}", kv("p0m", pDao.saveLater(p0).on(conn)));
-      });
+      pDao.sql().tx((tx, conn) -> pDao.sql().txJoin(tx, () -> {
+        log.info("{}", kv("p1s", pDao.save(p1)));
+        log.info("{}", kv("p1Del", pDao.deleteWhereIdEq(p1.pid)));
+        log.info("{}", kv("p1s", pDao.save(p1)));
+        log.info("{}", kv("p0Del", pDao.delete(p0)));
+        log.info("{}", kv("p0m", pDao.save(p0)));
+      }));
 
       log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
       log.info("{}", kv("d0m", dDao.upsert(d0)));
