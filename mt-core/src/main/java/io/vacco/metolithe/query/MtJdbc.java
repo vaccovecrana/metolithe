@@ -3,6 +3,7 @@ package io.vacco.metolithe.query;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 
 import static io.vacco.metolithe.core.MtLog.debug;
@@ -10,8 +11,9 @@ import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtJdbc implements MtConn {
 
+  private static final Map<Thread, MtConn> txIdx = new ConcurrentHashMap<>();
+
   private final DataSource ds;
-  private MtConn txFn;
 
   public MtJdbc(DataSource ds) {
     this.ds = Objects.requireNonNull(ds);
@@ -27,20 +29,12 @@ public class MtJdbc implements MtConn {
 
   public void tx(BiConsumer<MtConn, Connection> txFn) {
     try (var tx = new MtTransaction().withSupplier(this)) {
+      txIdx.put(Thread.currentThread(), tx);
       tx.start(conn -> txFn.accept(tx, conn));
     } catch (Exception e) {
       throw generalError("Transaction failed", e);
-    }
-  }
-
-  public void txJoin(MtConn txFn, Runnable block) {
-    try {
-      this.txFn = Objects.requireNonNull(txFn);
-      block.run();
-    } catch (Exception e) {
-      throw generalError("Transaction join failed", e);
     } finally {
-      this.txFn = null;
+      txIdx.remove(Thread.currentThread());
     }
   }
 
@@ -69,8 +63,13 @@ public class MtJdbc implements MtConn {
     return results;
   }
 
+  private MtConn getTxFn() {
+    return txIdx.get(Thread.currentThread());
+  }
+
   @Override public Connection get() {
-    if (txFn != null) {
+    var txFn = getTxFn();
+    if (txFn != null && txFn.get() != null) {
       return txFn.get();
     }
     try {
@@ -81,7 +80,7 @@ public class MtJdbc implements MtConn {
   }
 
   @Override public boolean inTx() {
-    return txFn != null;
+    return getTxFn() != null;
   }
 
 }

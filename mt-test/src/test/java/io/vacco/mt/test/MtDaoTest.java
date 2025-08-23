@@ -96,13 +96,16 @@ public class MtDaoTest extends MtTest {
       assertEquals(p0.countryCode, p01.countryCode);
       assertEquals(p0.number, p01.number);
 
-      pDao.sql().tx((tx, conn) -> pDao.sql().txJoin(tx, () -> {
+      pDao.sql().tx((tx, conn) -> {
+        assertEquals(tx.get(), conn);
+        assertEquals(tx.get(), pDao.sql().get());
+        assertEquals(tx.get(), uDao.sql().get());
         log.info("{}", kv("p1s", pDao.save(p1)));
         log.info("{}", kv("p1Del", pDao.deleteWhereIdEq(p1.pid)));
         log.info("{}", kv("p1s", pDao.save(p1)));
         log.info("{}", kv("p0Del", pDao.delete(p0)));
         log.info("{}", kv("p0m", pDao.save(p0)));
-      }));
+      });
 
       log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
       log.info("{}", kv("d0m", dDao.upsert(d0)));
