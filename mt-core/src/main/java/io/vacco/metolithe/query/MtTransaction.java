@@ -9,8 +9,10 @@ import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtTransaction implements AutoCloseable, MtConn {
 
-  private MtConn connFn;
-  private Connection txConn;
+  private MtConn               connFn;
+  private Connection           txConn;
+  private Consumer<Connection> afterTxFn;
+
   private boolean isOpen;
   private boolean shouldCommit = true;
 
@@ -19,18 +21,19 @@ public class MtTransaction implements AutoCloseable, MtConn {
     return this;
   }
 
-  public void start(Consumer<Connection> txConnFn) {
+  public void start(Consumer<Connection> txConnFn, Consumer<Connection> afterTxFn) {
     try {
-      txConn = connFn.get();
-      txConn.setAutoCommit(false);
-      isOpen = true;
+      this.txConn = connFn.get();
+      this.txConn.setAutoCommit(false);
+      this.isOpen = true;
+      this.afterTxFn = afterTxFn;
       txConnFn.accept(txConn);
     } catch (SQLException e) {
       throw generalError("Failed to start transaction", e);
     }
   }
 
-  public void rollback() {
+  @Override public void rollback() {
     shouldCommit = false;
   }
 
@@ -55,6 +58,9 @@ public class MtTransaction implements AutoCloseable, MtConn {
     } finally {
       try {
         txConn.setAutoCommit(true);
+        if (this.afterTxFn != null) {
+          this.afterTxFn.accept(txConn);
+        }
         txConn.close();
       } catch (SQLException e) {
         MtLog.warn("Failed to close connection", e);

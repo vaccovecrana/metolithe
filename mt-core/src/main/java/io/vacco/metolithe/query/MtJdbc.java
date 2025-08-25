@@ -27,15 +27,19 @@ public class MtJdbc implements MtConn {
     return new MtCmd(sql, this);
   }
 
-  public void tx(BiConsumer<MtConn, Connection> txFn) {
+  public void tx(BiConsumer<MtConn, Connection> txFn, Consumer<Connection> afterTx) {
     try (var tx = new MtTransaction().withSupplier(this)) {
       txIdx.put(Thread.currentThread(), tx);
-      tx.start(conn -> txFn.accept(tx, conn));
+      tx.start(conn -> txFn.accept(tx, conn), afterTx);
     } catch (Exception e) {
       throw generalError("Transaction failed", e);
     } finally {
       txIdx.remove(Thread.currentThread());
     }
+  }
+
+  public void tx(BiConsumer<MtConn, Connection> txFn) {
+    tx(txFn, null);
   }
 
   public List<MtResult<?>> batch(Consumer<List<MtResult<?>>> batchFn) throws SQLException {
@@ -81,6 +85,13 @@ public class MtJdbc implements MtConn {
 
   @Override public boolean inTx() {
     return getTxFn() != null;
+  }
+
+  @Override public void rollback() {
+    var tx = getTxFn();
+    if (tx != null) {
+      tx.rollback();
+    }
   }
 
 }

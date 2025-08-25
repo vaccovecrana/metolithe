@@ -1,9 +1,8 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.core.*;
-import io.vacco.mt.test.schema.DbUser;
-import io.vacco.mt.test.schema.Device;
-import io.vacco.mt.test.schema.Phone;
+import io.vacco.metolithe.id.MtXxHashLFn;
+import io.vacco.mt.test.schema.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
@@ -45,6 +44,7 @@ public class MtAnnotationsTest extends MtTest {
         logDescriptor(new MtDescriptor<>(DbUser.class, UPPER_CASE), u0);
         logDescriptor(new MtDescriptor<>(Device.class, LOWER_CASE), d0);
         logDescriptor(new MtDescriptor<>(Phone.class, KEEP_CASE), p0);
+        log.info("XXHashL: {}", new MtXxHashLFn().apply(new Object[] {"Hello", "friend"}));
       });
     });
   }

@@ -11,7 +11,9 @@ import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import io.vacco.metolithe.query.MtJdbc;
 import org.junit.runner.RunWith;
+import java.sql.*;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.*;
 
 import static io.vacco.shax.logging.ShArgument.kv;
@@ -96,6 +98,16 @@ public class MtDaoTest extends MtTest {
       assertEquals(p0.countryCode, p01.countryCode);
       assertEquals(p0.number, p01.number);
 
+      var afterTx = (Consumer<Connection>) conn -> {
+        try {
+          if (conn.getWarnings() != null) {
+            log.info(conn.getWarnings().toString());
+          }
+        } catch (SQLException e) {
+          log.error(e.toString(), e);
+        }
+      };
+
       pDao.sql().tx((tx, conn) -> {
         assertEquals(tx.get(), conn);
         assertEquals(tx.get(), pDao.sql().get());
@@ -105,7 +117,12 @@ public class MtDaoTest extends MtTest {
         log.info("{}", kv("p1s", pDao.save(p1)));
         log.info("{}", kv("p0Del", pDao.delete(p0)));
         log.info("{}", kv("p0m", pDao.save(p0)));
-      });
+      }, afterTx);
+
+      pDao.sql().tx((tx, conn) -> {
+        pDao.upsert(p0);
+        tx.rollback();
+      }, afterTx);
 
       log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
       log.info("{}", kv("d0m", dDao.upsert(d0)));
