@@ -33,7 +33,7 @@ public class MtCmd {
   public MtCmd prepareSql() {
     sqlP = sql;
     for (var param : params.keySet()) {
-      sqlP = sqlP.replace(":" + param, "?");
+      sqlP = sqlP.replaceFirst(":" + param, "?");
       values.add(params.get(param));
     }
     return this;

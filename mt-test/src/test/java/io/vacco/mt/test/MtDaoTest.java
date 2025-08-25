@@ -174,6 +174,12 @@ public class MtDaoTest extends MtTest {
       log.info("{}", kv("loadWhereAliasEqJane", ud.loadWhereAliasEq("Jane")));
       log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(u0.email, u1.email)));
       log.info("{}", kv("loadWhereEmailInArray", ud.loadWhereTidIn(u0.tid, u1.tid)));
+      log.info("{}", kv("loadWhereEmailIn", ud.loadWhereEmailIn(
+        "m00@me.com", "m01@me.com", "m02@me.com", "m03@me.com",
+        "m04@me.com", "m05@me.com", "m06@me.com", "m07@me.com",
+        "m08@me.com", "m09@me.com", "m10@me.com", "m11@me.com",
+        "m12@me.com", "m13@me.com", "m14@me.com", "m15@me.com"
+      )));
     });
 
     it("Uses filter predicates for basic search", () -> {
