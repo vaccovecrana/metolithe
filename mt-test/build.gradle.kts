@@ -10,6 +10,7 @@ dependencies {
   implementation(project(":mt-annotations"))
   implementation(project(":mt-codegen"))
   implementation("io.vacco.shax:shax:2.0.16.0.4.3")
-  implementation("com.h2database:h2:2.1.210")
   implementation("org.apache.commons:commons-lang3:3.18.0")
+  implementation("com.h2database:h2:2.1.210")
+  implementation("org.xerial:sqlite-jdbc:3.50.3.0")
 }

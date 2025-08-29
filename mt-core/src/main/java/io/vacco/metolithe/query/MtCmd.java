@@ -48,7 +48,7 @@ public class MtCmd {
   private void close(Connection conn) {
     try {
       conn.close();
-    } catch (SQLException e) {
+    } catch (Exception e) {
       MtLog.warn("Failed to close connection", e);
     }
   }

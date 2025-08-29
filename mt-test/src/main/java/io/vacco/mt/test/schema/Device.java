@@ -15,4 +15,7 @@ import io.vacco.mt.test.annotations.St512;
   @St512 @MtPk(idx = 0)
   public String signingKey;
 
+  @MtCol @MtNotNull @MtDao(loadEq = true)
+  public boolean disabled;
+
 }

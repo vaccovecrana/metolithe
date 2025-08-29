@@ -16,8 +16,18 @@ import java.util.Map;
  **************************************************/
 public class DeviceDao extends MtWriteDao<io.vacco.mt.test.schema.Device, java.lang.Long> {
 
+  public static final String fld_disabled = "disabled";
+
   public DeviceDao(String schema, MtCaseFormat fmt, MtJdbc jdbc, MtIdFn<java.lang.Long> idFn) {
     super(schema, jdbc, new MtDescriptor<>(io.vacco.mt.test.schema.Device.class, fmt), idFn);
+  }
+
+  public MtFieldDescriptor fld_disabled() {
+    return this.dsc.getField(fld_disabled);
+  }
+
+  public List<io.vacco.mt.test.schema.Device> loadWhereDisabledEq(java.lang.Boolean disabled) {
+    return loadWhereEq(fld_disabled, disabled);
   }
 
 }

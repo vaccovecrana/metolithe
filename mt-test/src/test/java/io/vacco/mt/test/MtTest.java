@@ -1,32 +1,47 @@
 package io.vacco.mt.test;
 
-import io.vacco.metolithe.changeset.MtChange;
-import io.vacco.metolithe.changeset.MtTable;
-import io.vacco.metolithe.core.MtCaseFormat;
+import io.vacco.metolithe.changeset.MtLevel;
+import io.vacco.metolithe.core.*;
 import io.vacco.metolithe.id.MtXxHash;
 import io.vacco.mt.test.schema.*;
 import io.vacco.shax.logging.ShOption;
-import org.h2.jdbcx.JdbcDataSource;
 import org.slf4j.*;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 public abstract class MtTest {
 
+  public enum MtDb {
+    Sqlite("jdbc:sqlite:./build/db/sqlite/test.db", "main", MtLevel.TABLE_COMPACT),
+    H2("jdbc:h2:file:./build/db/h2/test;DB_CLOSE_DELAY=-1", "public", MtLevel.TABLE_MAX);
+
+    public final String url;
+    public final String schema;
+    public final MtLevel level;
+
+    MtDb(String url, String schema, MtLevel level) {
+      this.url = url;
+      this.schema = schema;
+      this.level = level;
+    }
+  }
+
   static {
+    new File("./build/db/sqlite").mkdirs();
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
   }
 
-  protected static final String schema = "public";
   protected static final Logger log = LoggerFactory.getLogger(MtTest.class);
-  protected static final JdbcDataSource ds = new JdbcDataSource();
   protected static final MtCaseFormat fmt = MtCaseFormat.KEEP_CASE;
 
-  protected static List<MtTable> tables;
-  protected static List<MtChange> changes;
+  static {
+    MtLog.setInfoLogger(log::info);
+    MtLog.setDebugLogger(log::debug);
+    MtLog.setWarnLogger(log::warn);
+  }
 
   public static Class<?>[] testSchema = new Class<?>[] {
     Device.class, DeviceLocation.class, DeviceTag.class,
@@ -44,10 +59,6 @@ public abstract class MtTest {
   public static Device d1 = new Device();
 
   static {
-    // uncomment to inspect data
-    // ds.setURL("jdbc:h2:file:./build/db-test;DB_CLOSE_DELAY=-1");
-    ds.setURL("jdbc:h2:mem:public;DB_CLOSE_DELAY=-1");
-
     u0.alias = "Jane";
     u0.email = "jane@me.com";
     u0.pw = "0xAAABBBCCCDDDEEFFF";

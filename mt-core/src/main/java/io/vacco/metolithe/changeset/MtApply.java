@@ -29,7 +29,7 @@ public class MtApply {
   private final String schema;
   private final Connection conn;
 
-  private boolean autoCommit = false;
+  private boolean useTransactions = true;
 
   public MtApply(Connection conn, String schema) {
     this.conn = Objects.requireNonNull(conn);
@@ -37,16 +37,17 @@ public class MtApply {
   }
 
   /**
-   * Some databases don't fully support transactions, so you have the option
-   * to disable this, with proper caution of course.
+   * If true (default), wrap operations in transactions for atomicity.
+   * If false, assume auto-commit mode and apply changes without explicit transactions
+   * (useful for databases with limited transaction support).
    */
-  public MtApply withAutoCommit(boolean autoCommit) {
-    this.autoCommit = autoCommit;
+  public MtApply withTransactions(boolean useTransactions) {
+    this.useTransactions = useTransactions;
     return this;
   }
 
   private boolean tableMissing(String tableName) throws SQLException {
-    try (var rs = conn.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"})) {
+    try (var rs = conn.getMetaData().getTables(null, null, tableName, new String[] { "TABLE" })) {
       return !rs.next();
     }
   }
@@ -108,7 +109,9 @@ public class MtApply {
   public boolean claimLock() throws SQLException {
     var originalAutoCommit = conn.getAutoCommit();
     try {
-      conn.setAutoCommit(this.autoCommit);
+      if (useTransactions) {
+        conn.setAutoCommit(false);
+      }
       try (var pstmt = conn.prepareStatement(format(
         "UPDATE %s SET locked = ?, lock_granted = ?, locked_by = ? WHERE id = 1 AND (locked = FALSE OR lock_granted < ?)",
         lockTableName()
@@ -120,28 +123,52 @@ public class MtApply {
         pstmt.setTimestamp(4, staleThreshold);
         var rowsUpdated = pstmt.executeUpdate();
         if (rowsUpdated == 1) {
-          conn.commit();
+          if (useTransactions) {
+            conn.commit();
+          }
           info("Acquired database lock");
           return true; // Lock acquired
         } else {
-          conn.rollback();
+          if (useTransactions) {
+            conn.rollback();
+          }
           return false; // Lock already held
         }
       }
     } finally {
-      conn.setAutoCommit(originalAutoCommit);
+      if (useTransactions) {
+        conn.setAutoCommit(originalAutoCommit);
+      }
     }
   }
 
   public void releaseLock() throws SQLException {
-    try (var pstmt = conn.prepareStatement(format(
-      "UPDATE %s SET locked = FALSE, lock_granted = NULL, locked_by = NULL WHERE id = 1 AND locked_by = ?",
-      lockTableName()
-    ))) {
-      pstmt.setString(1, LOCK_ID);
-      int state = pstmt.executeUpdate();
-      if (state > 0) {
-        info("Released database lock");
+    var originalAutoCommit = conn.getAutoCommit();
+    try {
+      if (useTransactions) {
+        conn.setAutoCommit(false);
+      }
+      try (var pstmt = conn.prepareStatement(format(
+        "UPDATE %s SET locked = FALSE, lock_granted = NULL, locked_by = NULL WHERE id = 1 AND locked_by = ?",
+        lockTableName()
+      ))) {
+        pstmt.setString(1, LOCK_ID);
+        int state = pstmt.executeUpdate();
+        if (useTransactions) {
+          conn.commit();
+        }
+        if (state > 0) {
+          info("Released database lock");
+        }
+      }
+    } catch (SQLException e) {
+      if (useTransactions) {
+        conn.rollback();
+      }
+      throw e;
+    } finally {
+      if (useTransactions) {
+        conn.setAutoCommit(originalAutoCommit);
       }
     }
   }
@@ -157,51 +184,6 @@ public class MtApply {
     }
   }
 
-  private MtState applyChange(MtChange chg) throws Exception {
-    try (var checkStmt = conn.prepareStatement(
-      format("SELECT id, hash FROM %s WHERE id = ?", logTableName())
-    )) {
-      checkStmt.setString(1, chg.id);
-      try (var rs = checkStmt.executeQuery()) {
-        if (rs.next()) {
-          var hash = rs.getString(2); // hash col
-          checkHash(hash, chg.hash, chg.id);
-          return MtState.Found; // Skip if already applied
-        }
-      }
-    }
-    try (var stmt = conn.createStatement()) {
-      stmt.executeUpdate(chg.sql);
-    }
-    try (var logStmt = conn.prepareStatement(
-      format(
-        join("\n",
-          "INSERT INTO %s",
-          "(id, source, context, hash, author, sql, description, utcMs)",
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        ),
-        logTableName()
-      )
-    )) {
-      var nowMs = System.currentTimeMillis();
-      logStmt.setString(1, chg.id);
-      logStmt.setString(2, chg.source);
-      logStmt.setString(3, chg.context);
-      logStmt.setString(4, chg.hash);
-      logStmt.setString(5, chg.author);
-      logStmt.setString(6, chg.sql);
-      logStmt.setString(7, chg.description);
-      logStmt.setLong(8, nowMs);
-
-      int state = logStmt.executeUpdate();
-      if (state > 0) {
-        chg.utcMs = nowMs;
-        info("Executed changeset {}", chg);
-      }
-    }
-    return MtState.Applied;
-  }
-
   public void applyChanges(List<MtChange> changes, String context) throws Exception {
     init();
     if (!claimLock()) {
@@ -209,19 +191,71 @@ public class MtApply {
     }
     var originalAutoCommit = conn.getAutoCommit();
     try {
-      conn.setAutoCommit(this.autoCommit);
       for (var chg : changes) {
         var tryApply = context == null || context.equals(chg.context);
-        if (tryApply) {
-          chg.state = applyChange(chg);
-        } else {
+        if (!tryApply) {
           chg.state = MtState.Skipped;
+          continue;
+        }
+        try (var checkStmt = conn.prepareStatement(
+          format("SELECT id, hash FROM %s WHERE id = ?", logTableName())
+        )) {
+          checkStmt.setString(1, chg.id);
+          try (var rs = checkStmt.executeQuery()) {
+            if (rs.next()) {
+              var hash = rs.getString(2); // hash col
+              checkHash(hash, chg.hash, chg.id);
+              chg.state = MtState.Found;
+              continue;
+            }
+          }
+        }
+        if (useTransactions) {
+          conn.setAutoCommit(false);
+        }
+        try {
+          try (var stmt = conn.createStatement()) {
+            stmt.executeUpdate(chg.sql);
+          }
+          var nowMs = System.currentTimeMillis();
+          try (var logStmt = conn.prepareStatement(
+            format(
+              join("\n",
+                "INSERT INTO %s",
+                "(id, source, context, hash, author, sql, description, utcMs)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+              ),
+              logTableName()
+            )
+          )) {
+            logStmt.setString(1, chg.id);
+            logStmt.setString(2, chg.source);
+            logStmt.setString(3, chg.context);
+            logStmt.setString(4, chg.hash);
+            logStmt.setString(5, chg.author);
+            logStmt.setString(6, chg.sql);
+            logStmt.setString(7, chg.description);
+            logStmt.setLong(8, nowMs);
+            logStmt.executeUpdate();
+          }
+          if (useTransactions) {
+            conn.commit();
+          }
+          chg.utcMs = nowMs;
+          chg.state = MtState.Applied;
+          info("Executed changeset {}", chg);
+        } catch (Exception e) {
+          if (useTransactions) {
+            conn.rollback();
+          }
+          chg.state = MtState.Failed;
+          throw e;
+        } finally {
+          if (useTransactions) {
+            conn.setAutoCommit(originalAutoCommit);
+          }
         }
       }
-      conn.commit();
-    } catch (Exception e) {
-      conn.rollback();
-      throw e;
     } finally {
       conn.setAutoCommit(originalAutoCommit);
       releaseLock();
