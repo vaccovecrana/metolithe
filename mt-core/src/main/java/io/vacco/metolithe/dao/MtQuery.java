@@ -171,15 +171,26 @@ public class MtQuery {
   }
 
   public String renderOrderBy() {
-    return orderByFields.stream()
+    if (orderByFields.isEmpty()) {
+      return "";
+    }
+    var fieldsCsv = orderByFields.stream()
       .map(fd -> String.format("%s %s", fd.getFieldNameAliased(), orderByReverse ? "desc" : "asc"))
       .collect(Collectors.joining(", "));
+    return format("order by %s", fieldsCsv);
+  }
+
+  public String renderLimit() {
+    if (limit == null) {
+      return "";
+    }
+    return format("limit %d", limit + 1);
   }
 
   public String renderJoins() {
     return joins.stream()
       .map(MtJoin::render)
-      .collect(Collectors.joining(" "));
+      .collect(Collectors.joining("\n"));
   }
 
   public String render() {
@@ -189,19 +200,21 @@ public class MtQuery {
       "where 1 = 1",
       "%s",                   // filter predicate
       "%s",                   // seek predicate
-      "order by %s %s"        // sort fields, limit
+      "%s",                   // order by
+      "%s"                    // limit
     );
     var joins = renderJoins();
     var filterP = renderFilter().isEmpty() ? "" : format("and (%s)", renderFilter());
     var seekP = renderSeek();
     var orderBy = renderOrderBy();
+    var limit = renderLimit();
     var alias = (from != null ? from : target).getAlias();
     var table = (from != null ? from : target).getTableName(schema);
     return format(qFmt,
       propNamesCsv(target, true, target.getAlias()),
       table, alias,
-      joins, filterP, seekP, orderBy,
-      limit != null ? format("limit %d", limit + 1) : ""
+      joins, filterP, seekP,
+      orderBy, limit
     );
   }
 
