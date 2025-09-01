@@ -1,7 +1,6 @@
 package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtDescriptor;
-
 import java.util.Objects;
 
 import static java.lang.String.format;
@@ -23,24 +22,26 @@ public class MtJoin {
   }
 
   public static MtJoin inner(String schema, MtDescriptor<?> sourceTable, MtDescriptor<?> targetTable) {
-    var pk = targetTable.getPkField().orElseThrow();
-    var fk = sourceTable.getForeignKeyTo(targetTable.getType()).orElseThrow(
+    var fk = sourceTable.getForeignKeyTo(targetTable).orElseThrow(
       () -> new IllegalArgumentException(format(
-        "Table [%s] has no foreign key to [%s]", sourceTable, targetTable
+        "Table [%s] has no foreign key to/from [%s]", sourceTable, targetTable
       ))
     );
-    var join = MtPredicate.join(fk, pk);
+    var s2t = fk.parent.equals(sourceTable);
+    var pk = (s2t ? targetTable : sourceTable).getPkField().orElseThrow();
+    var join = s2t ? MtPredicate.join(fk, pk) : MtPredicate.join(pk, fk);
     return new MtJoin(schema, JoinType.INNER, sourceTable, join);
   }
 
   public static MtJoin left(String schema, MtDescriptor<?> sourceTable, MtDescriptor<?> targetTable) {
-    var pk = targetTable.getPkField().orElseThrow();
-    var fk = sourceTable.getForeignKeyTo(targetTable.getType()).orElseThrow(
+    var fk = sourceTable.getForeignKeyTo(targetTable).orElseThrow(
       () -> new IllegalArgumentException(format(
-        "Table [%s] has no foreign key to [%s]", sourceTable, targetTable
+        "Table [%s] has no foreign key to/from [%s]", sourceTable, targetTable
       ))
     );
-    var join = MtPredicate.join(fk, pk);
+    var s2t = fk.parent.equals(sourceTable);
+    var pk = (s2t ? targetTable : sourceTable).getPkField().orElseThrow();
+    var join = s2t ? MtPredicate.join(fk, pk) : MtPredicate.join(pk, fk);
     return new MtJoin(schema, JoinType.LEFT, sourceTable, join);
   }
 

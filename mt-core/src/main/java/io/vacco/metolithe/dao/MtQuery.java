@@ -195,10 +195,10 @@ public class MtQuery {
     var filterP = renderFilter().isEmpty() ? "" : format("and (%s)", renderFilter());
     var seekP = renderSeek();
     var orderBy = renderOrderBy();
-    var alias = target.getAlias();
-    var table = from != null ? from.getTableName(schema) : target.getTableName(schema);
+    var alias = (from != null ? from : target).getAlias();
+    var table = (from != null ? from : target).getTableName(schema);
     return format(qFmt,
-      propNamesCsv(target, true, alias),
+      propNamesCsv(target, true, target.getAlias()),
       table, alias,
       joins, filterP, seekP, orderBy,
       limit != null ? format("limit %d", limit + 1) : ""

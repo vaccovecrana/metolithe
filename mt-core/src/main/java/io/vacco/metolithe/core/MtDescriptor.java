@@ -80,6 +80,14 @@ public class MtDescriptor<T> {
       ).findFirst();
   }
 
+  public Optional<MtFieldDescriptor> getForeignKeyTo(MtDescriptor<?> target) {
+    var fk = getForeignKeyTo(target.getType());
+    if (fk.isPresent()) {
+      return fk;
+    }
+    return target.getForeignKeyTo(this.getType());
+  }
+
   public Stream<MtFieldDescriptor> get(Class<? extends Annotation> target) {
     return fields.stream().filter(fd -> fd.get(target).isPresent());
   }

@@ -24,7 +24,7 @@ public class MtFieldDescriptor {
   private final Field f;
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
-  private final MtDescriptor<?> parent;
+  public  final MtDescriptor<?> parent;
   private final boolean isPk;
   public  final int ordinal;
 
