@@ -31,7 +31,7 @@ public class MtDaoTest extends MtTest {
     return result.toString();
   }
 
-  public static List<MtTable> changeLogMake(MtDb db) {
+  public static List<MtTable> changeLogMake() {
     var tables = new MtMapper().build(fmt, testSchema);
     log.info("Tables: {}", kv("tables", tables));
     assertFalse(tables.isEmpty());
@@ -172,8 +172,8 @@ public class MtDaoTest extends MtTest {
   public static void daoPredicates(MtDb db, MtJdbc jdbc) {
     var ud = new DbUserDao(db.schema, fmt, jdbc, m3Ifn);
     var emailField = ud.dsc.getField(DbUserDao.fld_email);
-    var searchQuery = MtQuery.create(db.schema).like(emailField, "joe%");
-    var searchPage = ud.loadPage1(4, false, searchQuery, DbUserDao.fld_email, null);
+    var searchQuery = ud.query().like(emailField, "joe%").limit(4);
+    var searchPage = ud.loadPage1(searchQuery, DbUserDao.fld_email, null);
     log.info("{}", kv("searchPage", searchPage));
   }
 
@@ -196,11 +196,11 @@ public class MtDaoTest extends MtTest {
 
     log.info("======== All phone pages ========");
     phones.clear();
-    var page0 = pDao.loadPage1(16, true, null, PhoneDao.fld_number, null);
+    var page0 =  pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);
     phones.addAll(page0.items);
     while (page0.nx1 != null) {
       log.info("{}", kv("page0", page0));
-      page0 = pDao.loadPage1(16, true, null, PhoneDao.fld_number, page0.nx1);
+      page0 = pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, page0.nx1);
       phones.addAll(page0.items);
     }
     log.info("{}", kv("page0", page0));
@@ -208,12 +208,12 @@ public class MtDaoTest extends MtTest {
     log.info("======== Verified phone pages ========");
     var pageSum = 0L;
     var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
-    var fq0 = MtQuery.create(db.schema).neq(smsField, 0);
-    var page1 = pDao.loadPage1(4, false, fq0, PhoneDao.fld_number, null);
+    var fq0 = pDao.query().neq(smsField, 0).limit(4);
+    var page1 = pDao.loadPage1(fq0, PhoneDao.fld_number, null);
     pageSum += page1.size;
     while (page1.nx1 != null) {
       log.info("{}", kv("page1", page1));
-      page1 = pDao.loadPage1(4, false, fq0, PhoneDao.fld_number, page1.nx1);
+      page1 = pDao.loadPage1(fq0, PhoneDao.fld_number, page1.nx1);
       pageSum += page1.size;
     }
     log.info("{}", kv("page1", page1));
@@ -230,16 +230,15 @@ public class MtDaoTest extends MtTest {
     assertEquals(phones.size(), vp.size() + uvp.size());
 
     log.info("======== Verified, country code sorted phone pages ========");
-    var fq1 = MtQuery.create(db.schema).neq(smsField, 0);
     var page2 = pDao.loadPage2(
-      4, true, fq1,
+      pDao.query().neq(smsField, 0).limit(4).reverse(),
       PhoneDao.fld_countryCode, null,
       PhoneDao.fld_number, null
     );
     while (page2.nx1 != null) {
       log.info("{}", kv("page2", page2));
       page2 = pDao.loadPage2(
-        4, true, fq1,
+        pDao.query().neq(smsField, 0).limit(4).reverse(),
         PhoneDao.fld_countryCode, page2.nx1,
         PhoneDao.fld_number, page2.nx2
       );
@@ -251,24 +250,24 @@ public class MtDaoTest extends MtTest {
     var pDao = new PhoneDao(db.schema, fmt, jdbc, m3Ifn);
     var smsField = pDao.dsc.getField(PhoneDao.fld_smsVerificationCode);
 
-    assertEquals("t8o.smsVerificationCode IS NOT NULL", MtQuery.create(db.schema).isNotNull(smsField).renderFilter());
-    assertEquals("t8o.smsVerificationCode IS NULL", MtQuery.create(db.schema).isNull(smsField).renderFilter());
-    assertEquals("t8o.smsVerificationCode = :p0", MtQuery.create(db.schema).eq(smsField, 123).renderFilter());
-    assertEquals("t8o.smsVerificationCode < :p0", MtQuery.create(db.schema).lt(smsField, 123).renderFilter());
-    assertEquals("t8o.smsVerificationCode <= :p0", MtQuery.create(db.schema).lte(smsField, 123).renderFilter());
-    assertEquals("t8o.smsVerificationCode > :p0", MtQuery.create(db.schema).gt(smsField, 123).renderFilter());
-    assertEquals("t8o.smsVerificationCode >= :p0", MtQuery.create(db.schema).gte(smsField, 123).renderFilter());
+    assertEquals("_8o.smsVerificationCode IS NOT NULL", pDao.query().isNotNull(smsField).renderFilter());
+    assertEquals("_8o.smsVerificationCode IS NULL", pDao.query().isNull(smsField).renderFilter());
+    assertEquals("_8o.smsVerificationCode = :p0", pDao.query().eq(smsField, 123).renderFilter());
+    assertEquals("_8o.smsVerificationCode < :p0", pDao.query().lt(smsField, 123).renderFilter());
+    assertEquals("_8o.smsVerificationCode <= :p0", pDao.query().lte(smsField, 123).renderFilter());
+    assertEquals("_8o.smsVerificationCode > :p0", pDao.query().gt(smsField, 123).renderFilter());
+    assertEquals("_8o.smsVerificationCode >= :p0", pDao.query().gte(smsField, 123).renderFilter());
 
     assertEquals(
-      "t8o.smsVerificationCode IS NOT NULL AND t8o.smsVerificationCode = :p0 AND t8o.smsVerificationCode > :p1",
-      MtQuery.create(db.schema)
+      "_8o.smsVerificationCode IS NOT NULL AND _8o.smsVerificationCode = :p0 AND _8o.smsVerificationCode > :p1",
+      pDao.query()
         .isNotNull(smsField)
         .and().eq(smsField, 123)
         .and().gt(smsField, 0).renderFilter()
     );
     assertEquals(
-      "t8o.smsVerificationCode IS NULL OR t8o.smsVerificationCode = :p0 AND t8o.smsVerificationCode > :p1",
-      MtQuery.create(db.schema)
+      "_8o.smsVerificationCode IS NULL OR _8o.smsVerificationCode = :p0 AND _8o.smsVerificationCode > :p1",
+      pDao.query()
         .isNull(smsField)
         .or().eq(smsField, 123)
         .and().gt(smsField, 0).renderFilter()
@@ -299,22 +298,26 @@ public class MtDaoTest extends MtTest {
     var ij = nsDao
       .query()
       .innerJoin(knsDao.dsc, nsDao.dsc)
-      .eq(knsDao.fld_kid(), apiKey0.rec.kid);
-    var p1 = nsDao.loadPage1(ps, false, ij, flName, null);
+      .eq(knsDao.fld_kid(), apiKey0.rec.kid)
+      .limit(ps);
+    var p1 = nsDao.loadPage1(ij, flName, null);
     while (p1.hasNext()) {
       log.info("{}", kv("namespaces", p1.items));
-      p1 = nsDao.loadPage1(ps, false, ij, flName, p1.nx1);
+      p1 = nsDao.loadPage1(ij, flName, p1.nx1);
     }
     log.info("{}", kv("namespaces", p1.items));
 
     var lj = nsDao
       .query()
+      .from(nsDao.dsc)
       .leftJoin(knsDao.dsc, nsDao.dsc)
-      .eq(knsDao.fld_kid(), apiKey0.rec.kid);
-    var p2 = nsDao.loadPage2(ps, true, lj, flName, null, flUtcMs, null);
+      .eq(knsDao.fld_kid(), apiKey0.rec.kid)
+      .limit(ps)
+      .reverse();
+    var p2 = nsDao.loadPage2(lj, flName, null, flUtcMs, null);
     while (p2.hasNext()) {
       log.info("{}", kv("namespaces", p2.items));
-      p2 = nsDao.loadPage2(ps, true, lj, flName, p2.nx1, flUtcMs, p2.nx2);
+      p2 = nsDao.loadPage2(lj, flName, p2.nx1, flUtcMs, p2.nx2);
     }
     log.info("{}", kv("namespaces", p2.items));
   }

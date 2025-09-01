@@ -46,6 +46,11 @@ public class MtDescriptor<T> {
     this.pkField = pkds.isEmpty() ? null : pkds.get(0);
   }
 
+  public String getTableName(String schema) {
+    var raw = String.format("%s.%s", schema, getFormat().of(cl.getSimpleName()));
+    return getFormat().of(raw);
+  }
+
   public String getAlias() {
     int hash = Math.abs(Objects.requireNonNull(cl.getCanonicalName()).hashCode());
     hash = hash % MAX_VALUE_2; // Reduce to fit within base-36^2 range
@@ -54,7 +59,7 @@ public class MtDescriptor<T> {
       result[i] = BASE36_CHARS.charAt(hash % 36);
       hash /= 36;
     }
-    result[0] = 't';
+    result[0] = '_';
     return new String(result);
   }
 

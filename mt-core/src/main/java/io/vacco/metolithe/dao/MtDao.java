@@ -106,13 +106,8 @@ public abstract class MtDao<T, K> implements MtMapper<T> {
     return this;
   }
 
-  protected String getTableName(Class<?> clazz) {
-    var raw = String.format("%s.%s", schema, dsc.getFormat().of(clazz.getSimpleName()));
-    return dsc.getFormat().of(raw);
-  }
-
   public String getTableName() {
-    return getTableName(this.dsc.getType());
+    return this.dsc.getTableName(schema);
   }
 
   protected Map<String, String> getQueryCache() {

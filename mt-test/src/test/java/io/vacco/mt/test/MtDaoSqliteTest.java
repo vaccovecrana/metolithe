@@ -21,7 +21,7 @@ public class MtDaoSqliteTest {
     var jdbc  = new MtJdbc(ds);
     var tables = new ArrayList<MtTable>();
 
-    it("Generates changelogs", () -> tables.addAll(changeLogMake(db)));
+    it("Generates changelogs", () -> tables.addAll(changeLogMake()));
     it("Applies change logs.", () -> changeLogApply(tables, db, ds));
     it("Uses base DAOs for data access", () -> daoDataAccess(db, jdbc));
     it("Uses generated POJO DAOs for data access", () -> daoPojoAccess(db, jdbc));

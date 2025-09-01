@@ -94,26 +94,9 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return record.get();
   }
 
-  public List<T> loadPageItems(int pageSize, MtQuery query) {
+  public List<T> loadPageItems(MtQuery query) {
     try {
-      var qFmt = String.join("\n",
-        "select %s from %s %s", // props, table, alias
-        "%s", // join clause
-        "where 1 = 1",
-        "%s", // filter predicate
-        "%s", // seek predicate
-        "order by %s limit %d"
-      );
-      var joins = query.renderJoins();
-      var filterP = query.renderFilter().isEmpty() ? "" : format("and (%s)", query.renderFilter());
-      var seekP = query.renderSeek();
-      var orderBy = query.renderOrderBy();
-      var alias = dsc.getAlias();
-      var sql = format(qFmt,
-        propNamesCsv(dsc, true, alias),
-        getTableName(), alias,
-        joins, filterP, seekP, orderBy, pageSize + 1
-      );
+      var sql = query.render();
       var q = sql().select(sql);
       for (var e : query.getParams().entrySet()) {
         q = q.param(e.getKey(), e.getValue());
@@ -125,10 +108,10 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   public MtQuery query() {
-    return MtQuery.create(this.schema);
+    return MtQuery.create(this.schema, this.dsc);
   }
 
-  private MtQuery setQuery(MtQuery filter, String[] nxFields, Object[] nxValues, boolean reverse) {
+  private MtQuery setQuery(MtQuery filter, String[] nxFields, Object[] nxValues) {
     var fields = new MtFieldDescriptor[nxFields.length];
     for (int i = 0; i < nxFields.length; i++) {
       fields[i] = dsc.getField(nxFields[i]);
@@ -136,15 +119,15 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     if (filter == null) {
       filter = query();
     }
-    return filter.seek(fields, nxValues, reverse);
+    return filter.seek(fields, nxValues);
   }
 
-  public <K1> MtPage1<T, K1> loadPage1(int pageSize, boolean reverse, MtQuery filter, String nx1Fld, K1 nx1) {
-    var query = setQuery(filter, new String[] {nx1Fld}, new Object[] {nx1}, reverse);
+  public <K1> MtPage1<T, K1> loadPage1(MtQuery filter, String nx1Fld, K1 nx1) {
+    var query = setQuery(filter, new String[] {nx1Fld}, new Object[] {nx1});
     var page = new MtPage1<T, K1>();
-    var items = loadPageItems(pageSize, query);
+    var items = loadPageItems(query);
     page.items = items;
-    if (items.size() > pageSize) {
+    if (query.limit != null && items.size() > query.limit) {
       var next = items.remove(items.size() - 1);
       page.nx1 = dsc.getField(nx1Fld).getValue(next);
     }
@@ -152,15 +135,14 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return page;
   }
 
-  public <K1, K2> MtPage2<T, K1, K2> loadPage2(int pageSize, boolean reverse,
-                                               MtQuery filter,
+  public <K1, K2> MtPage2<T, K1, K2> loadPage2(MtQuery filter,
                                                String nx1Fld, K1 nx1,
                                                String nx2Fld, K2 nx2) {
-    var query = setQuery(filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2}, reverse);
+    var query = setQuery(filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2});
     var page = new MtPage2<T, K1, K2>();
-    var items = loadPageItems(pageSize, query);
+    var items = loadPageItems(query);
     page.items = items;
-    if (items.size() > pageSize) {
+    if (query.limit != null && items.size() > query.limit) {
       var next = items.remove(items.size() - 1);
       page.nx1 = dsc.getField(nx1Fld).getValue(next);
       page.nx2 = dsc.getField(nx2Fld).getValue(next);

@@ -5,6 +5,9 @@ import io.vacco.metolithe.core.MtFieldDescriptor;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.vacco.metolithe.core.MtCaseFormat.propNamesCsv;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtQuery {
@@ -17,14 +20,18 @@ public class MtQuery {
   private final List<MtFieldDescriptor> orderByFields = new ArrayList<>();
   private final List<MtJoin>            joins = new ArrayList<>();
   private final String                  schema;
-  private boolean orderByReverse;
 
-  private MtQuery(String schema) {
+  public MtDescriptor<?> from, target;
+  public Integer         limit;
+  public boolean         orderByReverse;
+
+  private MtQuery(String schema, MtDescriptor<?> target) {
     this.schema = Objects.requireNonNull(schema);
+    this.target = Objects.requireNonNull(target);
   }
 
-  public static MtQuery create(String schema) {
-    return new MtQuery(schema);
+  public static MtQuery create(String schema, MtDescriptor<?> target) {
+    return new MtQuery(schema, target);
   }
 
   private MtQuery addPredicate(MtPredicate predicate) {
@@ -35,6 +42,11 @@ public class MtQuery {
 
   private String nextParamName() {
     return "p" + params.size();
+  }
+
+  public MtQuery from(MtDescriptor<?> from) {
+    this.from = requireNonNull(from);
+    return this;
   }
 
   public MtQuery eq(MtFieldDescriptor field, Object value) {
@@ -83,16 +95,15 @@ public class MtQuery {
     return this;
   }
 
-  public MtQuery seek(MtFieldDescriptor[] fields, Object[] values, boolean reverse) {
+  public MtQuery seek(MtFieldDescriptor[] fields, Object[] values) {
     if (fields.length != values.length) {
       throw badSeek();
     }
     orderByFields.clear();
     orderByFields.addAll(Arrays.asList(fields));
-    orderByReverse = reverse;
     for (int i = 0; i < fields.length; i++) {
       if (values[i] != null) {
-        var op = reverse ? MtPredicate.Operator.LTE : MtPredicate.Operator.GTE;
+        var op = orderByReverse ? MtPredicate.Operator.LTE : MtPredicate.Operator.GTE;
         addPredicate(MtPredicate.seek(fields[i], op, values[i], "sk" + i));
       }
     }
@@ -112,6 +123,16 @@ public class MtQuery {
       throw badLogic();
     }
     operators.add(LogicalOperator.OR);
+    return this;
+  }
+
+  public MtQuery limit(Integer limit) {
+    this.limit = Objects.requireNonNull(limit);
+    return this;
+  }
+
+  public MtQuery reverse() {
+    this.orderByReverse = !this.orderByReverse;
     return this;
   }
 
@@ -159,6 +180,29 @@ public class MtQuery {
     return joins.stream()
       .map(MtJoin::render)
       .collect(Collectors.joining(" "));
+  }
+
+  public String render() {
+    var qFmt = String.join("\n",
+      "select %s from %s %s", // props, table, alias
+      "%s",                   // join clause(s)
+      "where 1 = 1",
+      "%s",                   // filter predicate
+      "%s",                   // seek predicate
+      "order by %s %s"        // sort fields, limit
+    );
+    var joins = renderJoins();
+    var filterP = renderFilter().isEmpty() ? "" : format("and (%s)", renderFilter());
+    var seekP = renderSeek();
+    var orderBy = renderOrderBy();
+    var alias = target.getAlias();
+    var table = from != null ? from.getTableName(schema) : target.getTableName(schema);
+    return format(qFmt,
+      propNamesCsv(target, true, alias),
+      table, alias,
+      joins, filterP, seekP, orderBy,
+      limit != null ? format("limit %d", limit + 1) : ""
+    );
   }
 
   public Map<String, Object> getParams() {
