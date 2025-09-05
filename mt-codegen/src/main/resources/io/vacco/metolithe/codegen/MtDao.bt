@@ -41,6 +41,12 @@ public class {{mtDaoClass}}Dao extends MtWriteDao<{{mtDsc.getClassName()}}, {{mt
   }
   {{end}}
 
+  {{if mtField.hasDaoListIn()}}
+  public final List<{{mtDsc.getClassName()}}> listWhere{{toBeanCase(mtField.getFieldRawName())}}In({{toWrapper(mtField.getType())}} ... values) {
+    return listWhereIn(fld_{{mtField.getFieldRawName()}}, values);
+  }
+  {{end}}
+
   {{if mtField.hasDaoDeleteEq()}}
   public MtResult<{{mtDsc.getClassName()}}> deleteWhere{{toBeanCase(mtField.getFieldRawName())}}Eq({{toWrapper(mtField.getType())}} {{mtField.getFieldRawName()}}) {
     return deleteWhereEq(fld_{{mtField.getFieldRawName()}}, {{mtField.getFieldRawName()}});

@@ -45,6 +45,8 @@ public class MtDaoMapper {
       .replace("\n\n}", "\n}")
       .replace("}\n}", "}\n\n}")
       .replace("}\n\n\n  ", "}\n\n  ")
+      .replace("\n\n\n", "\n\n")
+      .replace("}\n\n\n", "}\n\n")
     ;
     return out;
   }

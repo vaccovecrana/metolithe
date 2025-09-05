@@ -8,7 +8,7 @@ import io.vacco.mt.test.annotations.St16;
   @MtPk public int pid;
 
   @MtCol @MtNotNull @MtIndex
-  @MtDao(loadEq = true)
+  @MtDao(loadEq = true, listIn = true)
   @MtPk(idx = 0)
   @MtUnique(idx = 0)
   public int countryCode;

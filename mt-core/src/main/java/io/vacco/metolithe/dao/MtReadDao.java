@@ -66,9 +66,9 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
+  public final <V> List<T> listWhereIn(String field, V ... values) {
     if (values == null || values.length == 0) {
-      return Collections.emptyMap();
+      return Collections.emptyList();
     }
     var fd = dsc.getField(field);
     var alias = dsc.getAlias();
@@ -82,8 +82,14 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     for (int i = 0; i < values.length; i++) {
       select.param(labels.get(i), values[i]);
     }
-    var raw = select.list(mapToDefault());
-    return raw.stream().collect(groupingBy(fd::getValue));
+    return select.list(mapToDefault());
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
+    var fd = dsc.getField(field);
+    return listWhereIn(field, values).stream().collect(groupingBy(fd::getValue));
   }
 
   public T loadExisting(K id) {

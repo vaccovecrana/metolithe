@@ -194,6 +194,9 @@ public class MtDaoTest extends MtTest {
       }
     });
 
+    log.info("=========== All phones ==========");
+    log.info("{}", kv("allPhones", pDao.listWhereCountryCodeIn(1)));
+
     log.info("======== All phone pages ========");
     phones.clear();
     var page0 =  pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);

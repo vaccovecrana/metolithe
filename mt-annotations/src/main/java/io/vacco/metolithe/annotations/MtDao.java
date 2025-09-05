@@ -7,5 +7,6 @@ import java.lang.annotation.*;
 public @interface MtDao {
   boolean loadEq() default false;
   boolean loadIn() default false;
+  boolean listIn() default false;
   boolean deleteEq() default false;
 }

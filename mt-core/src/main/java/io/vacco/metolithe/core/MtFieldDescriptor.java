@@ -72,6 +72,10 @@ public class MtFieldDescriptor {
     return get(MtDao.class).map(MtDao::loadIn).orElse(false);
   }
 
+  public boolean hasDaoListIn() {
+    return get(MtDao.class).map(MtDao::listIn).orElse(false);
+  }
+
   public boolean hasDaoDeleteEq() {
     return get(MtDao.class).map(MtDao::deleteEq).orElse(false);
   }
