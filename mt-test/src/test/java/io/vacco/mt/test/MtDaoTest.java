@@ -94,17 +94,14 @@ public class MtDaoTest extends MtTest {
       log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
       log.info("{}", kv("pts", pDao.save(pt)));
       log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
-      tx.result = pt;
     });
     assertNull(txr.error);
-    assertNotNull(txr.result);
     assertTrue(txr.warnings.isEmpty());
 
-    txr = pDao.sql().tx((tx, conn) -> {
+    pDao.sql().tx((tx, conn) -> {
       pDao.upsert(p0);
       tx.rollback();
     });
-    assertNull(txr.result);
 
     log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
     log.info("{}", kv("d0m", dDao.upsert(d0)));

@@ -7,18 +7,17 @@ import java.util.function.Consumer;
 
 import static io.vacco.metolithe.core.MtErr.*;
 
-public class MtTx<T> implements AutoCloseable, MtConn {
+public class MtTx implements AutoCloseable, MtConn {
 
   private MtConn      connFn;
   private Connection  txConn;
   private boolean     isOpen;
   private boolean     shouldCommit = true;
 
-  public T                result;
   public List<SQLWarning> warnings = new ArrayList<>();
   public Exception        error;
 
-  public MtTx<T> withSupplier(MtConn connFn) {
+  public MtTx withSupplier(MtConn connFn) {
     this.connFn = Objects.requireNonNull(connFn);
     return this;
   }

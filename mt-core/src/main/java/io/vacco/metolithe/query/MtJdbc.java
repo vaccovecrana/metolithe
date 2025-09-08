@@ -27,8 +27,8 @@ public class MtJdbc implements MtConn {
     return new MtCmd(sql, this);
   }
 
-  public <T> MtTx<T> tx(BiConsumer<MtTx<T>, Connection> txFn) {
-    var tx = new MtTx<T>().withSupplier(this);
+  public MtTx tx(BiConsumer<MtTx, Connection> txFn) {
+    var tx = new MtTx().withSupplier(this);
     try (tx) {
       txIdx.put(Thread.currentThread(), tx);
       tx.run(conn -> txFn.accept(tx, conn));
