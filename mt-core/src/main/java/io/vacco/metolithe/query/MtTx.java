@@ -7,29 +7,30 @@ import java.util.function.Consumer;
 
 import static io.vacco.metolithe.core.MtErr.*;
 
-public class MtTransaction implements AutoCloseable, MtConn {
+public class MtTx<T> implements AutoCloseable, MtConn {
 
-  private MtConn               connFn;
-  private Connection           txConn;
-  private Consumer<Connection> afterTxFn;
+  private MtConn      connFn;
+  private Connection  txConn;
+  private boolean     isOpen;
+  private boolean     shouldCommit = true;
 
-  private boolean isOpen;
-  private boolean shouldCommit = true;
+  public T                result;
+  public List<SQLWarning> warnings = new ArrayList<>();
+  public Exception        error;
 
-  public MtTransaction withSupplier(MtConn connFn) {
+  public MtTx<T> withSupplier(MtConn connFn) {
     this.connFn = Objects.requireNonNull(connFn);
     return this;
   }
 
-  public void start(Consumer<Connection> txConnFn, Consumer<Connection> afterTxFn) {
+  public void run(Consumer<Connection> txConnFn) {
     try {
       this.txConn = connFn.get();
       this.txConn.setAutoCommit(false);
       this.isOpen = true;
-      this.afterTxFn = afterTxFn;
       txConnFn.accept(txConn);
     } catch (SQLException e) {
-      throw generalError("Failed to start transaction", e);
+      throw generalError("Failed to run transaction", e);
     }
   }
 
@@ -58,9 +59,12 @@ public class MtTransaction implements AutoCloseable, MtConn {
     } finally {
       try {
         txConn.setAutoCommit(true);
-        if (this.afterTxFn != null) {
-          this.afterTxFn.accept(txConn);
+        var txw = txConn.getWarnings();
+        while (txw != null) {
+          this.warnings.add(txw);
+          txw = txw.getNextWarning();
         }
+        txConn.clearWarnings();
         txConn.close();
       } catch (SQLException e) {
         MtLog.warn("Failed to close connection", e);

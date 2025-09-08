@@ -27,19 +27,17 @@ public class MtJdbc implements MtConn {
     return new MtCmd(sql, this);
   }
 
-  public void tx(BiConsumer<MtConn, Connection> txFn, Consumer<Connection> afterTx) {
-    try (var tx = new MtTransaction().withSupplier(this)) {
+  public <T> MtTx<T> tx(BiConsumer<MtTx<T>, Connection> txFn) {
+    var tx = new MtTx<T>().withSupplier(this);
+    try (tx) {
       txIdx.put(Thread.currentThread(), tx);
-      tx.start(conn -> txFn.accept(tx, conn), afterTx);
+      tx.run(conn -> txFn.accept(tx, conn));
     } catch (Exception e) {
-      throw generalError("Transaction failed", e);
+      tx.error = generalError("Transaction failed", e);
     } finally {
       txIdx.remove(Thread.currentThread());
     }
-  }
-
-  public void tx(BiConsumer<MtConn, Connection> txFn) {
-    tx(txFn, null);
+    return tx;
   }
 
   public List<MtResult<?>> batch(Consumer<List<MtResult<?>>> batchFn) throws SQLException {

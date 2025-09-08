@@ -3,5 +3,5 @@ plugins { id("io.vacco.oss.gitflow") version "1.8.3" apply(false) }
 subprojects {
   apply(plugin = "io.vacco.oss.gitflow")
   group = "io.vacco.metolithe"
-  version = "3.8.2"
+  version = "3.9.0"
 }

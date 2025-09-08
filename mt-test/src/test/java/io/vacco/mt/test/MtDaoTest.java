@@ -81,17 +81,7 @@ public class MtDaoTest extends MtTest {
     assertEquals(p0.countryCode, p01.countryCode);
     assertEquals(p0.number, p01.number);
 
-    var afterTx = (Consumer<Connection>) conn -> {
-      try {
-        if (conn.getWarnings() != null) {
-          log.info(conn.getWarnings().toString());
-        }
-      } catch (SQLException e) {
-        log.error(e.toString(), e);
-      }
-    };
-
-    pDao.sql().tx((tx, conn) -> {
+    var txr = pDao.sql().tx((tx, conn) -> {
       assertEquals(tx.get(), conn);
       assertEquals(tx.get(), pDao.sql().get());
       assertEquals(tx.get(), uDao.sql().get());
@@ -104,12 +94,17 @@ public class MtDaoTest extends MtTest {
       log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
       log.info("{}", kv("pts", pDao.save(pt)));
       log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
-    }, afterTx);
+      tx.result = pt;
+    });
+    assertNull(txr.error);
+    assertNotNull(txr.result);
+    assertTrue(txr.warnings.isEmpty());
 
-    pDao.sql().tx((tx, conn) -> {
+    txr = pDao.sql().tx((tx, conn) -> {
       pDao.upsert(p0);
       tx.rollback();
-    }, afterTx);
+    });
+    assertNull(txr.result);
 
     log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
     log.info("{}", kv("d0m", dDao.upsert(d0)));
