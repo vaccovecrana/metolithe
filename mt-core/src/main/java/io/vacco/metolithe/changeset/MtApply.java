@@ -1,18 +1,23 @@
 package io.vacco.metolithe.changeset;
 
-import java.net.*;
-import java.sql.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 
-import static io.vacco.metolithe.core.MtErr.*;
 import static io.vacco.metolithe.changeset.MtSummary.summarize;
+import static io.vacco.metolithe.core.MtErr.generalError;
 import static io.vacco.metolithe.core.MtLog.info;
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static java.lang.String.join;
 
 public class MtApply {
 
-  private static final String MTLOG_TABLE  = "MTLOG";
+  private static final String MTLOG_TABLE = "MTLOG";
   private static final String MTLOCK_TABLE = "MTLOCK";
   private static final String LOCK_ID;
 
@@ -47,7 +52,7 @@ public class MtApply {
   }
 
   private boolean tableMissing(String tableName) throws SQLException {
-    try (var rs = conn.getMetaData().getTables(null, null, tableName, new String[] { "TABLE" })) {
+    try (var rs = conn.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"})) {
       return !rs.next();
     }
   }
@@ -128,13 +133,33 @@ public class MtApply {
           }
           info("Acquired database lock");
           return true; // Lock acquired
-        } else {
-          if (useTransactions) {
-            conn.rollback();
-          }
-          return false; // Lock already held
         }
       }
+
+      try (var checkStmt = conn.prepareStatement(format("SELECT 1 FROM %s WHERE id = 1", lockTableName()))) {
+        var rs = checkStmt.executeQuery();
+        if (!rs.next()) {
+          try (var insStmt = conn.prepareStatement(format(
+            "INSERT INTO %s (id, locked, lock_granted, locked_by) VALUES (1, TRUE, ?, ?)",
+            lockTableName()
+          ))) {
+            insStmt.setTimestamp(1, Timestamp.from(Instant.now()));
+            insStmt.setString(2, LOCK_ID);
+            insStmt.executeUpdate();
+            if (useTransactions) {
+              conn.commit();
+            }
+            info("Acquired database lock (re-inserted missing row)");
+            return true;
+          }
+        }
+      }
+
+      if (useTransactions) {
+        conn.rollback();
+      }
+      return false; // Lock already held
+
     } finally {
       if (useTransactions) {
         conn.setAutoCommit(originalAutoCommit);

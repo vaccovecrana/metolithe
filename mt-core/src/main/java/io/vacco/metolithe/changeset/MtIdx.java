@@ -8,7 +8,8 @@ public class MtIdx {
   public String name;
   public List<String> columns = new ArrayList<>();
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format("%s %s", name, columns);
   }
 

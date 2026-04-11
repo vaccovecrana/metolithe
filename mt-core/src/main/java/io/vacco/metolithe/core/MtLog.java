@@ -19,19 +19,19 @@ public class MtLog {
     MtLog.debugFn = Objects.requireNonNull(logFn);
   }
 
-  public static void info(String fmt, Object ... args) {
+  public static void info(String fmt, Object... args) {
     if (infoFn != null) {
       infoFn.accept(fmt, args);
     }
   }
 
-  public static void warn(String fmt, Object ... args) {
+  public static void warn(String fmt, Object... args) {
     if (warnFn != null) {
       warnFn.accept(fmt, args);
     }
   }
 
-  public static void debug(String fmt, Object ... args) {
+  public static void debug(String fmt, Object... args) {
     if (debugFn != null) {
       debugFn.accept(fmt, args);
     }

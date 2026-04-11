@@ -1,10 +1,13 @@
 package io.vacco.metolithe.id;
 
 public class MtNoopIdFn implements MtIdFn<Void> {
-  @Override public Void apply(Object[] objects) {
+  @Override
+  public Void apply(Object[] objects) {
     return null;
   }
-  @Override public Class<Void> getIdType() {
+
+  @Override
+  public Class<Void> getIdType() {
     return Void.class;
   }
 }

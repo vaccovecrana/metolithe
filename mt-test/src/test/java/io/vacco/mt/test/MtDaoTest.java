@@ -1,26 +1,32 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.changeset.*;
-import io.vacco.metolithe.core.*;
-import io.vacco.metolithe.dao.*;
-import io.vacco.metolithe.id.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtLog;
+import io.vacco.metolithe.dao.MtWriteDao;
+import io.vacco.metolithe.id.MtIdFn;
+import io.vacco.metolithe.id.MtMurmur3IFn;
+import io.vacco.metolithe.id.MtMurmur3LFn;
+import io.vacco.metolithe.id.MtXxHashIFn;
+import io.vacco.metolithe.query.MtJdbc;
 import io.vacco.mt.test.dao.*;
 import io.vacco.mt.test.schema.*;
-import io.vacco.metolithe.query.MtJdbc;
+
 import javax.sql.DataSource;
-import java.sql.*;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.*;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.vacco.shax.logging.ShArgument.kv;
 import static org.junit.Assert.*;
 
 public class MtDaoTest extends MtTest {
 
-  private static final MtIdFn<Integer>  m3Ifn = new MtMurmur3IFn();
-  private static final MtIdFn<Long>     m3Lfn = new MtMurmur3LFn();
-  private static final MtIdFn<Integer>  xxIfn = new MtXxHashIFn();
+  private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
+  private static final MtIdFn<Long> m3Lfn = new MtMurmur3LFn();
+  private static final MtIdFn<Integer> xxIfn = new MtXxHashIFn();
 
   public static String generateRandomDigits(int n) {
     var random = new Random();
@@ -69,8 +75,15 @@ public class MtDaoTest extends MtTest {
     var pDao = new PhoneDao(db.schema, fmt, jdbc, m3Ifn);
 
     var stIdFn = new MtIdFn<String>() {
-      @Override public String apply(Object[] objects) { return objects[0].toString(); }
-      @Override public Class<String> getIdType() { return String.class; }
+      @Override
+      public String apply(Object[] objects) {
+        return objects[0].toString();
+      }
+
+      @Override
+      public Class<String> getIdType() {
+        return String.class;
+      }
     };
     var urDao = new MtWriteDao<>(db.schema, jdbc, new MtDescriptor<>(DbUserRole.class, fmt), stIdFn);
 
@@ -89,19 +102,43 @@ public class MtDaoTest extends MtTest {
       pt.countryCode = 44;
       pt.number = "5552226666";
       pt.smsVerificationCode = 6789;
-      log.info("{}", kv("pts", pDao.upsert(pt)));
-      log.info("{}", kv("p1s", pDao.upsert(p1)));
-      log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
-      log.info("{}", kv("pts", pDao.save(pt)));
-      log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
+
+      tx.result(pDao.upsert(pt))
+        .result(pDao.upsert(p1))
+        .result(pDao.deleteWhereIdEq(pt.pid))
+        .result(pDao.save(pt))
+        .result(pDao.deleteWhereIdEq(pt.pid));
     });
     assertNull(txr.error);
     assertTrue(txr.warnings.isEmpty());
+    log.info("{}", kv("txr.results", txr.results));
 
-    pDao.sql().tx((tx, conn) -> {
-      pDao.upsert(p0);
+    var txp = pDao.sql().tx((tx, conn) -> {
+      tx.result(pDao.upsert(p0));
       tx.rollback();
     });
+    assertNull(txp.error);
+    assertTrue(txp.warnings.isEmpty());
+
+    // Test delete(T rec)
+    var pDel = new Phone();
+    pDel.countryCode = 99;
+    pDel.number = "9999999999";
+    pDel.smsVerificationCode = 9999;
+    pDao.save(pDel);
+    assertTrue(pDao.load(pDel.pid).isPresent());
+    pDao.delete(pDel);
+    assertFalse(pDao.load(pDel.pid).isPresent());
+
+    // Test deleteWhereEq
+    var pDel2 = new Phone();
+    pDel2.countryCode = 88;
+    pDel2.number = "8888888888";
+    pDel2.smsVerificationCode = 8888;
+    pDao.save(pDel2);
+    assertTrue(pDao.load(pDel2.pid).isPresent());
+    pDao.deleteWhereEq("number", pDel2.number);
+    assertFalse(pDao.load(pDel2.pid).isPresent());
 
     log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
     log.info("{}", kv("d0m", dDao.upsert(d0)));
@@ -180,18 +217,21 @@ public class MtDaoTest extends MtTest {
       return p;
     }).collect(Collectors.toList());
 
-    pDao.sql().batch(results -> {
+    var batchTx = pDao.sql().tx((tx, conn) -> {
+      tx = tx.batch();
       for (var p : phones) {
-        results.add(pDao.saveLater(p));
+        tx.result(pDao.save(p));
       }
     });
+    assertNull(batchTx.error);
+    assertTrue(batchTx.warnings.isEmpty());
 
     log.info("=========== All phones ==========");
     log.info("{}", kv("allPhones", pDao.listWhereCountryCodeIn(1)));
 
     log.info("======== All phone pages ========");
     phones.clear();
-    var page0 =  pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);
+    var page0 = pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);
     phones.addAll(page0.items);
     while (page0.nx1 != null) {
       log.info("{}", kv("page0", page0));

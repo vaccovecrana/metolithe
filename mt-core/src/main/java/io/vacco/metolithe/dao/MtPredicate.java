@@ -1,11 +1,12 @@
 package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtFieldDescriptor;
-import java.util.*;
 
-import static io.vacco.metolithe.core.MtErr.*;
-import static java.util.Objects.requireNonNull;
+import java.util.Map;
+
+import static io.vacco.metolithe.core.MtErr.badOperator;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class MtPredicate {
 
@@ -18,17 +19,20 @@ public class MtPredicate {
     LIKE(" LIKE :%s");
 
     public final String sqlTemplate;
-    Operator(String sqlTemplate) { this.sqlTemplate = sqlTemplate; }
+
+    Operator(String sqlTemplate) {
+      this.sqlTemplate = sqlTemplate;
+    }
   }
 
   private final Operator operator;
   private final Object value;
 
-  public  final MtFieldDescriptor field0, field1;
-  public  final String paramName;
-  public  final boolean isSeek;
+  public final MtFieldDescriptor field0, field1;
+  public final String paramName;
+  public final boolean isSeek;
 
-  private static void oneOf(Operator test, Operator ... options) {
+  private static void oneOf(Operator test, Operator... options) {
     var ok = false;
     for (var op : options) {
       if (test == op) {
@@ -41,7 +45,9 @@ public class MtPredicate {
     }
   }
 
-  /** Constructor for single parameter operators */
+  /**
+   * Constructor for single parameter operators
+   */
   private MtPredicate(MtFieldDescriptor field0, Operator operator, Object value, String paramName, boolean isSeek) {
     this.field0 = requireNonNull(field0);
     this.field1 = null;
@@ -51,7 +57,9 @@ public class MtPredicate {
     this.isSeek = isSeek;
   }
 
-  /** Constructor for null/not null operators */
+  /**
+   * Constructor for null/not null operators
+   */
   private MtPredicate(MtFieldDescriptor field0, Operator operator) {
     this.field0 = requireNonNull(field0);
     this.field1 = null;
@@ -61,7 +69,9 @@ public class MtPredicate {
     this.isSeek = false;
   }
 
-  /** Constructor for join field operator */
+  /**
+   * Constructor for join field operator
+   */
   private MtPredicate(MtFieldDescriptor field0, MtFieldDescriptor field1) {
     this.field0 = requireNonNull(field0);
     this.field1 = requireNonNull(field1);
@@ -117,16 +127,19 @@ public class MtPredicate {
     }
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format("(%s): %s", isSeek ? "skp" : "flp", this.render());
   }
 
-  @Override public boolean equals(Object obj) {
+  @Override
+  public boolean equals(Object obj) {
     return obj instanceof MtPredicate
       && ((MtPredicate) obj).render().equals(this.render());
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return this.render().hashCode();
   }
 

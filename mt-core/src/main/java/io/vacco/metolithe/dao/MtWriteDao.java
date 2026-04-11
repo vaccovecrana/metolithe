@@ -1,14 +1,17 @@
 package io.vacco.metolithe.dao;
 
-import io.vacco.metolithe.core.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
-import io.vacco.metolithe.query.*;
-import java.util.*;
-import java.util.function.*;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtResult;
 
-import static io.vacco.metolithe.core.MtErr.*;
-import static io.vacco.metolithe.query.MtResult.*;
+import java.util.Optional;
+import java.util.function.BiFunction;
+
 import static io.vacco.metolithe.core.MtCaseFormat.*;
+import static io.vacco.metolithe.core.MtErr.generalError;
+import static io.vacco.metolithe.query.MtResult.result;
 import static java.lang.String.format;
 
 public class MtWriteDao<T, K> extends MtReadDao<T, K> {
@@ -37,7 +40,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     );
   }
 
-  public MtResult<T> save(T rec, boolean later) {
+  public MtResult<T> save(T rec) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("insert", k ->
         format("insert into %s (%s) values (%s)",
@@ -48,19 +51,11 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       );
       var upd = sql().update(query);
       dsc.forEach(true, rec, upd::param);
-      return result(rec, later ? upd : upd.execute());
+      return result(rec, sql().inTx() ? upd : upd.execute());
     });
   }
 
-  public MtResult<T> save(T rec) {
-    return save(rec, false);
-  }
-
-  public MtResult<T> saveLater(T rec) {
-    return save(rec, true);
-  }
-
-  public MtResult<T> update(T rec, boolean later) {
+  public MtResult<T> update(T rec) {
     return withId(rec, (fd, pk) -> {
       var queryAssignments = placeHolderAssignmentCsv(dsc, false);
       var query = getQueryCache().computeIfAbsent("update",
@@ -70,79 +65,39 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       var upd = sql().update(query);
       dsc.forEach(false, rec, upd::param);
       upd.param(fd.getFieldName(), pk);
-      return result(rec, later ? upd : upd.execute());
+      return result(rec, sql().inTx() ? upd : upd.execute());
     });
   }
 
-  public MtResult<T> update(T rec) {
-    return update(rec, false);
-  }
-
-  public MtResult<T> updateLater(T rec) {
-    return update(rec, true);
-  }
-
-  public MtResult<T> upsert(T rec, boolean later) {
-    return withId(rec, (fd, pk) -> load(pk).isEmpty()
-      ? save(rec, later)
-      : update(rec, later));
-  }
-
   public MtResult<T> upsert(T rec) {
-    return upsert(rec, false);
+    return withId(rec, (fd, pk) -> load(pk).isEmpty()
+      ? save(rec)
+      : update(rec));
   }
 
-  public MtResult<T> upsertLater(T rec) {
-    return upsert(rec, true);
-  }
-
-  public MtResult<T> delete(T rec, boolean later) {
+  public MtResult<T> delete(T rec) {
     return withId(rec, (fd, pk) -> {
       var query = getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s", getTableName(), fd.getFieldName(), fd.getFieldName())
       );
-      var cmd = sql().update(query).param(fd.getFieldName(), pk);
-      return result(rec, later ? cmd : cmd.execute());
+      var del = sql().update(query).param(fd.getFieldName(), pk);
+      return result(rec, sql().inTx() ? del : del.execute());
     });
   }
 
-  public MtResult<T> delete(T rec) {
-    return delete(rec, false);
-  }
-
-  public MtResult<T> deleteLater(T rec) {
-    return delete(rec, true);
-  }
-
-  public MtResult<T> deleteWhereEq(String field, Object value, boolean later) {
+  public MtResult<T> deleteWhereEq(String field, Object value) {
     var fn = dsc.getFormat().of(field);
     var query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
       k -> format("delete from %s where %s = :%s", getTableName(), fn, fn)
     );
-    var cmd = sql().update(query).param(fn, value);
-    return result(null, later ? cmd : cmd.execute());
-  }
-
-  public MtResult<T> deleteWhereEq(String field, Object value) {
-    return deleteWhereEq(field, value, false);
-  }
-
-  public MtResult<T> deleteWhereEqLater(String field, Object value) {
-    return deleteWhereEq(field, value, true);
-  }
-
-  public MtResult<T> deleteWhereIdEq(K id, boolean later) {
-    return dsc.getPkField()
-      .map(mtFieldDescriptor -> deleteWhereEq(mtFieldDescriptor.getFieldName(), id, later))
-      .orElseThrow(() -> generalError(format("Type [%s] has no primary key", dsc)));
+    var del = sql().update(query).param(fn, value);
+    return result(null, sql().inTx() ? del : del.execute());
   }
 
   public MtResult<T> deleteWhereIdEq(K id) {
-    return deleteWhereIdEq(id, false);
-  }
-
-  public MtResult<T> deleteWhereIdEqLater(K id) {
-    return deleteWhereIdEq(id, true);
+    return dsc.getPkField()
+      .map(mtFieldDescriptor -> deleteWhereEq(mtFieldDescriptor.getFieldName(), id))
+      .orElseThrow(() -> generalError(format("Type [%s] has no primary key", dsc)));
   }
 
 }

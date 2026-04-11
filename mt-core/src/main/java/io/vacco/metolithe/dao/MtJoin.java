@@ -1,13 +1,14 @@
 package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtDescriptor;
+
 import java.util.Objects;
 
 import static java.lang.String.format;
 
 public class MtJoin {
 
-  public enum JoinType { INNER, LEFT }
+  public enum JoinType {INNER, LEFT}
 
   public final JoinType type;
   public final MtDescriptor<?> table;

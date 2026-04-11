@@ -1,13 +1,14 @@
 package io.vacco.metolithe.query;
 
 import javax.sql.DataSource;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.*;
+import java.util.function.BiConsumer;
 
-import static io.vacco.metolithe.core.MtLog.debug;
-import static io.vacco.metolithe.core.MtErr.*;
+import static io.vacco.metolithe.core.MtErr.generalError;
 
 public class MtJdbc implements MtConn {
 
@@ -28,7 +29,7 @@ public class MtJdbc implements MtConn {
   }
 
   public MtTx tx(BiConsumer<MtTx, Connection> txFn) {
-    var tx = new MtTx().withSupplier(this);
+    var tx = new MtTx().supplier(this);
     try (tx) {
       txIdx.put(Thread.currentThread(), tx);
       tx.run(conn -> txFn.accept(tx, conn));
@@ -40,36 +41,12 @@ public class MtJdbc implements MtConn {
     return tx;
   }
 
-  public List<MtResult<?>> batch(Consumer<List<MtResult<?>>> batchFn) throws SQLException {
-    var results = new ArrayList<MtResult<?>>();
-    batchFn.accept(results);
-    var idx = new LinkedHashMap<String, List<MtResult<?>>>();
-    for (var res : results) {
-      var sql = res.cmd.prepareSql().sqlP;
-      idx.computeIfAbsent(sql, k -> new ArrayList<>()).add(res);
-    }
-    for (var e : idx.entrySet()) {
-      var sql = e.getValue().get(0).cmd.sqlP;
-      debug("Executing batch [{}]", sql);
-      try (var ps = get().prepareStatement(sql)) {
-        for (var res : e.getValue()) {
-          res.cmd.fill(ps);
-          ps.addBatch();
-        }
-        var counts = ps.executeBatch();
-        for (int i = 0; i < counts.length; i++) {
-          e.getValue().get(i).cmd.rowCount = counts[i];
-        }
-      }
-    }
-    return results;
-  }
-
   private MtConn getTxFn() {
     return txIdx.get(Thread.currentThread());
   }
 
-  @Override public Connection get() {
+  @Override
+  public Connection get() {
     var txFn = getTxFn();
     if (txFn != null && txFn.get() != null) {
       return txFn.get();
@@ -81,11 +58,13 @@ public class MtJdbc implements MtConn {
     }
   }
 
-  @Override public boolean inTx() {
+  @Override
+  public boolean inTx() {
     return getTxFn() != null;
   }
 
-  @Override public void rollback() {
+  @Override
+  public void rollback() {
     var tx = getTxFn();
     if (tx != null) {
       tx.rollback();

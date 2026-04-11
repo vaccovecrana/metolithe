@@ -2,12 +2,14 @@ package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.MtVarchar;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
-import static io.vacco.metolithe.core.MtErr.*;
+import static io.vacco.metolithe.core.MtErr.badSqlTypeMapping;
 import static java.lang.String.format;
-import static java.util.Arrays.*;
+import static java.util.Arrays.copyOf;
+import static java.util.Arrays.stream;
 
 public class MtUtil {
 

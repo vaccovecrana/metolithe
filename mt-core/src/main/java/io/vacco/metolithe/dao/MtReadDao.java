@@ -1,15 +1,20 @@
 package io.vacco.metolithe.dao;
 
-import io.vacco.metolithe.core.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtIdFn;
-import io.vacco.metolithe.util.*;
 import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.util.MtPage1;
+import io.vacco.metolithe.util.MtPage2;
+
 import java.util.*;
 
-import static io.vacco.metolithe.core.MtErr.*;
-import static io.vacco.metolithe.core.MtCaseFormat.*;
-import static java.lang.String.*;
-import static java.util.stream.Collectors.*;
+import static io.vacco.metolithe.core.MtCaseFormat.propNamesCsv;
+import static io.vacco.metolithe.core.MtErr.badId;
+import static io.vacco.metolithe.core.MtErr.badPageAccess;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 
 public class MtReadDao<T, K> extends MtDao<T, K> {
 
@@ -66,7 +71,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final <V> List<T> listWhereIn(String field, V ... values) {
+  public final <V> List<T> listWhereIn(String field, V... values) {
     if (values == null || values.length == 0) {
       return Collections.emptyList();
     }
@@ -87,7 +92,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final <V> Map<V, List<T>> loadWhereIn(String field, V ... values) {
+  public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
     var fd = dsc.getField(field);
     return listWhereIn(field, values).stream().collect(groupingBy(fd::getValue));
   }
@@ -129,7 +134,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   }
 
   public <K1> MtPage1<T, K1> loadPage1(MtQuery filter, String nx1Fld, K1 nx1) {
-    var query = setQuery(filter, new String[] {nx1Fld}, new Object[] {nx1});
+    var query = setQuery(filter, new String[]{nx1Fld}, new Object[]{nx1});
     var page = new MtPage1<T, K1>();
     var items = loadPageItems(query);
     page.items = items;
@@ -144,7 +149,7 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
   public <K1, K2> MtPage2<T, K1, K2> loadPage2(MtQuery filter,
                                                String nx1Fld, K1 nx1,
                                                String nx2Fld, K2 nx2) {
-    var query = setQuery(filter, new String[] {nx1Fld, nx2Fld}, new Object[] {nx1, nx2});
+    var query = setQuery(filter, new String[]{nx1Fld, nx2Fld}, new Object[]{nx1, nx2});
     var page = new MtPage2<T, K1, K2>();
     var items = loadPageItems(query);
     page.items = items;

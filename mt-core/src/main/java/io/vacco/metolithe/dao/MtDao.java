@@ -1,25 +1,30 @@
 package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.annotations.MtPk;
-import io.vacco.metolithe.core.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtUtil;
 import io.vacco.metolithe.id.MtIdFn;
-import io.vacco.metolithe.query.*;
+import io.vacco.metolithe.query.MtJdbc;
+import io.vacco.metolithe.query.MtMapper;
+
 import java.lang.reflect.Constructor;
-import java.sql.*;
-import java.util.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.vacco.metolithe.core.MtErr.*;
-import static java.util.Objects.*;
+import static io.vacco.metolithe.core.MtUtil.toWrapperClass;
+import static java.util.Objects.requireNonNull;
 
 public abstract class MtDao<T, K> implements MtMapper<T> {
 
   protected final String schema;
   protected final MtJdbc jdbc;
-  public    final MtDescriptor<T> dsc;
+  public final MtDescriptor<T> dsc;
   protected final MtIdFn<K> idFn;
   protected final Map<String, String> queryCache = new ConcurrentHashMap<>();
-  private   final Constructor<T> constructor;
+  private final Constructor<T> constructor;
 
   public MtDao(String schema, MtJdbc jdbc, MtDescriptor<T> d, MtIdFn<K> idFn) {
     this.schema = requireNonNull(schema);
@@ -41,19 +46,6 @@ public abstract class MtDao<T, K> implements MtMapper<T> {
     }
   }
 
-  public static Class<?> toWrapperClass(Class<?> type) {
-    if (!type.isPrimitive()) return type;
-    if (int.class.equals(type))     { return Integer.class; }
-    if (double.class.equals(type))  { return Double.class; }
-    if (char.class.equals(type))    { return Character.class; }
-    if (boolean.class.equals(type)) { return Boolean.class; }
-    if (long.class.equals(type))    { return Long.class; }
-    if (float.class.equals(type))   { return Float.class; }
-    if (short.class.equals(type))   { return Short.class; }
-    if (byte.class.equals(type))    { return Byte.class; }
-    return type;
-  }
-
   /**
    * This handles custom data storage formats from DB drivers.
    * Right now, we just handle:
@@ -65,15 +57,15 @@ public abstract class MtDao<T, K> implements MtMapper<T> {
   private Object mapPrimitive(Object from, Class<?> to) {
     if (from != null) {
       if (from instanceof Integer && to.equals(Boolean.class)) {
-        var i = (Integer) from;
-        return i != 0;
+        return ((Integer) from) != 0;
       }
     }
     return from;
   }
 
+  @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
-  @Override public T map(ResultSet rs) throws SQLException {
+  public T map(ResultSet rs) throws SQLException {
     try {
       T instance = constructor.newInstance();
       var metadata = rs.getMetaData();

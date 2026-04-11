@@ -1,8 +1,15 @@
 .DS_Store
+
 *.iml
 .idea/
+
 .gradle/
 gradle/
 gradlew*
+
 build/
 bin/
+
+.classpath
+.project
+.settings
