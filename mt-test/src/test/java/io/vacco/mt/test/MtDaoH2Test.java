@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 
 import static io.vacco.mt.test.MtDaoTest.*;
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -19,7 +19,7 @@ public class MtDaoH2Test {
     var db = MtTest.MtDb.H2;
     var ds = new JdbcDataSource();
     ds.setURL(db.url);
-    var jdbc  = new MtJdbc(ds);
+    var jdbc = new MtJdbc(ds);
     var tables = new ArrayList<MtTable>();
 
     it("Generates changelogs", () -> tables.addAll(changeLogMake()));

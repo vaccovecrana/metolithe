@@ -1,15 +1,21 @@
 package io.vacco.metolithe.core;
 
 import io.vacco.metolithe.annotations.*;
-import java.lang.annotation.*;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.*;
 
-import static io.vacco.metolithe.core.MtErr.*;
-import static java.util.Objects.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.vacco.metolithe.core.MtErr.badFieldAccess;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Stream.*;
-import static java.util.Arrays.*;
 
 public class MtFieldDescriptor {
 
@@ -24,9 +30,9 @@ public class MtFieldDescriptor {
   private final Field f;
   private final List<Annotation> annotations;
   private final MtCaseFormat fmt;
-  public  final MtDescriptor<?> parent;
+  public final MtDescriptor<?> parent;
   private final boolean isPk;
-  public  final int ordinal;
+  public final int ordinal;
 
   @SuppressWarnings("this-escape")
   public MtFieldDescriptor(int ordinal, Field f, MtCaseFormat fmt, MtDescriptor<?> parent) {
@@ -129,7 +135,8 @@ public class MtFieldDescriptor {
     }
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     var ants = annotations.stream()
       .map(a -> a.annotationType().getSimpleName())
       .collect(Collectors.joining(", "));

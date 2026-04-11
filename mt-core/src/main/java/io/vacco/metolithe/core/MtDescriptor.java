@@ -1,15 +1,20 @@
 package io.vacco.metolithe.core;
 
-import io.vacco.metolithe.annotations.*;
+import io.vacco.metolithe.annotations.MtFk;
+import io.vacco.metolithe.annotations.MtIndex;
+import io.vacco.metolithe.annotations.MtPk;
+import io.vacco.metolithe.annotations.MtUnique;
+
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.vacco.metolithe.core.MtErr.*;
-import static java.util.stream.Collectors.*;
-import static java.lang.String.*;
+import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
+import static java.util.stream.Collectors.toList;
 
 public class MtDescriptor<T> {
 
@@ -33,11 +38,12 @@ public class MtDescriptor<T> {
     this.fields = new ArrayList<>();
     int k = 0;
     for (var f : entity.getFields()) {
-      if (isPublic(f.getModifiers()) && !isStatic(f.getModifiers())) {
+      if (isPublic(f.getModifiers()) && !isStatic(f.getModifiers()) && !isTransient(f.getModifiers())) {
         this.fields.add(new MtFieldDescriptor(k, f, fmt, this));
         k++;
       }
     }
+
     this.fieldsNoPk = this.fields.stream().filter(fd -> !fd.isPk()).collect(toList());
     var pkds = this.fields.stream().filter(MtFieldDescriptor::isPk).collect(toList());
     if (pkds.size() > 1) {

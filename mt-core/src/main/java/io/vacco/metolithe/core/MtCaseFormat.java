@@ -3,8 +3,8 @@ package io.vacco.metolithe.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.stream.Collectors.*;
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 public enum MtCaseFormat {
 

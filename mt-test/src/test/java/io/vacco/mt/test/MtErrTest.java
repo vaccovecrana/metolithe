@@ -1,20 +1,24 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.changeset.MtApply;
-import io.vacco.metolithe.core.*;
+import io.vacco.metolithe.core.MtCaseFormat;
+import io.vacco.metolithe.core.MtErr;
+import io.vacco.metolithe.core.MtFieldDescriptor;
 import io.vacco.metolithe.id.MtMurmur3IFn;
 import io.vacco.mt.test.dao.DbUserDao;
 import io.vacco.mt.test.schema.DbUser;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
+import static j8spec.J8Spec.describe;
+import static j8spec.J8Spec.it;
+import static org.junit.Assert.assertEquals;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

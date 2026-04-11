@@ -1,20 +1,23 @@
 package io.vacco.metolithe.query;
 
 import io.vacco.metolithe.core.MtLog;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
-import static io.vacco.metolithe.core.MtErr.*;
+import static io.vacco.metolithe.core.MtErr.badSql;
 
 public class MtCmd {
 
   private final Map<String, Object> params = new LinkedHashMap<>();
-  private final List<Object>        values = new ArrayList<>();
-  private final MtConn              connFn;
+  private final List<Object> values = new ArrayList<>();
+  private final MtConn connFn;
 
-  public        String sqlP;
+  public String sqlP;
   private final String sql;
-  public  int   rowCount = -1;
+  public int rowCount = -1;
 
   MtCmd(String sql, MtConn connFn) {
     this.sql = Objects.requireNonNull(sql);

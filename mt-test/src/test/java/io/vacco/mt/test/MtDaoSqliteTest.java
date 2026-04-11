@@ -6,10 +6,11 @@ import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 import org.sqlite.SQLiteDataSource;
+
 import java.util.ArrayList;
 
 import static io.vacco.mt.test.MtDaoTest.*;
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -18,7 +19,7 @@ public class MtDaoSqliteTest {
     var db = MtDb.Sqlite;
     var ds = new SQLiteDataSource();
     ds.setUrl(db.url);
-    var jdbc  = new MtJdbc(ds);
+    var jdbc = new MtJdbc(ds);
     var tables = new ArrayList<MtTable>();
 
     it("Generates changelogs", () -> tables.addAll(changeLogMake()));

@@ -50,9 +50,9 @@ public class MtMurmur3 {
     for (int i = 0; i < nblocks; i++) {
       int i_4 = i << 2;
       int k = (data[offset + i_4] & 0xff)
-          | ((data[offset + i_4 + 1] & 0xff) << 8)
-          | ((data[offset + i_4 + 2] & 0xff) << 16)
-          | ((data[offset + i_4 + 3] & 0xff) << 24);
+        | ((data[offset + i_4 + 1] & 0xff) << 8)
+        | ((data[offset + i_4 + 2] & 0xff) << 16)
+        | ((data[offset + i_4 + 3] & 0xff) << 24);
 
       hash = mix32(k, hash);
     }
@@ -95,13 +95,13 @@ public class MtMurmur3 {
     for (int i = 0; i < nblocks; i++) {
       final int i8 = i << 3;
       long k = ((long) data[offset + i8] & 0xff)
-          | (((long) data[offset + i8 + 1] & 0xff) << 8)
-          | (((long) data[offset + i8 + 2] & 0xff) << 16)
-          | (((long) data[offset + i8 + 3] & 0xff) << 24)
-          | (((long) data[offset + i8 + 4] & 0xff) << 32)
-          | (((long) data[offset + i8 + 5] & 0xff) << 40)
-          | (((long) data[offset + i8 + 6] & 0xff) << 48)
-          | (((long) data[offset + i8 + 7] & 0xff) << 56);
+        | (((long) data[offset + i8 + 1] & 0xff) << 8)
+        | (((long) data[offset + i8 + 2] & 0xff) << 16)
+        | (((long) data[offset + i8 + 3] & 0xff) << 24)
+        | (((long) data[offset + i8 + 4] & 0xff) << 32)
+        | (((long) data[offset + i8 + 5] & 0xff) << 40)
+        | (((long) data[offset + i8 + 6] & 0xff) << 48)
+        | (((long) data[offset + i8 + 7] & 0xff) << 56);
 
       k *= C1;
       k = Long.rotateLeft(k, R1);

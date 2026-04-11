@@ -1,21 +1,26 @@
 package io.vacco.metolithe.query;
 
 import io.vacco.metolithe.core.MtLog;
-import java.sql.*;
-import java.util.*;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
-import static io.vacco.metolithe.core.MtErr.*;
+import static io.vacco.metolithe.core.MtErr.generalError;
 
 public class MtTx implements AutoCloseable, MtConn {
 
-  private MtConn      connFn;
-  private Connection  txConn;
-  private boolean     isOpen;
-  private boolean     shouldCommit = true;
+  private MtConn connFn;
+  private Connection txConn;
+  private boolean isOpen;
+  private boolean shouldCommit = true;
 
   public List<SQLWarning> warnings = new ArrayList<>();
-  public Exception        error;
+  public Exception error;
 
   public MtTx withSupplier(MtConn connFn) {
     this.connFn = Objects.requireNonNull(connFn);
@@ -33,11 +38,13 @@ public class MtTx implements AutoCloseable, MtConn {
     }
   }
 
-  @Override public void rollback() {
+  @Override
+  public void rollback() {
     shouldCommit = false;
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     try {
       if (isOpen) {
         if (shouldCommit) {
@@ -71,11 +78,13 @@ public class MtTx implements AutoCloseable, MtConn {
     }
   }
 
-  @Override public Connection get() {
+  @Override
+  public Connection get() {
     return txConn;
   }
 
-  @Override public boolean inTx() {
+  @Override
+  public boolean inTx() {
     return true;
   }
 

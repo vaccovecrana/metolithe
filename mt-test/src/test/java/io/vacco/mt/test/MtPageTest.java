@@ -1,12 +1,15 @@
 package io.vacco.mt.test;
 
-import io.vacco.metolithe.util.*;
+import io.vacco.metolithe.util.MtPage1;
+import io.vacco.metolithe.util.MtPage2;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
-import java.util.*;
 
-import static j8spec.J8Spec.*;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static j8spec.J8Spec.it;
 import static org.junit.Assert.assertEquals;
 
 @DefinedOrder

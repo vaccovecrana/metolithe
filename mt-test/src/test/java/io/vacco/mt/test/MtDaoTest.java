@@ -1,26 +1,32 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.changeset.*;
-import io.vacco.metolithe.core.*;
-import io.vacco.metolithe.dao.*;
-import io.vacco.metolithe.id.*;
+import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtLog;
+import io.vacco.metolithe.dao.MtWriteDao;
+import io.vacco.metolithe.id.MtIdFn;
+import io.vacco.metolithe.id.MtMurmur3IFn;
+import io.vacco.metolithe.id.MtMurmur3LFn;
+import io.vacco.metolithe.id.MtXxHashIFn;
+import io.vacco.metolithe.query.MtJdbc;
 import io.vacco.mt.test.dao.*;
 import io.vacco.mt.test.schema.*;
-import io.vacco.metolithe.query.MtJdbc;
+
 import javax.sql.DataSource;
-import java.sql.*;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.*;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.vacco.shax.logging.ShArgument.kv;
 import static org.junit.Assert.*;
 
 public class MtDaoTest extends MtTest {
 
-  private static final MtIdFn<Integer>  m3Ifn = new MtMurmur3IFn();
-  private static final MtIdFn<Long>     m3Lfn = new MtMurmur3LFn();
-  private static final MtIdFn<Integer>  xxIfn = new MtXxHashIFn();
+  private static final MtIdFn<Integer> m3Ifn = new MtMurmur3IFn();
+  private static final MtIdFn<Long> m3Lfn = new MtMurmur3LFn();
+  private static final MtIdFn<Integer> xxIfn = new MtXxHashIFn();
 
   public static String generateRandomDigits(int n) {
     var random = new Random();
@@ -69,8 +75,15 @@ public class MtDaoTest extends MtTest {
     var pDao = new PhoneDao(db.schema, fmt, jdbc, m3Ifn);
 
     var stIdFn = new MtIdFn<String>() {
-      @Override public String apply(Object[] objects) { return objects[0].toString(); }
-      @Override public Class<String> getIdType() { return String.class; }
+      @Override
+      public String apply(Object[] objects) {
+        return objects[0].toString();
+      }
+
+      @Override
+      public Class<String> getIdType() {
+        return String.class;
+      }
     };
     var urDao = new MtWriteDao<>(db.schema, jdbc, new MtDescriptor<>(DbUserRole.class, fmt), stIdFn);
 
@@ -182,7 +195,7 @@ public class MtDaoTest extends MtTest {
 
     pDao.sql().batch(results -> {
       for (var p : phones) {
-        results.add(pDao.saveLater(p));
+        results.add(pDao.save(p));
       }
     });
 
@@ -191,7 +204,7 @@ public class MtDaoTest extends MtTest {
 
     log.info("======== All phone pages ========");
     phones.clear();
-    var page0 =  pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);
+    var page0 = pDao.loadPage1(pDao.query().limit(16).reverse(), PhoneDao.fld_number, null);
     phones.addAll(page0.items);
     while (page0.nx1 != null) {
       log.info("{}", kv("page0", page0));

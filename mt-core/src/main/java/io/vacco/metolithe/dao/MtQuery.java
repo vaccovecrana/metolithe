@@ -2,28 +2,30 @@ package io.vacco.metolithe.dao;
 
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.core.MtFieldDescriptor;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.vacco.metolithe.core.MtCaseFormat.propNamesCsv;
+import static io.vacco.metolithe.core.MtErr.badLogic;
+import static io.vacco.metolithe.core.MtErr.badSeek;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtQuery {
 
-  public enum LogicalOperator { AND, OR }
+  public enum LogicalOperator {AND, OR}
 
-  private final Set<MtPredicate>        predicates = new LinkedHashSet<>();
-  private final List<LogicalOperator>   operators = new ArrayList<>();
-  private final Map<String, Object>     params = new LinkedHashMap<>();
+  private final Set<MtPredicate> predicates = new LinkedHashSet<>();
+  private final List<LogicalOperator> operators = new ArrayList<>();
+  private final Map<String, Object> params = new LinkedHashMap<>();
   private final List<MtFieldDescriptor> orderByFields = new ArrayList<>();
-  private final List<MtJoin>            joins = new ArrayList<>();
-  private final String                  schema;
+  private final List<MtJoin> joins = new ArrayList<>();
+  private final String schema;
 
   public MtDescriptor<?> from, target;
-  public Integer         limit;
-  public boolean         orderByReverse;
+  public Integer limit;
+  public boolean orderByReverse;
 
   private MtQuery(String schema, MtDescriptor<?> target) {
     this.schema = Objects.requireNonNull(schema);

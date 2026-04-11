@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class MtResult<T> {
 
-  public T     rec;
+  public T rec;
   public MtCmd cmd;
 
   public static <T> MtResult<T> result(T rec, MtCmd cmd) {

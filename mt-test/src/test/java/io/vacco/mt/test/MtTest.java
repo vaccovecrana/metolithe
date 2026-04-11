@@ -1,15 +1,18 @@
 package io.vacco.mt.test;
 
 import io.vacco.metolithe.changeset.MtLevel;
-import io.vacco.metolithe.core.*;
+import io.vacco.metolithe.core.MtCaseFormat;
+import io.vacco.metolithe.core.MtLog;
 import io.vacco.metolithe.id.MtXxHash;
 import io.vacco.mt.test.schema.*;
 import io.vacco.shax.logging.ShOption;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public abstract class MtTest {
 
@@ -43,7 +46,7 @@ public abstract class MtTest {
     MtLog.setWarnLogger(log::warn);
   }
 
-  public static Class<?>[] testSchema = new Class<?>[] {
+  public static Class<?>[] testSchema = new Class<?>[]{
     Device.class, DeviceLocation.class, DeviceTag.class,
     Phone.class, DbUser.class, DbUserRole.class, UserFollow.class,
     ApiKey.class, Namespace.class, KeyNamespace.class

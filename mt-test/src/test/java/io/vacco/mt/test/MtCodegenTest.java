@@ -6,8 +6,9 @@ import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 import java.io.File;
 
-import static io.vacco.mt.test.MtTest.*;
-import static j8spec.J8Spec.*;
+import static io.vacco.mt.test.MtTest.fmt;
+import static io.vacco.mt.test.MtTest.testSchema;
+import static j8spec.J8Spec.it;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

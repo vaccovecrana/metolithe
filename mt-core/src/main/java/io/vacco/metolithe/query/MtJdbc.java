@@ -1,13 +1,15 @@
 package io.vacco.metolithe.query;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
+import static io.vacco.metolithe.core.MtErr.generalError;
 import static io.vacco.metolithe.core.MtLog.debug;
-import static io.vacco.metolithe.core.MtErr.*;
 
 public class MtJdbc implements MtConn {
 
@@ -69,7 +71,8 @@ public class MtJdbc implements MtConn {
     return txIdx.get(Thread.currentThread());
   }
 
-  @Override public Connection get() {
+  @Override
+  public Connection get() {
     var txFn = getTxFn();
     if (txFn != null && txFn.get() != null) {
       return txFn.get();
@@ -81,11 +84,13 @@ public class MtJdbc implements MtConn {
     }
   }
 
-  @Override public boolean inTx() {
+  @Override
+  public boolean inTx() {
     return getTxFn() != null;
   }
 
-  @Override public void rollback() {
+  @Override
+  public void rollback() {
     var tx = getTxFn();
     if (tx != null) {
       tx.rollback();
