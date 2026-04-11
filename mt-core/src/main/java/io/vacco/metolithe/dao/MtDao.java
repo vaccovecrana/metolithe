@@ -13,8 +13,8 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.vacco.metolithe.core.MtUtil.toWrapperClass;
 import static io.vacco.metolithe.core.MtErr.*;
+import static io.vacco.metolithe.core.MtUtil.toWrapperClass;
 import static java.util.Objects.requireNonNull;
 
 public abstract class MtDao<T, K> implements MtMapper<T> {

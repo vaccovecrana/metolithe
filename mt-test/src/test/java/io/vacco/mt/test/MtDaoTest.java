@@ -102,19 +102,23 @@ public class MtDaoTest extends MtTest {
       pt.countryCode = 44;
       pt.number = "5552226666";
       pt.smsVerificationCode = 6789;
-      log.info("{}", kv("pts", pDao.upsert(pt)));
-      log.info("{}", kv("p1s", pDao.upsert(p1)));
-      log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
-      log.info("{}", kv("pts", pDao.save(pt)));
-      log.info("{}", kv("ptDel", pDao.deleteWhereIdEq(pt.pid)));
+
+      tx.result(pDao.upsert(pt))
+        .result(pDao.upsert(p1))
+        .result(pDao.deleteWhereIdEq(pt.pid))
+        .result(pDao.save(pt))
+        .result(pDao.deleteWhereIdEq(pt.pid));
     });
     assertNull(txr.error);
     assertTrue(txr.warnings.isEmpty());
+    log.info("{}", kv("txr.results", txr.results));
 
-    pDao.sql().tx((tx, conn) -> {
-      pDao.upsert(p0);
+    var txp = pDao.sql().tx((tx, conn) -> {
+      tx.result(pDao.upsert(p0));
       tx.rollback();
     });
+    assertNull(txp.error);
+    assertTrue(txp.warnings.isEmpty());
 
     log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
     log.info("{}", kv("d0m", dDao.upsert(d0)));
@@ -193,11 +197,14 @@ public class MtDaoTest extends MtTest {
       return p;
     }).collect(Collectors.toList());
 
-    pDao.sql().batch(results -> {
+    var batchTx = pDao.sql().tx((tx, conn) -> {
+      tx = tx.batch();
       for (var p : phones) {
-        results.add(pDao.save(p));
+        tx.result(pDao.save(p));
       }
     });
+    assertNull(batchTx.error);
+    assertTrue(batchTx.warnings.isEmpty());
 
     log.info("=========== All phones ==========");
     log.info("{}", kv("allPhones", pDao.listWhereCountryCodeIn(1)));

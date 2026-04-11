@@ -51,7 +51,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       );
       var upd = sql().update(query);
       dsc.forEach(true, rec, upd::param);
-      return result(rec, upd.execute());
+      return result(rec, sql().inTx() ? upd : upd.execute());
     });
   }
 
@@ -65,7 +65,7 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       var upd = sql().update(query);
       dsc.forEach(false, rec, upd::param);
       upd.param(fd.getFieldName(), pk);
-      return result(rec, upd.execute());
+      return result(rec, sql().inTx() ? upd : upd.execute());
     });
   }
 
@@ -80,8 +80,8 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
       var query = getQueryCache().computeIfAbsent("delete",
         k -> format("delete from %s where %s = :%s", getTableName(), fd.getFieldName(), fd.getFieldName())
       );
-      var cmd = sql().update(query).param(fd.getFieldName(), pk);
-      return result(rec, cmd.execute());
+      var del = sql().update(query).param(fd.getFieldName(), pk);
+      return result(rec, sql().inTx() ? del : del.execute());
     });
   }
 
@@ -90,8 +90,8 @@ public class MtWriteDao<T, K> extends MtReadDao<T, K> {
     var query = getQueryCache().computeIfAbsent("deleteWhereEq" + fn,
       k -> format("delete from %s where %s = :%s", getTableName(), fn, fn)
     );
-    var cmd = sql().update(query).param(fn, value);
-    return result(null, cmd.execute());
+    var del = sql().update(query).param(fn, value);
+    return result(null, sql().inTx() ? del : del.execute());
   }
 
   public MtResult<T> deleteWhereIdEq(K id) {
