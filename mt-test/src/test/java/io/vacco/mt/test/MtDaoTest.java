@@ -120,6 +120,26 @@ public class MtDaoTest extends MtTest {
     assertNull(txp.error);
     assertTrue(txp.warnings.isEmpty());
 
+    // Test delete(T rec)
+    var pDel = new Phone();
+    pDel.countryCode = 99;
+    pDel.number = "9999999999";
+    pDel.smsVerificationCode = 9999;
+    pDao.save(pDel);
+    assertTrue(pDao.load(pDel.pid).isPresent());
+    pDao.delete(pDel);
+    assertFalse(pDao.load(pDel.pid).isPresent());
+
+    // Test deleteWhereEq
+    var pDel2 = new Phone();
+    pDel2.countryCode = 88;
+    pDel2.number = "8888888888";
+    pDel2.smsVerificationCode = 8888;
+    pDao.save(pDel2);
+    assertTrue(pDao.load(pDel2.pid).isPresent());
+    pDao.deleteWhereEq("number", pDel2.number);
+    assertFalse(pDao.load(pDel2.pid).isPresent());
+
     log.info("{}", kv("loadWhereEq", pDao.loadWhereCountryCodeEq(1)));
     log.info("{}", kv("d0m", dDao.upsert(d0)));
     d0.type = Device.DType.IOS;
