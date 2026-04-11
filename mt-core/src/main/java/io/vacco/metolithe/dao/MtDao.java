@@ -56,8 +56,8 @@ public abstract class MtDao<T, K> implements MtMapper<T> {
    */
   private Object mapPrimitive(Object from, Class<?> to) {
     if (from != null) {
-      if (from instanceof Integer i && to.equals(Boolean.class)) {
-        return i != 0;
+      if (from instanceof Integer && to.equals(Boolean.class)) {
+        return ((Integer) from) != 0;
       }
     }
     return from;
