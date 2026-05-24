@@ -1,5 +1,6 @@
 package io.vacco.mt.test;
 
+import io.vacco.metolithe.changeset.MtMapper;
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
 import io.vacco.metolithe.id.MtXxHashLFn;
@@ -67,6 +68,11 @@ public class MtAnnotationsTest extends MtTest {
         var unqs = d.getUniqueConstraints();
         assertFalse(unqs.isEmpty());
         // nsId is nullable but part of unique idx=1
+      });
+      it("Includes isolated (no-FK) classes in changeset build (#24)", () -> {
+        var tables = new MtMapper().build(MtCaseFormat.KEEP_CASE, io.vacco.mt.test.schema.TransientSchema.class);
+        assertEquals(1, tables.size());
+        assertEquals("TransientSchema", tables.get(0).name);
       });
     });
   }

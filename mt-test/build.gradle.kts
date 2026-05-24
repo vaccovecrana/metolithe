@@ -2,7 +2,8 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> { addJ8Spec() }
 
 tasks.withType<JacocoReport> {
   sourceSets(
-    project(":mt-core").sourceSets.main.get()
+    project(":mt-core").sourceSets.main.get(),
+    project(":mt-codegen").sourceSets.main.get()
   )
 }
 
