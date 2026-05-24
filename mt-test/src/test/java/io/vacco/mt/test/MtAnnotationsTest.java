@@ -3,6 +3,7 @@ package io.vacco.mt.test;
 import io.vacco.metolithe.changeset.MtMapper;
 import io.vacco.metolithe.core.MtCaseFormat;
 import io.vacco.metolithe.core.MtDescriptor;
+import io.vacco.metolithe.core.MtUtil;
 import io.vacco.metolithe.id.MtXxHashLFn;
 import io.vacco.mt.test.schema.DbUser;
 import io.vacco.mt.test.schema.Device;
@@ -56,12 +57,16 @@ public class MtAnnotationsTest extends MtTest {
       });
       it("Filters transient fields", () -> {
         var descriptor = new MtDescriptor<>(TransientSchema.class, MtCaseFormat.KEEP_CASE);
-        // Should only have 2 fields: id and name. 'secret' should be ignored.
-        assertEquals(2, descriptor.getFields(true).size());
+        // Should only have 3 fields: id, name, amount. 'secret' should be ignored.
+        assertEquals(3, descriptor.getFields(true).size());
         boolean secretFound = descriptor.getFields(true)
           .stream()
           .anyMatch(fd -> fd.getFieldName().equals("secret"));
         assertFalse("Transient field 'secret' should not be in descriptor", secretFound);
+        var amountField = descriptor.getFields(true).stream()
+          .filter(fd -> fd.getFieldName().equals("amount"))
+          .findFirst().orElseThrow();
+        assertEquals("decimal", MtUtil.sqlTypeOf(amountField));
       });
       it("Supports nullable columns in composite unique constraints (#38)", () -> {
         var d = new MtDescriptor<>(io.vacco.mt.test.schema.KeyNamespace.class, MtCaseFormat.KEEP_CASE);

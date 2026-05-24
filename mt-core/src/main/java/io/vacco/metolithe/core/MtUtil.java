@@ -58,6 +58,9 @@ public class MtUtil {
     if (wt0 == Float.class) {
       return "float";
     }
+    if (wt0 == java.math.BigDecimal.class) {
+      return "decimal";
+    }
     if (Enum.class.isAssignableFrom(fd.getType())) {
       return format("varchar(%s)", ENUM_VARCHAR_LENGTH);
     }

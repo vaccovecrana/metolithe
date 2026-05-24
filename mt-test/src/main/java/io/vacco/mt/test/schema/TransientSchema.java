@@ -11,5 +11,7 @@ public class TransientSchema {
   @MtVarchar(255)
   public String name;
 
+  public java.math.BigDecimal amount;
+
   public transient String secret;
 }
