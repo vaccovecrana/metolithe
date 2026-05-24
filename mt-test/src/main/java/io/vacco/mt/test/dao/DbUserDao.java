@@ -43,12 +43,18 @@ public class DbUserDao extends MtWriteDao<io.vacco.mt.test.schema.DbUser, java.l
   public final Map<java.lang.String, List<io.vacco.mt.test.schema.DbUser>> loadWhereEmailIn(java.lang.String ... values) {
     return loadWhereIn(fld_email, values);
   }
+  public final Map<java.lang.String, List<io.vacco.mt.test.schema.DbUser>> loadWhereEmailIn(java.util.List<java.lang.String> values) {
+    return loadWhereIn(fld_email, values);
+  }
 
   public MtFieldDescriptor fld_tid() {
     return this.dsc.getField(fld_tid);
   }
 
   public final Map<java.lang.Long, List<io.vacco.mt.test.schema.DbUser>> loadWhereTidIn(java.lang.Long ... values) {
+    return loadWhereIn(fld_tid, values);
+  }
+  public final Map<java.lang.Long, List<io.vacco.mt.test.schema.DbUser>> loadWhereTidIn(java.util.List<java.lang.Long> values) {
     return loadWhereIn(fld_tid, values);
   }
 

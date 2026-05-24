@@ -25,6 +25,17 @@ public class MtTx implements AutoCloseable, MtConn {
   public List<SQLWarning> warnings = new ArrayList<>();
   public Exception error;
 
+  public boolean isOk() {
+    return error == null && warnings.isEmpty();
+  }
+
+  public MtTx orThrow() {
+    if (!isOk()) {
+      throw generalError("Transaction failed", error);
+    }
+    return this;
+  }
+
   public MtTx supplier(MtConn connFn) {
     this.connFn = Objects.requireNonNull(connFn);
     return this;

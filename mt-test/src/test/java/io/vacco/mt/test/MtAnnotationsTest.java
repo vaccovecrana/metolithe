@@ -62,6 +62,12 @@ public class MtAnnotationsTest extends MtTest {
           .anyMatch(fd -> fd.getFieldName().equals("secret"));
         assertFalse("Transient field 'secret' should not be in descriptor", secretFound);
       });
+      it("Supports nullable columns in composite unique constraints (#38)", () -> {
+        var d = new MtDescriptor<>(io.vacco.mt.test.schema.KeyNamespace.class, MtCaseFormat.KEEP_CASE);
+        var unqs = d.getUniqueConstraints();
+        assertFalse(unqs.isEmpty());
+        // nsId is nullable but part of unique idx=1
+      });
     });
   }
 }

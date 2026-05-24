@@ -35,6 +35,9 @@ public class PhoneDao extends MtWriteDao<io.vacco.mt.test.schema.Phone, java.lan
   public final List<io.vacco.mt.test.schema.Phone> listWhereCountryCodeIn(java.lang.Integer ... values) {
     return listWhereIn(fld_countryCode, values);
   }
+  public final List<io.vacco.mt.test.schema.Phone> listWhereCountryCodeIn(java.util.List<java.lang.Integer> values) {
+    return listWhereIn(fld_countryCode, values);
+  }
 
   public MtFieldDescriptor fld_number() {
     return this.dsc.getField(fld_number);

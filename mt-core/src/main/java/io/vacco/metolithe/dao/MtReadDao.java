@@ -90,11 +90,29 @@ public class MtReadDao<T, K> extends MtDao<T, K> {
     return select.list(mapToDefault());
   }
 
+  public final <V> List<T> listWhereIn(String field, List<V> values) {
+    if (values == null || values.isEmpty()) {
+      return Collections.emptyList();
+    }
+    @SuppressWarnings("unchecked")
+    V[] arr = (V[]) values.toArray();
+    return listWhereIn(field, arr);
+  }
+
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final <V> Map<V, List<T>> loadWhereIn(String field, V... values) {
     var fd = dsc.getField(field);
     return listWhereIn(field, values).stream().collect(groupingBy(fd::getValue));
+  }
+
+  public final <V> Map<V, List<T>> loadWhereIn(String field, List<V> values) {
+    if (values == null || values.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    @SuppressWarnings("unchecked")
+    V[] arr = (V[]) values.toArray();
+    return loadWhereIn(field, arr);
   }
 
   public T loadExisting(K id) {
