@@ -131,6 +131,11 @@ public class MtTx implements AutoCloseable, MtConn {
         MtLog.warn("Failed to close connection", e);
       }
     }
+    for (var res : results) {
+      if (res != null && res.cmd != null) {
+        res.cmd.clearConnection();
+      }
+    }
   }
 
   @Override

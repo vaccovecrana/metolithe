@@ -13,7 +13,7 @@ public class MtCmd {
 
   private final Map<String, Object> params = new LinkedHashMap<>();
   private final List<Object> values = new ArrayList<>();
-  private final MtConn connFn;
+  private MtConn connFn;
 
   public String sqlP;
   private final String sql;
@@ -92,6 +92,10 @@ public class MtCmd {
 
   public <T> Optional<T> one(MtMapper<T> mapper) {
     return list(mapper).stream().findFirst();
+  }
+
+  void clearConnection() {
+    this.connFn = null;
   }
 
 }
