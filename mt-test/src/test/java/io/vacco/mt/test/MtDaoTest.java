@@ -109,16 +109,14 @@ public class MtDaoTest extends MtTest {
         .result(pDao.save(pt))
         .result(pDao.deleteWhereIdEq(pt.pid));
     });
-    assertNull(txr.error);
-    assertTrue(txr.warnings.isEmpty());
+    assertTrue(txr.isOk());
     log.info("{}", kv("txr.results", txr.results));
 
     var txp = pDao.sql().tx((tx, conn) -> {
       tx.result(pDao.upsert(p0));
       tx.rollback();
     });
-    assertNull(txp.error);
-    assertTrue(txp.warnings.isEmpty());
+    assertTrue(txp.isOk());
 
     // Test delete(T rec)
     var pDel = new Phone();
@@ -223,8 +221,7 @@ public class MtDaoTest extends MtTest {
         tx.result(pDao.save(p));
       }
     });
-    assertNull(batchTx.error);
-    assertTrue(batchTx.warnings.isEmpty());
+    assertTrue(batchTx.isOk());
 
     log.info("=========== All phones ==========");
     log.info("{}", kv("allPhones", pDao.listWhereCountryCodeIn(1)));

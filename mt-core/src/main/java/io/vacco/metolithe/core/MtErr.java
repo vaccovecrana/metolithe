@@ -29,7 +29,7 @@ public class MtErr {
                                                     String dst, String dstField, String dstFieldType) {
     return new IllegalStateException(
       format(
-        "Foreign key mismatch: source [%s.%s:%s] to destination [%s.%s:%s]",
+        "Foreign key mismatch between entities: source [%s.%s:%s] to destination [%s.%s:%s]. Check @MtFk annotations and PK types on both classes.",
         src, srcField, srcFieldType, dst, dstField, dstFieldType
       )
     );

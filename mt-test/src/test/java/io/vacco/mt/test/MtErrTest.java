@@ -66,7 +66,7 @@ public class MtErrTest {
           throw MtErr.badForeignKey("srcTable", "srcField", "String", "dstTable", "dstField", "Integer");
         } catch (IllegalStateException e) {
           assertEquals(
-            "Foreign key mismatch: source [srcTable.srcField:String] to destination [dstTable.dstField:Integer]",
+            "Foreign key mismatch between entities: source [srcTable.srcField:String] to destination [dstTable.dstField:Integer]. Check @MtFk annotations and PK types on both classes.",
             e.getMessage()
           );
         }

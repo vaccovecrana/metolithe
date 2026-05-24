@@ -113,6 +113,7 @@ public class MtMapper {
       .collect(Collectors.toList());
     var schema = new OxGrph<String, MtDescriptor<?>>();
     var out = new ArrayList<MtTable>();
+    var processed = new java.util.HashSet<String>();
 
     for (var vd : descriptors) {
       for (var fd : vd.data.getFields(true)) {
@@ -129,9 +130,17 @@ public class MtMapper {
 
     OxKos.apply(schema).forEach((k, v) -> {
       for (var vtx : v) {
+        processed.add(vtx.data.getName());
         out.add(mapTable(vtx.data));
       }
     });
+
+    // Include isolated classes (no FKs) that were not part of the graph
+    for (var vd : descriptors) {
+      if (!processed.contains(vd.data.getName())) {
+        out.add(mapTable(vd.data));
+      }
+    }
 
     return out;
   }
